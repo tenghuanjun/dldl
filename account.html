@@ -30,6 +30,8 @@
                     <td>
                         <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
                         <span>&nbsp;&nbsp;</span>
+                        <button class="btn" type="button" @click="refreshToken(account)">刷新令牌</button>
+                        <span>&nbsp;&nbsp;</span>
                         <button class="btn" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏':'显示'}}</button>
                         <span>&nbsp;&nbsp;</span>
                         <button class="btn" type="button" @click="copyAccountPwd(account)">复制账号密码</button>
@@ -57,13 +59,28 @@
                         IMEI: "",
                         isPcLauncher: "true"
                     },
-                    accounts: [
-                        { uname: "18816232799", upwd: "ljy1998", name: "蓝银" },
-                        { uname: "13511356251", upwd: "13511356251hu", name: "阿龙" }
-                    ]
+                    accounts: []
                 };
             },
+        mounted() {
+            // 从后端读取 account.json，保持 UI/代理数据一致
+            this.loadAccounts();
+        },
             methods: {
+            async loadAccounts() {
+                try {
+                    const resp = await fetch('/accounts', { cache: 'no-store' });
+                    const json = await resp.json();
+                    // debugger
+                    if (Array.isArray(json)) {
+                        this.accounts = json;
+                    } else {
+                        console.error('invalid /accounts response', json);
+                    }
+                } catch (e) {
+                    console.error('load accounts failed', e);
+                }
+            },
                 buildLoginUrl(account) {
                     const params = new URLSearchParams({
                         ...this.baseLoginParams,

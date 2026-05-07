@@ -2,10 +2,14 @@ const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const https = require('https');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const PORT = 8080;
 const TARGET = 'https://dldl.50pk.com';
 const fixedQrTimeMs = String(process.env.DLDL_FIXED_TIME_MS || '1828368000000');
+const accountsFilePath = path.join(__dirname, 'account.json');
+app.use(express.json({ limit: '1mb' }));
+
 const accountConfig = {
   uname: process.env.DLDL_UNAME || 'laogao666666',
   upwd: process.env.DLDL_UPWD || '1234561239'
@@ -54,6 +58,55 @@ function getAccountFromRequest(req) {
     upwd: req.query.upwd || refererUpwd || accountConfig.upwd
   };
 }
+
+function readAccountsFromFile() {
+  try {
+    const text = fs.readFileSync(accountsFilePath, 'utf8');
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error(`[Accounts] read failed: ${error.message}`);
+    return [];
+  }
+}
+
+function validateAccounts(accounts) {
+  if (!Array.isArray(accounts)) return { ok: false, message: 'accounts must be an array' };
+  for (const acc of accounts) {
+    if (!acc || typeof acc !== 'object') return { ok: false, message: 'account item invalid' };
+    if (!String(acc.uname || '').trim()) return { ok: false, message: 'uname is required' };
+    if (!String(acc.upwd || '').trim()) return { ok: false, message: 'upwd is required' };
+  }
+  return { ok: true };
+}
+
+function writeAccountsToFile(accounts) {
+  const tmpPath = `${accountsFilePath}.tmp`;
+  fs.writeFileSync(tmpPath, JSON.stringify(accounts, null, 2), 'utf8');
+  fs.renameSync(tmpPath, accountsFilePath);
+}
+
+// 供 account.html 读取/写入账号
+app.get('/accounts', (req, res) => {
+  res.json(readAccountsFromFile());
+});
+
+app.post('/accounts', (req, res) => {
+  const body = req.body || {};
+  const accounts = Array.isArray(body) ? body : body.accounts;
+  const validation = validateAccounts(accounts);
+  if (!validation.ok) {
+    res.status(400).json({ ok: false, message: validation.message });
+    return;
+  }
+  try {
+    writeAccountsToFile(accounts);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(`[Accounts] write failed: ${error.message}`);
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
 
 async function getDynamicTokenInfo(account) {
   const callback = `jsonp_callback_${Date.now()}`;
