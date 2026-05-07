@@ -10,6 +10,7 @@ const accountConfig = {
   uname: process.env.DLDL_UNAME || 'laogao666666',
   upwd: process.env.DLDL_UPWD || '1234561239'
 };
+const qrSessionAccountMap = new Map();
 const tokenApiBaseParams = {
   autoLogin: 'true',
   pid: '46',
@@ -35,12 +36,31 @@ function fetchText(url) {
   });
 }
 
-async function getDynamicTokenInfo() {
+function getAccountFromRequest(req) {
+  const referer = req.get('referer') || '';
+  let refererUname = '';
+  let refererUpwd = '';
+  try {
+    if (referer) {
+      const refererUrl = new URL(referer);
+      refererUname = refererUrl.searchParams.get('uname') || '';
+      refererUpwd = refererUrl.searchParams.get('upwd') || '';
+    }
+  } catch (error) {
+    // ignore invalid referer
+  }
+  return {
+    uname: req.query.uname || refererUname || accountConfig.uname,
+    upwd: req.query.upwd || refererUpwd || accountConfig.upwd
+  };
+}
+
+async function getDynamicTokenInfo(account) {
   const callback = `jsonp_callback_${Date.now()}`;
   const params = new URLSearchParams({
     ...tokenApiBaseParams,
-    uname: accountConfig.uname,
-    upwd: accountConfig.upwd,
+    uname: account.uname,
+    upwd: account.upwd,
     callback
   });
   const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
@@ -73,18 +93,23 @@ const fakeLoginData = {
 // 拦截扫码接口
 app.use('/pc/getCodeInfo', async (req, res) => {
   console.log('[Mock] getCodeInfo');
+  const sessionId = String(req.query.id || '');
+  const account = qrSessionAccountMap.get(sessionId) || getAccountFromRequest(req);
   let dynamicData = {};
   try {
-    dynamicData = await getDynamicTokenInfo();
-    console.log('[Mock] token fetched from s-api.37.com.cn');
+    dynamicData = await getDynamicTokenInfo(account);
+    console.log(`[Mock] token fetched for account: ${account.uname}`);
   } catch (error) {
     console.error(`[Mock] token fetch failed, fallback to static token: ${error.message}`);
   }
   res.json({ state: 1, msg: "success", data: { ...fakeLoginData, ...dynamicData } });
 });
 app.use('/pc/getId', (req, res) => {
-  console.log('[Mock] getId');
-  res.json({ state: 1, msg: "success", data: "mock_id_" + Date.now() });
+  const account = getAccountFromRequest(req);
+  const id = `mock_id_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  qrSessionAccountMap.set(id, account);
+  console.log(`[Mock] getId => ${id} for account: ${account.uname}`);
+  res.json({ state: 1, msg: "success", data: id });
 });
 // 静态文件服务
 app.use(express.static(__dirname));
@@ -167,4 +192,5 @@ app.listen(PORT, () => {
   console.log(`✅ Mock interceptors active`);
   console.log(`✅ Account uname: ${accountConfig.uname}`);
   console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
+  console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
 });
