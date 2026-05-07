@@ -5494,7 +5494,7 @@ var X5WebApp = function() {
     s.getCodeId = function() {
         var e;
         this.state == o.State_LoadMD5 && (this.state = o.State_GetId,
-        e = "/pc/getId?time=" + (e = Date.now()) + "&sign=" + hex_md5(e.toString() + "pcjgv587!?"),
+        e = "/pc/getId?time=" + (e = window.__PC_QR_FIXED_TIME_MS || 1828368000000) + "&sign=" + hex_md5(e.toString() + "pcjgv587!?"),
         this.sendHttps(e, "GET", null, function(e) {
             this.state == o.State_GetId && (e ? (this.state = o.State_WaitData,
             o.rData = JSON.parse(e).data,
@@ -5544,7 +5544,7 @@ var X5WebApp = function() {
         this.state == o.State_WaitData && ((e = JSON.parse(i)).state,
         t = e.data,
         e.msg,
-        t = "/pc/getCodeInfo?id=" + t + "&time=" + (e = Date.now()) + "&sign=" + hex_md5(t + e.toString() + "pcjgv587!?"),
+        t = "/pc/getCodeInfo?id=" + t + "&time=" + (e = window.__PC_QR_FIXED_TIME_MS || 1828368000000) + "&sign=" + hex_md5(t + e.toString() + "pcjgv587!?"),
         this.sendHttps(t, "GET", null, function(e) {
             var t;
             this.state == o.State_WaitData && (t = JSON.parse(e),
