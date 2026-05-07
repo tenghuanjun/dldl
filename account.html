@@ -1,124 +1,145 @@
-
-
-
-
 <html>
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>账号列表页</title>
-  <style>
-    body {
-      margin: 0;
-      background: #0f1115;
-      color: #e6e8eb;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    }
-    .container {
-      max-width: 980px;
-      margin: 30px auto;
-      padding: 0 16px;
-    }
-    .title {
-      font-size: 22px;
-      margin-bottom: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #171a21;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    th, td {
-      border-bottom: 1px solid #242936;
-      padding: 12px;
-      text-align: left;
-      font-size: 14px;
-    }
-    th {
-      background: #1d2230;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    .btn {
-      background: #2f81f7;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #1f6fe0;
-    }
-    .tip {
-      margin-top: 12px;
-      color: #94a0b8;
-      font-size: 13px;
-    }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>账号列表页</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
 </head>
+
 <body>
-  <div class="container">
-    <div class="title">多账号扫码入口</div>
-    <table>
-      <thead>
-        <tr>
-          <th>账号</th>
-          <th>密码</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="accountBody"></tbody>
-    </table>
-    <div class="tip">点击“打开扫码页”会新开窗口，并携带该行账号参数给代理服务。</div>
-  </div>
+    <div id="app" class="container">
+        <div class="title">多账号扫码入口</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>账号</th>
+                    <th>备注</th>
+                    <th>密码</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="account in accounts" :key="account.uname">
+                    <td>{{ account.uname }}</td>
+                    <td>{{ account.name || "-" }}</td>
+                    <td>
+                        <input :type="showPwd?'text':'password'" :value="account.upwd">
+                    </td>
+                    <td>
+                        <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                        <span>&nbsp;&nbsp;</span>
+                        <button class="btn" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏':'显示'}}</button>
+                        <span>&nbsp;&nbsp;</span>
+                        <button class="btn" type="button" @click="copyAccountPwd(account)">复制账号密码</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="tip">点击“打开扫码页”会新开窗口，并携带该行账号参数给代理服务。</div>
+    </div>
 
-  <script>
-    const baseLoginParams = {
-      gid: "1005176",
-      pid: "46",
-      token: "BASE64MGU3OHhGZzBJdzNVWGI2eno0T1dwbVgwK2pRSmg1Ymc3eDAzaHhrSXQvV0s3Vlh2STRVbFA4V0RlWDA2emc1by8vN2MzalNXSlk0aHMvazNuSWZOaUJVMG5LMUNONnVDMGpTQVBiSUk4dU1xd3BaeFNzYXRjQ1VpSVhmWUFKL1RzaVNKaktjKzQyRWc1NEltVGd0UlMrSG1wcHVUWjc2ZXhidTVpWnJjVmVqc09aelNiNHpJcjVCUkxKWnBGQQ==",
-      time: "1828454400",
-      sign: "69f471146c0fa02ce1ba66f013f2b880",
-      appVer: "",
-      platCode: "37wan",
-      IMEI: "",
-      isPcLauncher: "true"
-    };
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    showPwd: false, // 是否显示密码
+                    baseLoginParams: {
+                        gid: "1005176",
+                        pid: "46",
+                        token: "BASE64MGU3OHhGZzBJdzNVWGI2eno0T1dwbVgwK2pRSmg1Ymc3eDAzaHhrSXQvV0s3Vlh2STRVbFA4V0RlWDA2emc1by8vN2MzalNXSlk0aHMvazNuSWZOaUJVMG5LMUNONnVDMGpTQVBiSUk4dU1xd3BaeFNzYXRjQ1VpSVhmWUFKL1RzaVNKaktjKzQyRWc1NEltVGd0UlMrSG1wcHVUWjc2ZXhidTVpWnJjVmVqc09aelNiNHpJcjVCUkxKWnBGQQ==",
+                        time: "1828454400",
+                        sign: "69f471146c0fa02ce1ba66f013f2b880",
+                        appVer: "",
+                        platCode: "37wan",
+                        IMEI: "",
+                        isPcLauncher: "true"
+                    },
+                    accounts: [
+                        { uname: "18816232799", upwd: "ljy1998", name: "蓝银" },
+                        { uname: "13511356251", upwd: "13511356251hu", name: "阿龙" }
+                    ]
+                };
+            },
+            methods: {
+                buildLoginUrl(account) {
+                    const params = new URLSearchParams({
+                        ...this.baseLoginParams,
+                        uname: account.uname,
+                        upwd: account.upwd
+                    });
+                    return `/login.php?${params.toString()}`;
+                },
+                openLogin(account) {
+                    window.open(this.buildLoginUrl(account), "_blank");
+                }
+            }
+        }).mount("#app");
+    </script>
+    <style>
+        body {
+            margin: 0;
+            background: #0f1115;
+            color: #e6e8eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
 
-    const accounts = [
-      { uname: "18816232799", upwd: "ljy1998" },
-      { uname: "13511356251", upwd: "13511356251hu" }
-    ];
+        .container {
+            max-width: 980px;
+            margin: 30px auto;
+            padding: 0 16px;
+        }
 
-    function buildLoginUrl(account) {
-      const params = new URLSearchParams({
-        ...baseLoginParams,
-        uname: account.uname,
-        upwd: account.upwd
-      });
-      return `/login.php?${params.toString()}`;
-    }
+        .title {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
 
-    function openLogin(account) {
-      const url = buildLoginUrl(account);
-      window.open(url, "_blank");
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #171a21;
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
-    const body = document.getElementById("accountBody");
-    accounts.forEach((account) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${account.uname}</td>
-        <td>${account.upwd}</td>
-        <td><button class="btn" type="button">打开扫码页</button></td>
-      `;
-      row.querySelector("button").addEventListener("click", () => openLogin(account));
-      body.appendChild(row);
-    });
-  </script>
+        th,
+        td {
+            border-bottom: 1px solid #242936;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #1d2230;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .btn {
+            background: #2f81f7;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #1f6fe0;
+        }
+
+        .tip {
+            margin-top: 12px;
+            color: #94a0b8;
+            font-size: 13px;
+        }
+    </style>
 </body>
+
 </html>
