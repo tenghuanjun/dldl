@@ -86,19 +86,47 @@ function readAccountsFromFile() {
   try {
     const text = fs.readFileSync(accountsFilePath, 'utf8');
     const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [];
+    // 严格新格式：{ area: string[], list: Record<string, Account[]> }
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    throw new Error('account.json must be an object: { area, list }');
   } catch (error) {
     console.error(`[Accounts] read failed: ${error.message}`);
-    return [];
+    return { area: [], list: {} };
   }
 }
 
-function validateAccounts(accounts) {
-  if (!Array.isArray(accounts)) return { ok: false, message: 'accounts must be an array' };
-  for (const acc of accounts) {
-    if (!acc || typeof acc !== 'object') return { ok: false, message: 'account item invalid' };
-    if (!String(acc.uname || '').trim()) return { ok: false, message: 'uname is required' };
-    if (!String(acc.upwd || '').trim()) return { ok: false, message: 'upwd is required' };
+function validateAccountItem(acc) {
+  if (!acc || typeof acc !== 'object') return { ok: false, message: 'account item invalid' };
+  if (!String(acc.uname || '').trim()) return { ok: false, message: 'uname is required' };
+  if (!String(acc.upwd || '').trim()) return { ok: false, message: 'upwd is required' };
+  return { ok: true };
+}
+
+function validateAccounts(payload) {
+  // 严格新格式：{ area: string[], list: Record<string, Account[]> }
+  if (!payload || typeof payload !== 'object') return { ok: false, message: 'accounts payload invalid' };
+  const area = payload.area;
+  const list = payload.list;
+  if (!Array.isArray(area)) return { ok: false, message: 'area must be an array' };
+  if (!list || typeof list !== 'object') return { ok: false, message: 'list must be an object' };
+  for (const a of area) {
+    const key = String(a || '').trim();
+    if (!key) return { ok: false, message: 'area item invalid' };
+    const accounts = list[key];
+    if (!Array.isArray(accounts)) return { ok: false, message: `list[${key}] must be an array` };
+    for (const acc of accounts) {
+      const v = validateAccountItem(acc);
+      if (!v.ok) return v;
+    }
+  }
+  // 允许 list 里多余的区服 key（前端会追加渲染）
+  for (const k of Object.keys(list)) {
+    const accounts = list[k];
+    if (!Array.isArray(accounts)) return { ok: false, message: `list[${k}] must be an array` };
+    for (const acc of accounts) {
+      const v = validateAccountItem(acc);
+      if (!v.ok) return v;
+    }
   }
   return { ok: true };
 }
@@ -116,14 +144,14 @@ app.get('/accounts', (req, res) => {
 
 app.post('/accounts', (req, res) => {
   const body = req.body || {};
-  const accounts = Array.isArray(body) ? body : body.accounts;
-  const validation = validateAccounts(accounts);
+  const accountsPayload = body.accounts ?? body;
+  const validation = validateAccounts(accountsPayload);
   if (!validation.ok) {
     res.status(400).json({ ok: false, message: validation.message });
     return;
   }
   try {
-    writeAccountsToFile(accounts);
+    writeAccountsToFile(accountsPayload);
     res.json({ ok: true });
   } catch (error) {
     console.error(`[Accounts] write failed: ${error.message}`);
