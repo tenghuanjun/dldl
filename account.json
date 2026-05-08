@@ -1,27 +1,30 @@
 {
-    "area": [
-        "海神3017",
-        "海神3302"
+  "area": [
+    "海神3017",
+    "海神3302"
+  ],
+  "list": {
+    "海神3017": [
+      {
+        "uname": "13015924105",
+        "upwd": "Aa970802",
+        "name": "桐生一马",
+        "token": "BASE64ZjlhNWNHcmxndHBCdDh5bkNrVjRaQVJRZXJINFozclU2UXV4OFIzYXp2OXhsTXN0elNTc2FUSUdtQWt1b2w5Q1BvVmcveXZWMHZlelVhMlZkeXBBMFRSVlhiMDlUOXllTHM0bU1YZWZuQmtFdEZiZm1iTUQwQVk2dmpSRDgrOXNyTVhEU3BVMWRIR0llemlKNHBIaVNJMDI1Wnh0SnpyMFNMU1M4dENpdWlpd0c5L1A3SUdjVmN0cnRneGpNaUgxVEE=",
+        "time": "1778231189",
+        "sign": "ad14c098194871f690ebe790f82ebaa5"
+      }
     ],
-    "list": {
-        "海神3017": [
-            {
-                "uname": "13015924105",
-                "upwd": "Aa970802",
-                "name": "桐生一马"
-            }
-        ],
-        "海神3302": [
-            {
-                "uname": "18816232799",
-                "upwd": "ljy1998",
-                "name": "蓝银"
-            },
-            {
-                "uname": "13511356251",
-                "upwd": "13511356251hu",
-                "name": "阿龙"
-            }
-        ]
-    }
+    "海神3302": [
+      {
+        "uname": "18816232799",
+        "upwd": "ljy1998",
+        "name": "蓝银"
+      },
+      {
+        "uname": "13511356251",
+        "upwd": "13511356251hu",
+        "name": "阿龙"
+      }
+    ]
+  }
 }

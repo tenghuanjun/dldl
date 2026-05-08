@@ -28,7 +28,10 @@
                             <div class="nick">{{ account.name || '-' }}</div>
                             <div class="uname">{{ account.uname }}</div>
                         </div>
-                        <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
+                            <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                        </div>
                     </div>
 
                     <div class="card-row">
@@ -64,6 +67,54 @@
                     this.areas = parsed;
                 } catch (e) {
                     console.error('load accounts failed', e);
+                }
+            },
+            async saveAccounts() {
+                const payload = {
+                    area: this.areas.map(group => group.area),
+                    list: {}
+                };
+                for (const group of this.areas) {
+                    payload.list[group.area] = group.accounts.map(account => ({
+                        uname: account.uname,
+                        upwd: account.upwd,
+                        name: account.name,
+                        token: account.token,
+                        time: account.time,
+                        sign: account.sign
+                    }));
+                }
+                const resp = await fetch('/accounts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accounts: payload })
+                });
+                const result = await resp.json();
+                if (!resp.ok || !result.ok) {
+                    throw new Error(result?.message || '保存账号失败');
+                }
+            },
+            findAccountLocation(account) {
+                for (const group of this.areas) {
+                    const index = group.accounts.findIndex(item => item.uname === account.uname && item.upwd === account.upwd);
+                    if (index >= 0) {
+                        return { group, index };
+                    }
+                }
+                return null;
+            },
+            async persistToken(account, tokenInfo) {
+                const location = this.findAccountLocation(account);
+                if (!location) return;
+                const target = location.group.accounts[location.index];
+                target.token = tokenInfo.token;
+                target.time = tokenInfo.time;
+                target.sign = tokenInfo.sign;
+                try {
+                    await this.saveAccounts();
+                } catch (e) {
+                    console.error('save token failed', e);
+                    alert(`token 已获取，但写回 account.json 失败：${e?.message || e}`);
                 }
             },
                 normalizeAccounts(payload) {
@@ -158,6 +209,13 @@
                     return hex_md5(str);
                 },
                  async fetchToken(account) {
+                    if (account.token) {
+                        return {
+                            token: String(account.token),
+                            time: String(account.time || ""),
+                            sign: String(account.sign || "")
+                        };
+                    }
                     const API_KEY = "Jp*4Y8vQOYck2*&Z";
                     const time = String(Math.floor(Date.now() / 1000));
                     const signParams = {
@@ -203,6 +261,7 @@
                     const win = window.open("about:blank", "_blank", "width=600,height=400");
                     try {
                         const tokenInfo = await this.fetchToken(account);
+                        await this.persistToken(account, tokenInfo);
                         const url = this.buildLoginUrl({
                             ...account,
                             ...tokenInfo
@@ -213,6 +272,16 @@
                         console.error("openLogin token failed", e);
                         if (win) win.close();
                         alert(`获取 token 失败：${e?.message || e}`);
+                    }
+                },
+                async refreshToken(account) {
+                    try {
+                        const tokenInfo = await this.fetchToken({ ...account, token: "", time: "", sign: "" });
+                        await this.persistToken(account, tokenInfo);
+                        alert(`已刷新并保存 ${account.uname} 的 token`);
+                    } catch (e) {
+                        console.error("refreshToken failed", e);
+                        alert(`刷新 token 失败：${e?.message || e}`);
                     }
                 },
                 
@@ -257,6 +326,11 @@
         .btn.btn-secondary {
             background: #2a3345;
             color: #d6dbe6;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .btn.btn-secondary:hover {
@@ -318,6 +392,13 @@
             justify-content: space-between;
             gap: 10px;
             margin-bottom: 10px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .card-name .nick {
