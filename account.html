@@ -12,6 +12,7 @@
     <div id="app" class="container">
         <div class="title">多账号扫码入口</div>
         <div class="toolbar">
+            <button class="btn btn-secondary" type="button" @click="openAccountModal()">新增账号</button>
             <button class="btn btn-secondary" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏密码':'显示密码'}}</button>
         </div>
 
@@ -29,6 +30,7 @@
                             <div class="uname">{{ account.uname }}</div>
                         </div>
                         <div class="card-actions">
+                            <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
                             <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
                             <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
                         </div>
@@ -42,6 +44,38 @@
             </div>
         </section>
         <div class="tip">点击“打开扫码页”会新开窗口：先请求 h5sdk/login 获取 token，再按固定参数格式跳转到 login.php。</div>
+
+        <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
+            <div class="modal">
+                <div class="modal-title">{{ accountModalMode === 'create' ? '新增账号' : '编辑账号' }}</div>
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label class="form-label">区服</label>
+                        <input class="form-input" v-model="accountForm.area" list="area-options" placeholder="可选择已有区服或直接输入新增区服">
+                        <datalist id="area-options">
+                            <option v-for="group in areas" :key="group.area" :value="group.area"></option>
+                        </datalist>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">昵称 name</label>
+                        <input class="form-input" v-model="accountForm.name" placeholder="请输入昵称">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">账号 uname</label>
+                        <input class="form-input" v-model="accountForm.uname" placeholder="请输入账号">
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">密码 upwd</label>
+                        <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
+                    </div>
+                </div>
+                <div class="form-help">保存后会写入 `account.json`，新增账号会自动创建对应区服分组。</div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
+                    <button class="btn" type="button" @click="submitAccountModal()">保存</button>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="md5.js"></script>
     <script>
@@ -51,7 +85,11 @@
             data() {
                 return {
                     showPwd: false, // 是否显示密码
-                    areas: []
+                    areas: [],
+                    accountModalVisible: false,
+                    accountModalMode: 'create',
+                    accountForm: { area: '', name: '', uname: '', upwd: '' },
+                    editingAccountRef: null
                 };
             },
         mounted() {
@@ -102,6 +140,82 @@
                     }
                 }
                 return null;
+            },
+            findAccountByUname(uname) {
+                for (const group of this.areas) {
+                    const index = group.accounts.findIndex(item => item.uname === uname);
+                    if (index >= 0) {
+                        return { group, index, account: group.accounts[index] };
+                    }
+                }
+                return null;
+            },
+            normalizeAreaName(area) {
+                return String(area || '').trim();
+            },
+            ensureArea(areaName) {
+                const targetArea = this.normalizeAreaName(areaName);
+                if (!targetArea) throw new Error('区服不能为空');
+                let group = this.areas.find(item => item.area === targetArea);
+                if (!group) {
+                    group = { area: targetArea, accounts: [] };
+                    this.areas.push(group);
+                }
+                return group;
+            },
+            openAccountModal(account = null) {
+                if (account) {
+                    this.accountModalMode = 'edit';
+                    this.accountForm = {
+                        area: this.findAccountLocation(account)?.group.area || '',
+                        name: account.name || '',
+                        uname: account.uname || '',
+                        upwd: account.upwd || ''
+                    };
+                    this.editingAccountRef = account;
+                } else {
+                    this.accountModalMode = 'create';
+                    this.accountForm = { area: this.areas[0]?.area || '', name: '', uname: '', upwd: '' };
+                    this.editingAccountRef = null;
+                }
+                this.accountModalVisible = true;
+            },
+            closeAccountModal() {
+                this.accountModalVisible = false;
+                this.editingAccountRef = null;
+            },
+            async submitAccountModal() {
+                const area = this.normalizeAreaName(this.accountForm.area);
+                const name = String(this.accountForm.name || '').trim();
+                const uname = String(this.accountForm.uname || '').trim();
+                const upwd = String(this.accountForm.upwd || '').trim();
+                if (!area) throw new Error('请选择或填写区服');
+                if (!uname) throw new Error('请输入账号 uname');
+                if (!upwd) throw new Error('请输入密码 upwd');
+                const targetGroup = this.ensureArea(area);
+                if (this.accountModalMode === 'create') {
+                    if (this.findAccountByUname(uname)) throw new Error('该 uname 已存在');
+                    targetGroup.accounts.push({ name, uname, upwd });
+                } else {
+                    const location = this.findAccountLocation(this.editingAccountRef || {});
+                    if (!location) throw new Error('未找到要编辑的账号');
+                    const target = location.group.accounts[location.index];
+                    const existing = this.findAccountByUname(uname);
+                    if (existing && existing.account !== target) throw new Error('该 uname 已存在');
+                    if (location.group.area !== targetGroup.area) {
+                        location.group.accounts.splice(location.index, 1);
+                        targetGroup.accounts.push(target);
+                    }
+                    target.name = name;
+                    target.uname = uname;
+                    target.upwd = upwd;
+                }
+                await this.saveAccounts();
+                this.closeAccountModal();
+                await this.loadAccounts();
+            },
+            editAccount(account) {
+                this.openAccountModal(account);
             },
             async persistToken(account, tokenInfo) {
                 const location = this.findAccountLocation(account);
@@ -435,6 +549,79 @@
             padding: 8px 10px;
             font-size: 13px;
             outline: none;
+        }
+
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+        }
+
+        .modal {
+            width: min(560px, 100%);
+            background: #171a21;
+            border: 1px solid #242936;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            padding: 18px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: #94a0b8;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0f1115;
+            border: 1px solid #242936;
+            border-radius: 8px;
+            color: #e6e8eb;
+            padding: 10px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #94a0b8;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         .tip {

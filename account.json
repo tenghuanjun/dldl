@@ -1,7 +1,8 @@
 {
   "area": [
     "海神3017",
-    "海神3302"
+    "海神3302",
+    "海神3150"
   ],
   "list": {
     "海神3017": [
@@ -18,12 +19,25 @@
       {
         "uname": "18816232799",
         "upwd": "ljy1998",
-        "name": "蓝银"
+        "name": "蓝银",
+        "token": "BASE64MzliMXFDODlQM2xJZVp5NmpIRUtIS3VITXV2dTZQVzJlVGlIR0RTTFZJQTM5ZVI5TUl3RUtKK3JGbUlnb0RBY2ZndXc3bVYwZGFoOG5oNG80NzZHdmYvcEIvSWcveTAvUnMxQ1JqQjNTaGlFTVdMNjBaSW85Z1BnME5UK1ZIQjFBVTg1R3F4L3VPK0N3WXA3R1luKzBqbHR4aUFkSnN6NUVLSldYaUovYXM0b1hnL3ZtYVEycHR0b1J5L0pUZUpTa2c=",
+        "time": "1778231421",
+        "sign": "f92d9eedb13aa653f24853620f2bba6d"
       },
       {
         "uname": "13511356251",
         "upwd": "13511356251hu",
         "name": "阿龙"
+      }
+    ],
+    "海神3150": [
+      {
+        "uname": "37zd3aca2f4b",
+        "upwd": "zxc050505",
+        "name": "酷酷",
+        "token": "BASE64OGNkOUowYUM3R0FPekJ4Y3dBOFNXTmpIVlhEOUZmMGVrdjBDWjRIMzhsbitIWkliNWNmMVNIRTEzNVRqSDg3K3N4cEIxT0tDNEhlbFR6RHh1cUR0UWZjUzUvWk1obzRMdkZNR3dRVlhJLzdWVkhhWm5zOTY5bGdzNDJrZU9MUXpuZEpRb1U2dDdpRy83WE9XQlBIb1NzYlhmQk1mN0luelZneXZoNkJzaW9HUENrdEdoOHVjenNreEN4dkNNcUUrZTM3TEpn",
+        "time": "1778232418",
+        "sign": "31caa14acebf10643e4fbdc6b8050c9f"
       }
     ]
   }
