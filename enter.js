@@ -1,4 +1,4 @@
-var pageVer = 202602111815
+var pageVer = 202603131821
   , defaultLang = "zh"
   , zh_i18_Cfg = {
     10104: "佩戴飞龙宝宝可立即提升经验效率",
@@ -3810,6 +3810,7 @@ var X5WebApp = function() {
     ,
     t.onOpen = function() {
         this.width = 768,
+        this.inputName.font = "黑体",
         this.inputName.y += 7,
         this.inputName.editable = !X5WebApp.instance.isTime("2025/9/2 18:00:00", "2025/9/4 18:00:00"),
         this.btnEnter.on(cc.Event.CLICK, this, this.clickEnterGameBtnHandler),
@@ -3841,6 +3842,7 @@ var X5WebApp = function() {
         this.txtInfo.fontSize = 18,
         this.txtInfo.align = "center",
         this.txtInfo.color = "#929aa1",
+        this.txtInfo.font = "黑体",
         this.selectSex = .5 < Math.random() ? 1 : 2,
         this.refresh(!1),
         this._showCheckBtn = X5WebApp.instance.isNewRole,
@@ -5494,7 +5496,7 @@ var X5WebApp = function() {
     s.getCodeId = function() {
         var e;
         this.state == o.State_LoadMD5 && (this.state = o.State_GetId,
-        e = "/pc/getId?time=" + (e = window.__PC_QR_FIXED_TIME_MS || 1828368000000) + "&sign=" + hex_md5(e.toString() + "pcjgv587!?"),
+        e = "https://app.xxh5.z7xz.com/pc/getId?time=" + (e = Date.now()) + "&sign=" + hex_md5(e.toString() + "pcjgv587!?"),
         this.sendHttps(e, "GET", null, function(e) {
             this.state == o.State_GetId && (e ? (this.state = o.State_WaitData,
             o.rData = JSON.parse(e).data,
@@ -5544,12 +5546,12 @@ var X5WebApp = function() {
         this.state == o.State_WaitData && ((e = JSON.parse(i)).state,
         t = e.data,
         e.msg,
-        t = "/pc/getCodeInfo?id=" + t + "&time=" + (e = window.__PC_QR_FIXED_TIME_MS || 1828368000000) + "&sign=" + hex_md5(t + e.toString() + "pcjgv587!?"),
+        t = "https://app.xxh5.z7xz.com/pc/getCodeInfo?id=" + t + "&time=" + (e = Date.now()) + "&sign=" + hex_md5(t + e.toString() + "pcjgv587!?"),
         this.sendHttps(t, "GET", null, function(e) {
             var t;
             this.state == o.State_WaitData && (t = JSON.parse(e),
             null != e && "{}" != e && t.hasOwnProperty("state") && t.hasOwnProperty("msg") && t.hasOwnProperty("data") && 6 != t.state ? 1 != t.state || null == t.data || (t.data,
-            0) ? setTimeout(this.waitdataFun.bind(this), 1e3, [i]) : window.location.href = "/login.php?gid=" + t.data.gid + "&pid=" + t.data.pid + "&token=" + t.data.token + "&time=" + t.data.time + "&sign=" + t.data.sign + "&appVer=" + t.data.appVer + "&platCode=" + t.data.platCode + "&IMEI=" + t.data.IMEI + "&isPcLauncher=true" : (console.error("showCodeImg fail???"),
+            0) ? setTimeout(this.waitdataFun.bind(this), 1e3, [i]) : window.location.href = "https://app.xxh5.z7xz.com/login.php?gid=" + t.data.gid + "&pid=" + t.data.pid + "&token=" + t.data.token + "&time=" + t.data.time + "&sign=" + t.data.sign + "&appVer=" + t.data.appVer + "&platCode=" + t.data.platCode + "&IMEI=" + t.data.IMEI + "&isPcLauncher=true" : (console.error("showCodeImg fail???"),
             setTimeout(this.showCode.bind(this), 1e3)))
         }
         .bind(this), function() {

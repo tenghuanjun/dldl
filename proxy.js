@@ -11,8 +11,8 @@ const accountsFilePath = path.join(__dirname, 'account.json');
 app.use(express.json({ limit: '1mb' }));
 
 const accountConfig = {
-  uname: process.env.DLDL_UNAME || 'laogao666666',
-  upwd: process.env.DLDL_UPWD || '1234561239'
+  uname: process.env.DLDL_UNAME,
+  upwd: process.env.DLDL_UPWD
 };
 const qrSessionAccountMap = new Map();
 const tokenApiBaseParams = {
@@ -40,7 +40,29 @@ function fetchText(url) {
   });
 }
 
+function parseCookies(req) {
+  const header = req.headers && req.headers.cookie;
+  const out = {};
+  if (!header) return out;
+  for (const part of String(header).split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 0) continue;
+    const key = part.slice(0, idx).trim();
+    const val = part.slice(idx + 1).trim();
+    if (!key) continue;
+    try {
+      out[key] = decodeURIComponent(val);
+    } catch (_) {
+      out[key] = val;
+    }
+  }
+  return out;
+}
+
 function getAccountFromRequest(req) {
+  const cookies = parseCookies(req);
+  const cookieUname = String(cookies.dldl_uname || '').trim();
+  const cookieUpwd = String(cookies.dldl_upwd || '').trim();
   const referer = req.get('referer') || '';
   let refererUname = '';
   let refererUpwd = '';
@@ -54,8 +76,9 @@ function getAccountFromRequest(req) {
     // ignore invalid referer
   }
   return {
-    uname: req.query.uname || refererUname || accountConfig.uname,
-    upwd: req.query.upwd || refererUpwd || accountConfig.upwd
+    // Priority: explicit query > cookie (set by /login.php) > referer > env
+    uname: req.query.uname || cookieUname || refererUname || accountConfig.uname,
+    upwd: req.query.upwd || cookieUpwd || refererUpwd || accountConfig.upwd
   };
 }
 
@@ -136,7 +159,7 @@ async function getDynamicTokenInfo(account) {
 const fakeLoginData = {
   gid: "1005176",
   pid: "46",
-  token: "BASE64N2MxYkNHQS8wQkNTaVdQVjYrd0o5VWFKS3NuaUoycERXeVFpekVhWjhZZ2RoNGIrZEg1dm5xTUN0MGIybVBRTVRnNkgwNm5pYTdxenR3RmlzVFVyYkNFZDl2RXlLbkV3SUtXS3k0S2pNNnZRN2FoTElEQ2dtcHZHRE5YZVFjUS9vTGlISTF0cThpVjNMY0N0b05PaXU4b2lRZk4zWXlDeFg2U05oejE1a3NEbTMrdjRFN0NtdnZ2aFc4QVE3VTlwYm5GMkdn",
+  token: "",
   time: "1778137103",
   sign: "8f44cb6da674f966231cb60432ba5b07",
   appVer: "134",
@@ -164,6 +187,26 @@ app.use('/pc/getId', (req, res) => {
   console.log(`[Mock] getId => ${id} for account: ${account.uname}`);
   res.json({ state: 1, msg: "success", data: id });
 });
+// h5sdk/login 代理，处理签名并转发请求
+app.use('/api/h5sdk/login', async (req, res) => {
+  console.log('[h5sdk/login] request:', req.query.uname);
+  const callback = `jsonp_callback_${Date.now()}`;
+  const params = new URLSearchParams(req.query);
+  params.set('callback', callback);
+  // 移除 sign，让服务器自己验证（或我们需要生成正确的 sign）
+  // 由于 API_KEY 未知，直接转发原参数
+  const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
+  console.log('[h5sdk/login] forwarding to:', url);
+  try {
+    const responseText = await fetchText(url);
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.end(responseText);
+  } catch (error) {
+    console.error('[h5sdk/login] failed:', error.message);
+    res.status(500).json({ state: 0, msg: error.message });
+  }
+});
+
 // 静态文件服务
 app.use(express.static(__dirname));
 // 代理所有其他请求
@@ -190,7 +233,7 @@ app.use('/', createProxyMiddleware({
           );
           body = body.replace(
             /(<script src=['"]\/qq_res\/enter\.js[^>]*><\/script>)/,
-            `<script>window.__PC_QR_FIXED_TIME_MS=${fixedQrTimeMs};</script>\n    $1`
+            `<script>(function(){\n  window.__PC_QR_FIXED_TIME_MS=${fixedQrTimeMs};\n  try{var p=new URLSearchParams(location.search||\"\");window.__DLDL_PROXY_UNAME=p.get(\"uname\")||\"\";window.__DLDL_PROXY_UPWD=p.get(\"upwd\")||\"\";}catch(_){window.__DLDL_PROXY_UNAME=\"\";window.__DLDL_PROXY_UPWD=\"\";}\n\n  // 兜底：不依赖 enter.js 的字符串替换是否命中，运行时强制给扫码请求补上 uname/upwd。\n  try{\n    var _open=XMLHttpRequest.prototype.open;\n    XMLHttpRequest.prototype.open=function(method,url){\n      try{\n        var uStr=String(url||\"\");\n        if(uStr){\n          var a=window.__DLDL_PROXY_UNAME||\"\";\n          var b=window.__DLDL_PROXY_UPWD||\"\";\n          if((uStr.indexOf(\"/pc/getId\")==0||uStr.indexOf(\"/pc/getCodeInfo\")==0) && (a||b)){\n            var u=new URL(uStr, location.origin);\n            if(a && !u.searchParams.has(\"uname\")) u.searchParams.set(\"uname\", a);\n            if(b && !u.searchParams.has(\"upwd\")) u.searchParams.set(\"upwd\", b);\n            url=u.pathname + (u.search||\"\");\n            arguments[1]=url;\n          }\n        }\n      }catch(_){ }\n      return _open.apply(this, arguments);\n    };\n  }catch(_){ }\n})();</script>\n    $1`
           );
           
           // 同步上游状态和基础响应头（修改 body 后移除长度/压缩相关头）
@@ -205,6 +248,19 @@ app.use('/', createProxyMiddleware({
             }
           });
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.setHeader('Referrer-Policy', 'unsafe-url');
+          // 让后续 /pc/* 请求不依赖 query/referrer，也能稳定拿到账号
+          try {
+            const qUname = String(req.query.uname || '').trim();
+            const qUpwd = String(req.query.upwd || '').trim();
+            if (qUname && qUpwd) {
+              const cookieAttrs = 'Path=/; SameSite=Lax';
+              res.append('Set-Cookie', `dldl_uname=${encodeURIComponent(qUname)}; ${cookieAttrs}`);
+              res.append('Set-Cookie', `dldl_upwd=${encodeURIComponent(qUpwd)}; ${cookieAttrs}`);
+            }
+          } catch (_) {
+            // ignore
+          }
           res.end(body);
         });
         return;
@@ -219,6 +275,26 @@ app.use('/', createProxyMiddleware({
           body = body.replace(/https:\/\/app\.xxh5\.z7xz\.com\/pc\/getId/g, '/pc/getId');
           body = body.replace(/https:\/\/app\.xxh5\.z7xz\.com\/pc\/getCodeInfo/g, '/pc/getCodeInfo');
           body = body.replace(/https:\/\/dldl\.50pk\.com\/login\.php\?/g, '/login.php?');
+          const accQsMin =
+            '+(window.__DLDL_PROXY_UNAME?"&uname="+encodeURIComponent(window.__DLDL_PROXY_UNAME):"")+(window.__DLDL_PROXY_UPWD?"&upwd="+encodeURIComponent(window.__DLDL_PROXY_UPWD):"")';
+          body = body.replace(
+            /\/pc\/getId\?time="\+(\([^)]+\))\+"&sign="\+hex_md5\(e\.toString\(\)\+"pcjgv587!?"\)/g,
+            `"/pc/getId?time="+$1+"&sign="+hex_md5(e.toString()+"pcjgv587!?")${accQsMin}`
+          );
+          body = body.replace(
+            /\/pc\/getCodeInfo\?id="\+t\+\+"&time="\+(\([^)]+\))\+"&sign="\+hex_md5\(t\+e\.toString\(\)\+"pcjgv587!?"\)/g,
+            `"/pc/getCodeInfo?id="+t+"&time="+$1+"&sign="+hex_md5(t+e.toString()+"pcjgv587!?")${accQsMin}`
+          );
+          const accQs =
+            ' + (window.__DLDL_PROXY_UNAME ? "&uname=" + encodeURIComponent(window.__DLDL_PROXY_UNAME) : "") + (window.__DLDL_PROXY_UPWD ? "&upwd=" + encodeURIComponent(window.__DLDL_PROXY_UPWD) : "")';
+          body = body.replace(
+            /\/pc\/getId\?time=" \+ (\([^)]+\)) \+ "&sign=" \+ hex_md5\(e\.toString\(\) \+ "pcjgv587!?"\)/g,
+            `"/pc/getId?time=" + $1 + "&sign=" + hex_md5(e.toString() + "pcjgv587!?")${accQs}`
+          );
+          body = body.replace(
+            /\/pc\/getCodeInfo\?id=" \+ t \+ "&time=" \+ (\([^)]+\)) \+ "&sign=" \+ hex_md5\(t \+ e\.toString\(\) \+ "pcjgv587!?"\)/g,
+            `"/pc/getCodeInfo?id=" + t + "&time=" + $1 + "&sign=" + hex_md5(t + e.toString() + "pcjgv587!?")${accQs}`
+          );
 
           res.statusCode = proxyRes.statusCode;
           Object.entries(proxyRes.headers || {}).forEach(([key, value]) => {
