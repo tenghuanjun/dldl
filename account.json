@@ -778,7 +778,10 @@
       {
         "uname": "18259738401",
         "upwd": "wq8023",
-        "name": "战天い浪子"
+        "name": "战天い浪子",
+        "token": "BASE64MDM0YlJKczJpMmhPdThnNHFSNldTVnlJUWN4ZVhIV2hvSkFXYWZLYXJlaWFlUUNIN0RPQUtlR2ZOUTEyRHM3QUFvQ0xYclAwWDA3VkJpVXJwWHhmWWZYRDNFeTBRVFpZWmpGM2ZPTG5BVDNMSklwKzVaVmZtY2tVdG52K0UrZndhWkJCOGNaT1R4NythamNBTEtIbTdVMnpJdG95akpoTDM4eGhsYmVvV0NocFhwNzRlZDM1WC9tVXhFRWExWnBqWEE%3D",
+        "time": "4932080109",
+        "sign": "9c71cbfa62ecfd4f5a1125d9c6c51367"
       },
       {
         "uname": "499313779",
