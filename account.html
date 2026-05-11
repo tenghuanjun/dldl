@@ -486,11 +486,13 @@
                     return `https://dldl.50pk.com/login.php?${params.toString()}`;
                 },
                 async openLogin(account) {
-                    const win = window.open("about:blank", "_blank", "width=400,height=600");
+                    // 使用唯一窗口名，保证每次点击都新开窗口，不复用旧窗口
+                    const windowName = `dldl_login_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                    const win = window.open("about:blank", windowName, "width=400,height=600");
                     try {
                         const tokenInfo = await this.fetchToken(account);
                         if (!tokenInfo) {
-                            if (win) win.close();
+                            // token 获取失败时保留已打开窗口，避免误关用户已打开页面
                             return;
                         }
                         if (!tokenInfo.fromCache) {
@@ -506,11 +508,14 @@
                             time: tokenInfo.time,
                             sign: tokenInfo.sign
                         });
-                        if (win) win.location.href = url;
-                        else window.location.href = url;
+                        if (win) {
+                            win.location.href = url;
+                        } else {
+                            // 弹窗被拦截时，尽量保持“新开窗口”行为
+                            window.open(url, windowName, "width=400,height=600");
+                        }
                     } catch (e) {
                         console.error("openLogin token failed", e);
-                        if (win) win.close();
                         this.showError(`获取 token 失败：${e?.message || e}`);
                     }
                 },
