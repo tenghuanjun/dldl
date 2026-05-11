@@ -450,7 +450,7 @@
                         gid: "1005176",
                         sversion: "undefined",
                         version: "1.0.4",
-                        time: time,
+                        time: 4129596000,
                         dev: "9c71cbfa62ecfd4f5a1125d9c6c51367",
                         os: "iOS",
                         over: "18.5"
@@ -464,8 +464,10 @@
                     }
                     return {
                         token: String(payload.data.token),
-                        time: String(payload.data.time || time),
-                        sign: String(payload.data.sign || ""),
+                        // time: String(payload.data.time || time),
+                        time: String(4129596000),
+                        // sign: String(payload.data.sign || ""),
+                        sign: String(sign),
                         fromCache: false
                     };
                 },
