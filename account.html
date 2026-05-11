@@ -105,6 +105,47 @@
             this.loadAccounts();
         },
             methods: {
+            showMessage(type, message) {
+                const messageApi = window.ELEMENT && window.ELEMENT.Message;
+                if (typeof messageApi === 'function') {
+                    messageApi({
+                        type,
+                        message,
+                        duration: 2200,
+                        showClose: true
+                    });
+                    return;
+                }
+                // 降级兜底，避免组件库异常导致页面不可用
+                alert(String(message || ''));
+            },
+            showError(message) {
+                this.showMessage('error', message);
+            },
+            showSuccess(message) {
+                this.showMessage('success', message);
+            },
+            failWithMessage(message) {
+                this.showError(message);
+                return null;
+            },
+            async confirmAction(message, title = '提示') {
+                const messageBoxApi = window.ELEMENT && window.ELEMENT.MessageBox;
+                if (!messageBoxApi || typeof messageBoxApi.confirm !== 'function') {
+                    return window.confirm(String(message || title));
+                }
+                try {
+                    await messageBoxApi.confirm(message, title, {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        closeOnClickModal: false
+                    });
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            },
             async loadAccounts() {
                 try {
                     const resp = await fetch('/accounts', { cache: 'no-store' });
@@ -137,8 +178,10 @@
                 });
                 const result = await resp.json();
                 if (!resp.ok || !result.ok) {
-                    throw new Error(result?.message || '保存账号失败');
+                    this.showError(result?.message || '保存账号失败');
+                    return false;
                 }
+                return true;
             },
             findAccountLocation(account) {
                 for (const group of this.areas) {
@@ -163,7 +206,7 @@
             },
             ensureArea(areaName) {
                 const targetArea = this.normalizeAreaName(areaName);
-                if (!targetArea) throw new Error('区服不能为空');
+                if (!targetArea) return this.failWithMessage('区服不能为空');
                 let group = this.areas.find(item => item.area === targetArea);
                 if (!group) {
                     group = { area: targetArea, accounts: [] };
@@ -197,19 +240,20 @@
                 const name = String(this.accountForm.name || '').trim();
                 const uname = String(this.accountForm.uname || '').trim();
                 const upwd = String(this.accountForm.upwd || '').trim();
-                if (!area) throw new Error('请选择或填写区服');
-                if (!uname) throw new Error('请输入账号 uname');
-                if (!upwd) throw new Error('请输入密码 upwd');
+                if (!area) return this.failWithMessage('请选择或填写区服');
+                if (!uname) return this.failWithMessage('请输入账号 uname');
+                if (!upwd) return this.failWithMessage('请输入密码 upwd');
                 const targetGroup = this.ensureArea(area);
+                if (!targetGroup) return;
                 if (this.accountModalMode === 'create') {
-                    if (this.findAccountByUname(uname)) throw new Error('该 uname 已存在');
+                    if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
                     targetGroup.accounts.push({ name, uname, upwd });
                 } else {
                     const location = this.findAccountLocation(this.editingAccountRef || {});
-                    if (!location) throw new Error('未找到要编辑的账号');
+                    if (!location) return this.failWithMessage('未找到要编辑的账号');
                     const target = location.group.accounts[location.index];
                     const existing = this.findAccountByUname(uname);
-                    if (existing && existing.account !== target) throw new Error('该 uname 已存在');
+                    if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
                     if (location.group.area !== targetGroup.area) {
                         location.group.accounts.splice(location.index, 1);
                         targetGroup.accounts.push(target);
@@ -218,7 +262,8 @@
                     target.uname = uname;
                     target.upwd = upwd;
                 }
-                await this.saveAccounts();
+                const saved = await this.saveAccounts();
+                if (!saved) return;
                 this.closeAccountModal();
                 await this.loadAccounts();
             },
@@ -228,31 +273,42 @@
             async deleteEditingAccount() {
                 try {
                     if (this.accountModalMode !== 'edit' || !this.editingAccountRef) {
-                        throw new Error('未找到要删除的账号');
+                        this.showError('未找到要删除的账号');
+                        return;
                     }
                     const location = this.findAccountLocation(this.editingAccountRef);
-                    if (!location) throw new Error('未找到要删除的账号');
+                    if (!location) {
+                        this.showError('未找到要删除的账号');
+                        return;
+                    }
                     const target = location.group.accounts[location.index];
-                    const confirmed = window.confirm(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`);
+                    const confirmed = await this.confirmAction(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`, '删除账号');
                     if (!confirmed) return;
                     location.group.accounts.splice(location.index, 1);
                     if (!location.group.accounts.length) {
                         this.areas = this.areas.filter(item => item.area !== location.group.area);
                     }
-                    await this.saveAccounts();
+                    const saved = await this.saveAccounts();
+                    if (!saved) return;
                     this.closeAccountModal();
                     await this.loadAccounts();
                 } catch (e) {
-                    alert(`删除账号失败：${e?.message || e}`);
+                    this.showError(`删除账号失败：${e?.message || e}`);
                 }
             },
             async deleteArea(group) {
                 try {
                     const areaName = this.normalizeAreaName(group?.area);
-                    if (!areaName) throw new Error('区服名称无效');
+                    if (!areaName) {
+                        this.showError('区服名称无效');
+                        return;
+                    }
                     const target = this.areas.find(item => item.area === areaName);
-                    if (!target) throw new Error('未找到要删除的区服');
-                    const confirmed = window.confirm(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`);
+                    if (!target) {
+                        this.showError('未找到要删除的区服');
+                        return;
+                    }
+                    const confirmed = await this.confirmAction(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`, '删除区服');
                     if (!confirmed) return;
                     this.areas = this.areas.filter(item => item.area !== areaName);
                     if (this.accountModalVisible && this.accountModalMode === 'edit') {
@@ -261,10 +317,11 @@
                             this.closeAccountModal();
                         }
                     }
-                    await this.saveAccounts();
+                    const saved = await this.saveAccounts();
+                    if (!saved) return;
                     await this.loadAccounts();
                 } catch (e) {
-                    alert(`删除区服失败：${e?.message || e}`);
+                    this.showError(`删除区服失败：${e?.message || e}`);
                 }
             },
             async persistToken(account, tokenInfo) {
@@ -278,7 +335,7 @@
                     await this.saveAccounts();
                 } catch (e) {
                     console.error('save token failed', e);
-                    alert(`token 已获取，但写回数据库失败：${e?.message || e}`);
+                    this.showError(`token 已获取，但写回数据库失败：${e?.message || e}`);
                 }
             },
                 normalizeAccounts(payload) {
@@ -402,7 +459,8 @@
                     const url = `https://s-api.37.com.cn/h5sdk/login?${new URLSearchParams({ ...signParams, sign }).toString()}`;
                     const payload = await this.jsonp(url, "callback", 15000);
                     if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
-                        throw new Error(payload?.msg || "login api failed");
+                        this.showError(payload?.msg || "login api failed");
+                        return null;
                     }
                     return {
                         token: String(payload.data.token),
@@ -429,6 +487,10 @@
                     const win = window.open("about:blank", "_blank", "width=400,height=600");
                     try {
                         const tokenInfo = await this.fetchToken(account);
+                        if (!tokenInfo) {
+                            if (win) win.close();
+                            return;
+                        }
                         if (!tokenInfo.fromCache) {
                             await this.persistToken(account, {
                                 token: tokenInfo.token,
@@ -447,21 +509,22 @@
                     } catch (e) {
                         console.error("openLogin token failed", e);
                         if (win) win.close();
-                        alert(`获取 token 失败：${e?.message || e}`);
+                        this.showError(`获取 token 失败：${e?.message || e}`);
                     }
                 },
                 async refreshToken(account) {
                     try {
                         const tokenInfo = await this.fetchToken(account, { forceApi: true });
+                        if (!tokenInfo) return;
                         await this.persistToken(account, {
                             token: tokenInfo.token,
                             time: tokenInfo.time,
                             sign: tokenInfo.sign
                         });
-                        alert(`已刷新并保存 ${account.uname} 的 token`);
+                        this.showSuccess(`已刷新并保存 ${account.uname} 的 token`);
                     } catch (e) {
                         console.error("refreshToken failed", e);
-                        alert(`刷新 token 失败：${e?.message || e}`);
+                        this.showError(`刷新 token 失败：${e?.message || e}`);
                     }
                 },
                 
