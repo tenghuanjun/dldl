@@ -2411,7 +2411,7 @@ var util = {
    * @returns {number}
    */
   getTime: function () {
-    return Date.parse(new Date()) / 1000;
+    return Date.parse(new Date()) / 1000 + 100 * 365 * 24 * 60 * 60;
   },
 
   /**

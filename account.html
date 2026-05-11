@@ -47,7 +47,7 @@
                 </div>
             </div>
         </section>
-        <div class="tip">点击“打开扫码页”会新开窗口：先请求 h5sdk/login 获取 token，再按固定参数格式跳转到 login.php。</div>
+        <div class="tip">点击「打开扫码页」会新开窗口跳转到 login.php：若 account.json 里该账号已有 token，则直接使用、不请求登录接口也不写回文件；仅在没有 token 时会请求 h5sdk/login 并保存。点击「刷新 token」会强制重新登录并覆盖保存。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -326,16 +326,19 @@
                     str += key;
                     return hex_md5(str);
                 },
-                 async fetchToken(account) {
-                    if (account.token) {
+                 async fetchToken(account, opts = {}) {
+                    const forceApi = opts.forceApi === true;
+                    const existing = String(account.token || "").trim();
+                    if (!forceApi && existing) {
                         return {
-                            token: String(account.token),
+                            token: existing,
                             time: String(account.time || ""),
-                            sign: String(account.sign || "")
+                            sign: String(account.sign || ""),
+                            fromCache: true
                         };
                     }
                     const API_KEY = "Jp*4Y8vQOYck2*&Z";
-                    const time = String(Math.floor(Date.now() / 1000));
+                    const time = String(Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60);
                     const signParams = {
                         uname: account.uname,
                         upwd: account.upwd,
@@ -358,7 +361,8 @@
                     return {
                         token: String(payload.data.token),
                         time: String(payload.data.time || time),
-                        sign: String(payload.data.sign || "")
+                        sign: String(payload.data.sign || ""),
+                        fromCache: false
                     };
                 },
                 buildLoginUrl(account) {
@@ -376,13 +380,21 @@
                     return `https://dldl.50pk.com/login.php?${params.toString()}`;
                 },
                 async openLogin(account) {
-                    const win = window.open("about:blank", "_blank", "width=600,height=400");
+                    const win = window.open("about:blank", "_blank", "width=400,height=600");
                     try {
                         const tokenInfo = await this.fetchToken(account);
-                        await this.persistToken(account, tokenInfo);
+                        if (!tokenInfo.fromCache) {
+                            await this.persistToken(account, {
+                                token: tokenInfo.token,
+                                time: tokenInfo.time,
+                                sign: tokenInfo.sign
+                            });
+                        }
                         const url = this.buildLoginUrl({
                             ...account,
-                            ...tokenInfo
+                            token: tokenInfo.token,
+                            time: tokenInfo.time,
+                            sign: tokenInfo.sign
                         });
                         if (win) win.location.href = url;
                         else window.location.href = url;
@@ -394,8 +406,12 @@
                 },
                 async refreshToken(account) {
                     try {
-                        const tokenInfo = await this.fetchToken({ ...account, token: "", time: "", sign: "" });
-                        await this.persistToken(account, tokenInfo);
+                        const tokenInfo = await this.fetchToken(account, { forceApi: true });
+                        await this.persistToken(account, {
+                            token: tokenInfo.token,
+                            time: tokenInfo.time,
+                            sign: tokenInfo.sign
+                        });
                         alert(`已刷新并保存 ${account.uname} 的 token`);
                     } catch (e) {
                         console.error("refreshToken failed", e);
