@@ -23,7 +23,10 @@
         <section class="area" v-for="group in areas" :key="group.area">
             <div class="area-head">
                 <div class="area-title">{{ group.area }}</div>
-                <div class="area-sub">{{ group.accounts.length }} 个账号</div>
+                <div class="area-sub">
+                    {{ group.accounts.length }} 个账号
+                    <button class="btn btn-danger btn-mini" type="button" @click="deleteArea(group)">删除区服</button>
+                </div>
             </div>
 
             <div class="cards">
@@ -47,7 +50,7 @@
                 </div>
             </div>
         </section>
-        <div class="tip">点击「打开扫码页」会新开窗口跳转到 login.php：若 account.json 里该账号已有 token，则直接使用、不请求登录接口也不写回文件；仅在没有 token 时会请求 h5sdk/login 并保存。点击「刷新 token」会强制重新登录并覆盖保存。</div>
+        <div class="tip">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -73,8 +76,9 @@
                         <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
                     </div>
                 </div>
-                <div class="form-help">保存后会写入 `account.json`，新增账号会自动创建对应区服分组。</div>
+                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。</div>
                 <div class="modal-actions">
+                    <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
                     <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
                     <button class="btn" type="button" @click="submitAccountModal()">保存</button>
                 </div>
@@ -97,7 +101,7 @@
                 };
             },
         mounted() {
-            // 从后端读取 account.json，保持 UI/代理数据一致
+            // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
             this.loadAccounts();
         },
             methods: {
@@ -221,6 +225,48 @@
             editAccount(account) {
                 this.openAccountModal(account);
             },
+            async deleteEditingAccount() {
+                try {
+                    if (this.accountModalMode !== 'edit' || !this.editingAccountRef) {
+                        throw new Error('未找到要删除的账号');
+                    }
+                    const location = this.findAccountLocation(this.editingAccountRef);
+                    if (!location) throw new Error('未找到要删除的账号');
+                    const target = location.group.accounts[location.index];
+                    const confirmed = window.confirm(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`);
+                    if (!confirmed) return;
+                    location.group.accounts.splice(location.index, 1);
+                    if (!location.group.accounts.length) {
+                        this.areas = this.areas.filter(item => item.area !== location.group.area);
+                    }
+                    await this.saveAccounts();
+                    this.closeAccountModal();
+                    await this.loadAccounts();
+                } catch (e) {
+                    alert(`删除账号失败：${e?.message || e}`);
+                }
+            },
+            async deleteArea(group) {
+                try {
+                    const areaName = this.normalizeAreaName(group?.area);
+                    if (!areaName) throw new Error('区服名称无效');
+                    const target = this.areas.find(item => item.area === areaName);
+                    if (!target) throw new Error('未找到要删除的区服');
+                    const confirmed = window.confirm(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`);
+                    if (!confirmed) return;
+                    this.areas = this.areas.filter(item => item.area !== areaName);
+                    if (this.accountModalVisible && this.accountModalMode === 'edit') {
+                        const editingArea = this.findAccountLocation(this.editingAccountRef || {})?.group?.area;
+                        if (editingArea === areaName) {
+                            this.closeAccountModal();
+                        }
+                    }
+                    await this.saveAccounts();
+                    await this.loadAccounts();
+                } catch (e) {
+                    alert(`删除区服失败：${e?.message || e}`);
+                }
+            },
             async persistToken(account, tokenInfo) {
                 const location = this.findAccountLocation(account);
                 if (!location) return;
@@ -232,7 +278,7 @@
                     await this.saveAccounts();
                 } catch (e) {
                     console.error('save token failed', e);
-                    alert(`token 已获取，但写回 account.json 失败：${e?.message || e}`);
+                    alert(`token 已获取，但写回数据库失败：${e?.message || e}`);
                 }
             },
                 normalizeAccounts(payload) {
@@ -471,6 +517,20 @@
             background: #35415a;
         }
 
+        .btn.btn-danger {
+            background: #d14343;
+            color: #fff;
+        }
+
+        .btn.btn-danger:hover {
+            background: #b73838;
+        }
+
+        .btn.btn-mini {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
         .toolbar {
             display: flex;
             justify-content: flex-end;
@@ -497,6 +557,9 @@
         .area-sub {
             font-size: 12px;
             color: #94a0b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .cards {
@@ -639,7 +702,8 @@
 
         .modal-actions {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             gap: 10px;
             margin-top: 16px;
         }

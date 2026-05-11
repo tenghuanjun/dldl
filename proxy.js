@@ -3,11 +3,13 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
+const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const PORT = 8080;
 const TARGET = 'https://dldl.50pk.com';
 const fixedQrTimeMs = String(process.env.DLDL_FIXED_TIME_MS || '1828368000000');
 const accountsFilePath = path.join(__dirname, 'account.json');
+const accountsDbPath = path.join(__dirname, 'accounts.sqlite');
 app.use(express.json({ limit: '1mb' }));
 
 const accountConfig = {
@@ -27,6 +29,172 @@ const tokenApiBaseParams = {
   over: '18.5',
   sign: '865145b213b92f565e24b8022ad18ace'
 };
+let db = null;
+
+function normalizeAccountsPayload(payload) {
+  const source = payload && typeof payload === 'object' ? payload : {};
+  const sourceArea = Array.isArray(source.area) ? source.area : [];
+  const sourceList = source.list && typeof source.list === 'object' ? source.list : {};
+
+  const area = [];
+  const areaSeen = new Set();
+  for (const rawArea of sourceArea) {
+    const areaName = String(rawArea || '').trim();
+    if (!areaName || areaSeen.has(areaName)) continue;
+    areaSeen.add(areaName);
+    area.push(areaName);
+  }
+  for (const key of Object.keys(sourceList)) {
+    const areaName = String(key || '').trim();
+    if (!areaName || areaSeen.has(areaName)) continue;
+    areaSeen.add(areaName);
+    area.push(areaName);
+  }
+
+  const list = {};
+  const dropped = [];
+  for (const areaName of area) {
+    const rows = Array.isArray(sourceList[areaName]) ? sourceList[areaName] : [];
+    const areaRows = [];
+    const accountSeen = new Set();
+    for (const item of rows) {
+      const uname = String(item && item.uname ? item.uname : '').trim();
+      const upwd = String(item && item.upwd ? item.upwd : '').trim();
+      if (!uname || !upwd) {
+        dropped.push({ areaName, reason: 'uname/upwd missing' });
+        continue;
+      }
+      const dedupeKey = `${areaName}::${uname}`;
+      if (accountSeen.has(dedupeKey)) {
+        dropped.push({ areaName, reason: `duplicate uname in area: ${uname}` });
+        continue;
+      }
+      accountSeen.add(dedupeKey);
+      areaRows.push({
+        uname,
+        upwd,
+        name: String(item && item.name ? item.name : '').trim(),
+        token: String(item && item.token ? item.token : '').trim(),
+        time: String(item && item.time ? item.time : '').trim(),
+        sign: String(item && item.sign ? item.sign : '').trim()
+      });
+    }
+    list[areaName] = areaRows;
+  }
+
+  return { area, list, dropped };
+}
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const instance = new sqlite3.Database(accountsDbPath, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(instance);
+    });
+  });
+}
+
+function dbRun(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function onRun(error) {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(this);
+    });
+  });
+}
+
+function dbGet(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (error, row) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(row);
+    });
+  });
+}
+
+function dbAll(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (error, rows) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(rows);
+    });
+  });
+}
+
+async function initDatabase() {
+  db = await openDatabase();
+  await dbRun('PRAGMA foreign_keys = ON');
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS areas (
+      name TEXT PRIMARY KEY,
+      sort_order INTEGER NOT NULL
+    )
+  `);
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      area_name TEXT NOT NULL,
+      uname TEXT NOT NULL,
+      upwd TEXT NOT NULL,
+      name TEXT,
+      token TEXT,
+      time TEXT,
+      sign TEXT,
+      UNIQUE(area_name, uname),
+      FOREIGN KEY (area_name) REFERENCES areas(name) ON DELETE CASCADE
+    )
+  `);
+  const tableInfo = await dbAll("PRAGMA table_info('accounts')");
+  const hasLegacyUniqueUname =
+    Array.isArray(tableInfo)
+    && tableInfo.some((column) => String(column && column.name) === 'uname')
+    && tableInfo.some((column) => String(column && column.name) === 'uname' && Number(column.pk) === 0);
+  const createSqlRow = await dbGet("SELECT sql FROM sqlite_master WHERE type='table' AND name='accounts'");
+  const createSql = String((createSqlRow && createSqlRow.sql) || '').toUpperCase();
+  if (hasLegacyUniqueUname && createSql.includes('UNAME TEXT NOT NULL UNIQUE')) {
+    await dbRun('BEGIN IMMEDIATE TRANSACTION');
+    try {
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS accounts_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          area_name TEXT NOT NULL,
+          uname TEXT NOT NULL,
+          upwd TEXT NOT NULL,
+          name TEXT,
+          token TEXT,
+          time TEXT,
+          sign TEXT,
+          UNIQUE(area_name, uname),
+          FOREIGN KEY (area_name) REFERENCES areas(name) ON DELETE CASCADE
+        )
+      `);
+      await dbRun(`
+        INSERT OR IGNORE INTO accounts_new(area_name, uname, upwd, name, token, time, sign)
+        SELECT area_name, uname, upwd, name, token, time, sign FROM accounts
+      `);
+      await dbRun('DROP TABLE accounts');
+      await dbRun('ALTER TABLE accounts_new RENAME TO accounts');
+      await dbRun('COMMIT');
+      console.log('[Accounts] upgraded SQLite schema to UNIQUE(area_name, uname)');
+    } catch (error) {
+      await dbRun('ROLLBACK');
+      throw error;
+    }
+  }
+  await dbRun('CREATE INDEX IF NOT EXISTS idx_accounts_area_name ON accounts(area_name)');
+}
 
 function fetchText(url) {
   return new Promise((resolve, reject) => {
@@ -82,7 +250,7 @@ function getAccountFromRequest(req) {
   };
 }
 
-function readAccountsFromFile() {
+function readAccountsFromJsonFile() {
   try {
     const text = fs.readFileSync(accountsFilePath, 'utf8');
     const parsed = JSON.parse(text);
@@ -93,6 +261,41 @@ function readAccountsFromFile() {
     console.error(`[Accounts] read failed: ${error.message}`);
     return { area: [], list: {} };
   }
+}
+
+async function readAccountsFromDb() {
+  const rows = await dbAll(`
+    SELECT
+      a.name AS area_name,
+      ac.uname AS uname,
+      ac.upwd AS upwd,
+      ac.name AS display_name,
+      ac.token AS token,
+      ac.time AS time,
+      ac.sign AS sign
+    FROM areas a
+    LEFT JOIN accounts ac ON ac.area_name = a.name
+    ORDER BY a.sort_order ASC, ac.id ASC
+  `);
+  const area = [];
+  const list = {};
+  for (const row of rows) {
+    const areaName = String(row.area_name || '');
+    if (!list[areaName]) {
+      area.push(areaName);
+      list[areaName] = [];
+    }
+    if (!row.uname) continue;
+    list[areaName].push({
+      uname: String(row.uname || ''),
+      upwd: String(row.upwd || ''),
+      name: String(row.display_name || ''),
+      token: String(row.token || ''),
+      time: String(row.time || ''),
+      sign: String(row.sign || '')
+    });
+  }
+  return { area, list };
 }
 
 function validateAccountItem(acc) {
@@ -131,27 +334,93 @@ function validateAccounts(payload) {
   return { ok: true };
 }
 
-function writeAccountsToFile(accounts) {
-  const tmpPath = `${accountsFilePath}.tmp`;
-  fs.writeFileSync(tmpPath, JSON.stringify(accounts, null, 2), 'utf8');
-  fs.renameSync(tmpPath, accountsFilePath);
+async function writeAccountsToDb(accounts) {
+  const areaOrder = [];
+  const areaSeen = new Set();
+  for (const areaName of accounts.area || []) {
+    const key = String(areaName || '').trim();
+    if (!key || areaSeen.has(key)) continue;
+    areaSeen.add(key);
+    areaOrder.push(key);
+  }
+  for (const key of Object.keys(accounts.list || {})) {
+    const name = String(key || '').trim();
+    if (!name || areaSeen.has(name)) continue;
+    areaSeen.add(name);
+    areaOrder.push(name);
+  }
+
+  await dbRun('BEGIN IMMEDIATE TRANSACTION');
+  try {
+    await dbRun('DELETE FROM accounts');
+    await dbRun('DELETE FROM areas');
+    for (let idx = 0; idx < areaOrder.length; idx += 1) {
+      const areaName = areaOrder[idx];
+      await dbRun('INSERT INTO areas(name, sort_order) VALUES(?, ?)', [areaName, idx]);
+      const rows = Array.isArray(accounts.list[areaName]) ? accounts.list[areaName] : [];
+      for (const acc of rows) {
+        await dbRun(
+          `INSERT INTO accounts(area_name, uname, upwd, name, token, time, sign)
+           VALUES(?, ?, ?, ?, ?, ?, ?)`,
+          [
+            areaName,
+            String(acc.uname || ''),
+            String(acc.upwd || ''),
+            String(acc.name || ''),
+            String(acc.token || ''),
+            String(acc.time || ''),
+            String(acc.sign || '')
+          ]
+        );
+      }
+    }
+    await dbRun('COMMIT');
+  } catch (error) {
+    await dbRun('ROLLBACK');
+    throw error;
+  }
+}
+
+async function migrateJsonToDbIfNeeded() {
+  const result = await dbGet('SELECT COUNT(1) AS count FROM accounts');
+  if (Number(result && result.count) > 0) return;
+  if (!fs.existsSync(accountsFilePath)) return;
+  const jsonPayload = readAccountsFromJsonFile();
+  const normalizedPayload = normalizeAccountsPayload(jsonPayload);
+  const validation = validateAccounts(normalizedPayload);
+  if (!validation.ok) {
+    console.warn(`[Accounts] skip JSON migration: ${validation.message}`);
+    return;
+  }
+  await writeAccountsToDb(normalizedPayload);
+  if (normalizedPayload.dropped.length > 0) {
+    console.warn(`[Accounts] migration dropped invalid rows: ${normalizedPayload.dropped.length}`);
+  }
+  console.log(`[Accounts] migrated JSON data into SQLite: ${accountsDbPath}`);
 }
 
 // 供 account.html 读取/写入账号
-app.get('/accounts', (req, res) => {
-  res.json(readAccountsFromFile());
+app.get('/accounts', async (req, res) => {
+  try {
+    const payload = await readAccountsFromDb();
+    res.json(payload);
+  } catch (error) {
+    console.error(`[Accounts] query failed: ${error.message}`);
+    res.status(500).json({ ok: false, message: error.message });
+  }
 });
 
-app.post('/accounts', (req, res) => {
+app.post('/accounts', async (req, res) => {
   const body = req.body || {};
   const accountsPayload = body.accounts ?? body;
-  const validation = validateAccounts(accountsPayload);
+  const normalizedPayload = normalizeAccountsPayload(accountsPayload);
+  const validation = validateAccounts(normalizedPayload);
   if (!validation.ok) {
     res.status(400).json({ ok: false, message: validation.message });
     return;
   }
   try {
-    writeAccountsToFile(accountsPayload);
+    await writeAccountsToDb(normalizedPayload);
     res.json({ ok: true });
   } catch (error) {
     console.error(`[Accounts] write failed: ${error.message}`);
@@ -344,10 +613,22 @@ app.use('/', createProxyMiddleware({
   },
   selfHandleResponse: true
 }));
-app.listen(PORT, () => {
-  console.log(`✅ Proxy running at http://localhost:${PORT}`);
-  console.log(`✅ Mock interceptors active`);
-  console.log(`✅ Account uname: ${accountConfig.uname}`);
-  console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
-  console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
-});
+async function startServer() {
+  try {
+    await initDatabase();
+    await migrateJsonToDbIfNeeded();
+    app.listen(PORT, () => {
+      console.log(`✅ Proxy running at http://localhost:${PORT}`);
+      console.log(`✅ Mock interceptors active`);
+      console.log(`✅ Account uname: ${accountConfig.uname}`);
+      console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
+      console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
+      console.log(`✅ Accounts storage: SQLite (${accountsDbPath})`);
+    });
+  } catch (error) {
+    console.error(`❌ Failed to start server: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+startServer();
