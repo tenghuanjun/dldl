@@ -16,6 +16,9 @@ const accountsFilePath = path.join(userDataDir, 'account.json');
 const accountsDbPath = path.join(userDataDir, 'accounts.sqlite');
 app.use(express.json({ limit: '1mb' }));
 
+const IMPORT_DB_MAX_BYTES = 50 * 1024 * 1024;
+const SQLITE_MAGIC = Buffer.from('SQLite format 3\0');
+
 const accountConfig = {
   uname: process.env.DLDL_UNAME,
   upwd: process.env.DLDL_UPWD
@@ -34,6 +37,48 @@ const tokenApiBaseParams = {
   sign: '865145b213b92f565e24b8022ad18ace'
 };
 let db = null;
+
+async function closeDatabase() {
+  if (!db) return;
+  const instance = db;
+  db = null;
+  await new Promise((resolve, reject) => {
+    instance.close((error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function validateImportedAccountsDbFile(filePath) {
+  return new Promise((resolve, reject) => {
+    const testDb = new sqlite3.Database(filePath, sqlite3.OPEN_READONLY, (openError) => {
+      if (openError) {
+        reject(new Error(`无法作为 SQLite 打开：${openError.message}`));
+        return;
+      }
+      testDb.all(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name IN ('areas','accounts')`,
+        [],
+        (err, rows) => {
+          if (err) {
+            testDb.close(() => reject(err));
+            return;
+          }
+          const names = new Set((rows || []).map((row) => String(row && row.name)));
+          if (!names.has('areas') || !names.has('accounts')) {
+            testDb.close(() => reject(new Error('不是本工具使用的账号库（需包含 areas、accounts 表）。请确认文件由本页「导出数据库」生成或结构一致。')));
+            return;
+          }
+          testDb.close((closeErr) => {
+            if (closeErr) reject(closeErr);
+            else resolve();
+          });
+        }
+      );
+    });
+  });
+}
 
 function ensureUserDataLayout() {
   fs.mkdirSync(userDataDir, { recursive: true });
@@ -156,6 +201,7 @@ function dbAll(sql, params = []) {
 }
 
 async function initDatabase() {
+  await closeDatabase();
   db = await openDatabase();
   await dbRun('PRAGMA foreign_keys = ON');
   await dbRun(`
@@ -449,6 +495,105 @@ app.post('/accounts', async (req, res) => {
     res.status(500).json({ ok: false, message: error.message });
   }
 });
+
+/** 下载当前账号 SQLite（换机备份用） */
+app.get('/accounts/database/export', async (req, res) => {
+  let reopened = false;
+  async function reopenOnce() {
+    if (reopened) return;
+    reopened = true;
+    try {
+      await initDatabase();
+    } catch (error) {
+      console.error(`[Accounts] export 后重新打开数据库失败: ${error.message}`);
+    }
+  }
+  try {
+    await closeDatabase();
+    if (!fs.existsSync(accountsDbPath)) {
+      await initDatabase();
+      await closeDatabase();
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `dldl-accounts-${stamp}.sqlite`;
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    const stream = fs.createReadStream(accountsDbPath);
+    stream.on('error', async (streamError) => {
+      console.error(`[Accounts] export stream: ${streamError.message}`);
+      await reopenOnce();
+      if (!res.headersSent) {
+        res.status(500).json({ ok: false, message: streamError.message });
+      } else {
+        res.destroy();
+      }
+    });
+    res.on('finish', reopenOnce);
+    res.on('close', reopenOnce);
+    stream.pipe(res);
+  } catch (error) {
+    console.error(`[Accounts] export failed: ${error.message}`);
+    await reopenOnce();
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, message: error.message });
+    }
+  }
+});
+
+/** 用上传的 .sqlite 整体替换当前账号库（换机恢复用） */
+app.post(
+  '/accounts/database/import',
+  express.raw({ type: 'application/octet-stream', limit: IMPORT_DB_MAX_BYTES }),
+  async (req, res) => {
+    const body = req.body;
+    if (!Buffer.isBuffer(body) || body.length < 100) {
+      res.status(400).json({ ok: false, message: '请上传有效的 SQLite 文件（application/octet-stream）' });
+      return;
+    }
+    if (!body.subarray(0, SQLITE_MAGIC.length).equals(SQLITE_MAGIC)) {
+      res.status(400).json({ ok: false, message: '文件头不是 SQLite 数据库' });
+      return;
+    }
+    const tempPath = path.join(userDataDir, `accounts.import.${Date.now()}.sqlite`);
+    const backupPath = path.join(userDataDir, `accounts.before-import.${Date.now()}.sqlite`);
+    let hadExisting = false;
+    try {
+      fs.mkdirSync(userDataDir, { recursive: true });
+      fs.writeFileSync(tempPath, body);
+      await validateImportedAccountsDbFile(tempPath);
+      await closeDatabase();
+      if (fs.existsSync(accountsDbPath)) {
+        hadExisting = true;
+        fs.copyFileSync(accountsDbPath, backupPath);
+        fs.unlinkSync(accountsDbPath);
+      }
+      fs.renameSync(tempPath, accountsDbPath);
+      await initDatabase();
+      console.log(`[Accounts] 已从上传文件导入数据库: ${accountsDbPath}${hadExisting ? `（已备份旧库到 ${path.basename(backupPath)}）` : ''}`);
+      res.json({ ok: true, backup: hadExisting ? path.basename(backupPath) : null });
+    } catch (error) {
+      console.error(`[Accounts] import failed: ${error.message}`);
+      try {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      } catch (_) {
+        // ignore
+      }
+      try {
+        if (hadExisting && fs.existsSync(backupPath) && !fs.existsSync(accountsDbPath)) {
+          fs.copyFileSync(backupPath, accountsDbPath);
+        }
+      } catch (restoreError) {
+        console.error(`[Accounts] import 回滚失败: ${restoreError.message}`);
+      }
+      try {
+        await initDatabase();
+      } catch (reopenError) {
+        console.error(`[Accounts] import 失败后 initDatabase: ${reopenError.message}`);
+      }
+      res.status(400).json({ ok: false, message: error.message || String(error) });
+    }
+  }
+);
 
 async function getDynamicTokenInfo(account) {
   const callback = `jsonp_callback_${Date.now()}`;

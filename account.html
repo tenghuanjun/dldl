@@ -15,6 +15,17 @@
     <div id="app" class="container">
         <div class="title">多账号扫码入口</div>
         <div class="toolbar">
+            <button class="btn btn-secondary" type="button" @click="triggerImportDatabase">导入数据库</button>
+            <input
+                ref="importDbInput"
+                type="file"
+                accept=".sqlite,.db,application/x-sqlite3,application/octet-stream,*/*"
+                class="visually-hidden"
+                @change="onImportDatabaseFile"
+            >
+            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <button class="btn btn-secondary" type="button" @click="exportDatabase">导出数据库</button>
+            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <button class="btn btn-secondary" type="button" @click="openAccountModal()">新增账号</button>
             <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <button class="btn btn-secondary" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏密码':'显示密码'}}</button>
@@ -54,6 +65,7 @@
             </div>
         </section>
         <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
+        <div class="tip tip-secondary">换电脑时可用「导出数据库」将当前 <code>accounts.sqlite</code> 存到本机任意位置；在新电脑安装后点「导入数据库」选择该文件即可整体恢复账号（导入前会自动备份当前库到用户数据目录）。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -233,17 +245,91 @@
                         return false;
                     }
                 },
-            async loadAccounts() {
-                try {
-                    const resp = await fetch('/accounts', { cache: 'no-store' });
-                    const json = await resp.json();
-                    const parsed = this.normalizeAccounts(json);
-                    this.areas = parsed;
-                } catch (e) {
-                    console.error('load accounts failed', e);
-                }
-            },
-            async saveAccounts() {
+                triggerImportDatabase() {
+                    const el = this.$refs.importDbInput;
+                    if (el) el.click();
+                },
+                async onImportDatabaseFile(ev) {
+                    const input = ev.target;
+                    const file = input.files && input.files[0];
+                    if (!file) return;
+                    try {
+                        const ok = await this.confirmAction(
+                            '将用所选文件替换当前账号数据库（当前列表会被完全替换）。\n\n建议先使用「导出数据库」备份。是否继续？',
+                            '导入数据库'
+                        );
+                        if (!ok) {
+                            input.value = '';
+                            return;
+                        }
+                        const buf = await file.arrayBuffer();
+                        const resp = await fetch('/accounts/database/import', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/octet-stream' },
+                            body: buf
+                        });
+                        const result = await resp.json().catch(() => ({}));
+                        if (!resp.ok || !result.ok) {
+                            this.showError(result?.message || '导入失败');
+                            input.value = '';
+                            return;
+                        }
+                        let msg = '导入成功，列表已更新';
+                        if (result.backup) msg += `（原库已备份为 ${result.backup}）`;
+                        this.showSuccess(msg);
+                        await this.loadAccounts();
+                    } catch (e) {
+                        this.showError(e && e.message ? e.message : '导入失败');
+                    }
+                    input.value = '';
+                },
+                async exportDatabase() {
+                    try {
+                        const resp = await fetch('/accounts/database/export', { cache: 'no-store' });
+                        if (!resp.ok) {
+                            let msg = '导出失败';
+                            try {
+                                const j = await resp.json();
+                                if (j && j.message) msg = j.message;
+                            } catch (_) {
+                                /* ignore */
+                            }
+                            this.showError(msg);
+                            return;
+                        }
+                        const blob = await resp.blob();
+                        const cd = resp.headers.get('Content-Disposition') || '';
+                        let filename = 'dldl-accounts.sqlite';
+                        const m = /filename\*=UTF-8''([^;\n]+)|filename="([^"]+)"/i.exec(cd);
+                        if (m) {
+                            const raw = (m[1] || m[2] || '').trim();
+                            if (raw) filename = decodeURIComponent(raw);
+                        }
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        a.rel = 'noopener';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                        this.showSuccess('已保存数据库文件到下载目录（或浏览器提示的位置）');
+                    } catch (e) {
+                        this.showError(e && e.message ? e.message : '导出失败');
+                    }
+                },
+                async loadAccounts() {
+                    try {
+                        const resp = await fetch('/accounts', { cache: 'no-store' });
+                        const json = await resp.json();
+                        const parsed = this.normalizeAccounts(json);
+                        this.areas = parsed;
+                    } catch (e) {
+                        console.error('load accounts failed', e);
+                    }
+                },
+                async saveAccounts() {
                 const payload = {
                     area: this.areas.map(group => group.area),
                     list: {}
@@ -1041,6 +1127,31 @@
             margin-top: 12px;
             color: #94a0b8;
             font-size: 13px;
+        }
+
+        .tip-secondary {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #7d8aa0;
+        }
+
+        .tip code {
+            font-size: 12px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
         .white-space-nowrap{
             white-space: nowrap;
