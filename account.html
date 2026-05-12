@@ -806,7 +806,23 @@
                 async openLogin(account) {
                     // 使用唯一窗口名，保证每次点击都新开窗口，不复用旧窗口
                     const windowName = `dldl_login_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                    const win = window.open("about:blank", windowName, "width=360,height=660");
+                    const winOpts = "width=360,height=660";
+                    // 已有 token 时在同一用户手势内直接打开 login.php，避免 about:blank 再跳转（少一次文档加载，多窗口时更顺）
+                    const cachedTok = String(account.token || "").trim();
+                    if (cachedTok) {
+                        const url = this.buildLoginUrl({
+                            ...account,
+                            token: cachedTok,
+                            time: String(account.time || ""),
+                            sign: String(account.sign || "")
+                        });
+                        const w = window.open(url, windowName, winOpts);
+                        if (!w) {
+                            this.showError("弹窗被拦截，请允许本应用打开新窗口");
+                        }
+                        return;
+                    }
+                    const win = window.open("about:blank", windowName, winOpts);
                     try {
                         const tokenInfo = await this.fetchToken(account);
                         if (!tokenInfo) {

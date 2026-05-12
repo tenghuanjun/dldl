@@ -65,6 +65,42 @@ if (!gotTheLock) {
         contextIsolation: true
       }
     });
+
+    // 扫码页等通过 window.open 打开的窗口：统一选项，减轻多窗口时的白屏/卡顿，并与主窗口共享 session 以复用磁盘缓存
+    mainWindow.webContents.setWindowOpenHandler((details) => {
+      const raw = details.url || '';
+      if (!/^(https?:|about:)/i.test(raw)) {
+        return { action: 'deny' };
+      }
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          show: false,
+          autoHideMenuBar: true,
+          backgroundColor: '#000000',
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true,
+            spellcheck: false,
+            session: mainWindow.webContents.session
+          }
+        }
+      };
+    });
+
+    mainWindow.webContents.on('did-create-window', (childWindow) => {
+      if (!childWindow || childWindow.isDestroyed()) return;
+      let shown = false;
+      const showOnce = () => {
+        if (shown || childWindow.isDestroyed()) return;
+        shown = true;
+        childWindow.show();
+      };
+      childWindow.once('ready-to-show', showOnce);
+      childWindow.webContents.once('did-finish-load', showOnce);
+    });
+
     // 必须在 loadURL 之前监听：否则本地页加载很快时 ready-to-show 已触发，会永远不调 show()
     mainWindow.once('ready-to-show', () => {
       if (mainWindow && !mainWindow.isDestroyed()) {
