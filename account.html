@@ -13,42 +13,41 @@
 
 <body>
     <div id="app" class="container">
-        <div class="title">多账号扫码入口</div>
-        <div class="toolbar toolbar-main">
-            <button class="btn btn-secondary" type="button" @click="triggerImportDatabase">导入数据库</button>
-            <input
-                ref="importDbInput"
-                type="file"
-                accept=".sqlite,.db,application/x-sqlite3,application/octet-stream,*/*"
-                class="visually-hidden"
-                @change="onImportDatabaseFile"
-            >
-            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            <button class="btn btn-secondary" type="button" @click="exportDatabase">导出数据库</button>
-            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            <button class="btn btn-secondary" type="button" @click="openAccountModal()">新增账号</button>
-            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            <button class="btn btn-secondary" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏密码':'显示密码'}}</button>
-            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-            <button
-                class="btn"
-                type="button"
-                :disabled="selectedAccountCount === 0"
-                @click="batchLaunchSelected"
-            >批量启动扫码页（已选 {{ selectedAccountCount }}）</button>
-        </div>
-
-        <div class="batch-area-panel">
-            <span class="batch-area-panel-title">同区服按批次启动</span>
-            <span class="batch-area-hint">按卡片顺序分批，与下方勾选无关。</span>
-            <div class="batch-area-row">
-                <label class="batch-inline-label">区服</label>
+        <header class="account-controls-sticky">
+            <div class="sticky-row sticky-row-top">
+                <h1 class="sticky-page-title">多账号扫码入口</h1>
+                <div class="sticky-tools">
+                    <button class="btn btn-secondary btn-compact" type="button" @click="triggerImportDatabase">导入库</button>
+                    <input
+                        ref="importDbInput"
+                        type="file"
+                        accept=".sqlite,.db,application/x-sqlite3,application/octet-stream,*/*"
+                        class="visually-hidden"
+                        @change="onImportDatabaseFile"
+                    >
+                    <button class="btn btn-secondary btn-compact" type="button" @click="exportDatabase">导出库</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
+                    <button
+                        class="btn btn-compact"
+                        type="button"
+                        :disabled="selectedAccountCount === 0"
+                        @click="batchLaunchSelected"
+                    >批量启动（{{ selectedAccountCount }}）</button>
+                </div>
+            </div>
+            <div class="sticky-row sticky-row-batch">
+                <span class="batch-row-head">
+                    同区批次
+                    <span class="batch-info-icon" title="按该区下列表顺序分批启动，与下方勾选无关">ⓘ</span>
+                </span>
                 <el-select
                     v-model="batchPanelArea"
-                    class="batch-area-select"
+                    class="batch-area-select batch-select-ep"
+                    size="default"
                     filterable
                     clearable
-                    placeholder="选择区服"
+                    placeholder="区服"
                 >
                     <el-option
                         v-for="g in areas"
@@ -74,9 +73,9 @@
                     class="form-input batch-num-input"
                 >
                 <label class="batch-inline-label">批</label>
-                <button class="btn" type="button" @click="batchLaunchByAreaSlice">启动该批次</button>
+                <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
             </div>
-        </div>
+        </header>
 
         <section class="area" v-for="group in areas" :key="group.area">
             <div class="area-head">
@@ -969,13 +968,160 @@
 
         .container {
             max-width: 1100px;
-            margin: 30px auto;
+            margin: 12px auto 24px;
             padding: 0 16px;
         }
 
-        .title {
-            font-size: 22px;
-            margin-bottom: 16px;
+        .account-controls-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            margin: 0 -16px 12px;
+            padding: 6px 16px 8px;
+            background: rgba(15, 17, 21, 0.94);
+            backdrop-filter: saturate(150%) blur(10px);
+            -webkit-backdrop-filter: saturate(150%) blur(10px);
+            border-bottom: 1px solid #2a3140;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .sticky-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+        }
+
+        .sticky-row-batch {
+            --batch-ctrl-h: 40px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #242936;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
+            min-height: 42px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .sticky-row-batch::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .sticky-row-batch::-webkit-scrollbar-thumb {
+            background: #3d4a63;
+            border-radius: 3px;
+        }
+
+        .sticky-row-batch > * {
+            flex-shrink: 0;
+        }
+
+        .sticky-row-batch .batch-select-ep {
+            flex: 1 1 140px;
+            min-width: 100px;
+            max-width: 260px;
+            width: 160px;
+        }
+
+        /* 区服下拉与数字框同高，与 Element Plus 尺寸变量对齐 */
+        .sticky-row-batch .batch-select-ep.el-select .el-select__wrapper {
+            min-height: var(--batch-ctrl-h);
+            height: var(--batch-ctrl-h);
+            box-sizing: border-box;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .sticky-row-batch .batch-select-ep.el-select .el-select__selection {
+            display: flex;
+            align-items: center;
+        }
+
+        .sticky-row-batch .batch-select-ep.el-select .el-select__placeholder,
+        .sticky-row-batch .batch-select-ep.el-select .el-select__selected-item {
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .sticky-row-batch .btn-compact {
+            min-height: var(--batch-ctrl-h);
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            padding: 0 12px;
+        }
+
+        .sticky-page-title {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6e8eb;
+            line-height: 1.3;
+            flex-shrink: 0;
+            max-width: 42%;
+        }
+
+        .sticky-tools {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .batch-row-head {
+            font-size: 16px;
+            font-weight: 500;
+            color: #e6e8eb;
+            margin-right: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            line-height: 1.2;
+        }
+
+        .batch-info-icon {
+            cursor: help;
+            opacity: 0.55;
+            font-size: 16px;
+            font-weight: 400;
+            user-select: none;
+        }
+
+        .batch-info-icon:hover {
+            opacity: 0.95;
+        }
+
+        @media (max-width: 640px) {
+            .sticky-page-title {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .sticky-tools {
+                justify-content: flex-start;
+            }
+        }
+
+        .btn-compact {
+            padding: 5px 9px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .btn.btn-mini.btn-compact {
+            padding: 3px 7px;
+            font-size: 11px;
         }
 
         .btn {
@@ -1022,61 +1168,24 @@
             font-size: 12px;
         }
 
-        .toolbar {
-            display: flex;
-            justify-content: flex-end;
-            margin: 10px 0 16px;
-            flex-wrap: wrap;
-            gap: 8px 0;
-            align-items: center;
-        }
-
-        .toolbar-main .separator {
-            flex-shrink: 0;
-        }
-
-        .batch-area-panel {
-            background: #141821;
-            border: 1px solid #242936;
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin-bottom: 18px;
-        }
-
-        .batch-area-panel-title {
-            font-size: 13px;
-            font-weight: 600;
+        .sticky-row-batch .batch-inline-label {
+            font-size: 16px;
+            font-weight: 400;
             color: #e6e8eb;
-            margin-right: 8px;
-        }
-
-        .batch-area-hint {
-            font-size: 12px;
-            color: #7a869f;
-        }
-
-        .batch-area-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 10px;
-            margin-top: 10px;
-        }
-
-        .batch-inline-label {
-            font-size: 12px;
-            color: #94a0b8;
             white-space: nowrap;
+            line-height: 1.2;
         }
 
-        .batch-area-select {
-            min-width: 160px;
-            max-width: 260px;
-        }
-
-        .batch-num-input {
-            width: 72px;
-            flex: 0 0 auto;
+        .sticky-row-batch .batch-num-input {
+            width: 88px;
+            max-width: 88px;
+            flex: 0 0 88px;
+            box-sizing: border-box;
+            height: var(--batch-ctrl-h);
+            min-height: var(--batch-ctrl-h);
+            padding: 0 10px;
+            font-size: 16px;
+            line-height: 1.2;
         }
 
         .btn-link {
