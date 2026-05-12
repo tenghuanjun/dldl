@@ -8,7 +8,7 @@
     "proxy": "node proxy.js",
     "electron": "electron .",
     "rebuild:native": "npx @electron/rebuild -f -w sqlite3",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && npx @electron/rebuild -f -w sqlite3",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
