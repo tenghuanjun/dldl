@@ -1,3 +1,7 @@
+/**
+ * 旧版 Electron 入口（已迁移到 Tauri，见 src-tauri/ 与 npm run tauri:dev）。
+ * 若仍需本地调试 Electron，请自行装回 electron 并恢复 package.json 中的脚本。
+ */
 const path = require('path');
 const fs = require('fs');
 const Module = require('module');

@@ -1,0 +1,5 @@
+{
+  "identifier": "default",
+  "description": "主窗口与扫码弹窗",
+  "permissions": ["core:default"]
+}
