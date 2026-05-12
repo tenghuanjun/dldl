@@ -1,15 +1,13 @@
-<html>
+<html class="dark">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>账号列表页</title>
     <script src="vue.global.js"></script>
-    <!-- 引入样式 -->
-    <link rel="stylesheet" href="element-ui@2.15.14.css">
-    <!-- 引入组件库 -->
-    <script src="element-ui@2.15.14.js"></script>
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/dist/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/theme-chalk/dark/css-vars.css" />
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/dist/index.full.min.js"></script>
 </head>
 
 <body>
@@ -17,6 +15,7 @@
         <div class="title">多账号扫码入口</div>
         <div class="toolbar">
             <button class="btn btn-secondary" type="button" @click="openAccountModal()">新增账号</button>
+            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <button class="btn btn-secondary" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏密码':'显示密码'}}</button>
         </div>
 
@@ -34,7 +33,7 @@
                     <div class="card-top">
                         <div class="card-name">
                             <div class="nick">{{ account.name || '-' }}</div>
-                            <div class="uname">{{ account.uname }}</div>
+                            <div class="uname white-space-nowrap" v-if="showPwd">{{ account.uname }}</div>
                         </div>
                         <div class="card-actions">
                             <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
@@ -58,10 +57,22 @@
                 <div class="form-grid">
                     <div class="form-field full">
                         <label class="form-label">区服</label>
-                        <input class="form-input" v-model="accountForm.area" list="area-options" placeholder="可选择已有区服或直接输入新增区服">
-                        <datalist id="area-options">
-                            <option v-for="group in areas" :key="group.area" :value="group.area"></option>
-                        </datalist>
+                        <el-select
+                            v-model="accountForm.area"
+                            class="area-select"
+                            filterable
+                            allow-create
+                            default-first-option
+                            clearable
+                            placeholder="搜索或选择区服，也可输入新名称后回车创建"
+                        >
+                            <el-option
+                                v-for="group in areas"
+                                :key="group.area"
+                                :label="group.area"
+                                :value="group.area"
+                            />
+                        </el-select>
                     </div>
                     <div class="form-field">
                         <label class="form-label">昵称 name</label>
@@ -88,8 +99,10 @@
     <script src="md5.js"></script>
     <script>
         const { createApp } = Vue;
+        const ElMessage = window.ElementPlus?.ElMessage;
+        const ElMessageBox = window.ElementPlus?.ElMessageBox;
 
-        createApp({
+        const app = createApp({
             data() {
                 return {
                     showPwd: false, // 是否显示密码
@@ -100,52 +113,50 @@
                     editingAccountRef: null
                 };
             },
-        mounted() {
-            // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
-            this.loadAccounts();
-        },
+            mounted() {
+                // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
+                this.loadAccounts();
+            },
             methods: {
-            showMessage(type, message) {
-                const messageApi = window.ELEMENT && window.ELEMENT.Message;
-                if (typeof messageApi === 'function') {
-                    messageApi({
-                        type,
-                        message,
-                        duration: 2200,
-                        showClose: true
-                    });
-                    return;
-                }
-                // 降级兜底，避免组件库异常导致页面不可用
-                alert(String(message || ''));
-            },
-            showError(message) {
-                this.showMessage('error', message);
-            },
-            showSuccess(message) {
-                this.showMessage('success', message);
-            },
-            failWithMessage(message) {
-                this.showError(message);
-                return null;
-            },
-            async confirmAction(message, title = '提示') {
-                const messageBoxApi = window.ELEMENT && window.ELEMENT.MessageBox;
-                if (!messageBoxApi || typeof messageBoxApi.confirm !== 'function') {
-                    return window.confirm(String(message || title));
-                }
-                try {
-                    await messageBoxApi.confirm(message, title, {
-                        confirmButtonText: '确定',
-                        cancelButtonText: '取消',
-                        type: 'warning',
-                        closeOnClickModal: false
-                    });
-                    return true;
-                } catch (_) {
-                    return false;
-                }
-            },
+                showMessage(type, message) {
+                    if (typeof ElMessage === 'function') {
+                        ElMessage({
+                            type,
+                            message: String(message || ''),
+                            duration: 2200,
+                            showClose: true
+                        });
+                        return;
+                    }
+                    alert(String(message || ''));
+                },
+                showError(message) {
+                    this.showMessage('error', message);
+                },
+                showSuccess(message) {
+                    this.showMessage('success', message);
+                },
+                failWithMessage(message) {
+                    this.showError(message);
+                    return null;
+                },
+                async confirmAction(message, title = '提示') {
+                    if (!ElMessageBox || typeof ElMessageBox.confirm !== 'function') {
+                        return window.confirm(String(message || title));
+                    }
+                    try {
+                        await ElMessageBox.confirm(String(message || ''), title, {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning',
+                            closeOnClickModal: false,
+                            appendTo: document.body
+                        });
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                },
             async loadAccounts() {
                 try {
                     const resp = await fetch('/accounts', { cache: 'no-store' });
@@ -534,9 +545,11 @@
                         this.showError(`刷新 token 失败：${e?.message || e}`);
                     }
                 },
-                
+
             }
-        }).mount("#app");
+        });
+        app.use(ElementPlus);
+        app.mount("#app");
     </script>
     <style>
         body {
@@ -764,6 +777,14 @@
             outline: none;
         }
 
+        .area-select {
+            width: 100%;
+        }
+
+        .area-select.el-select {
+            --el-select-input-focus-border-color: var(--el-color-primary);
+        }
+
         .form-help {
             font-size: 12px;
             color: #94a0b8;
@@ -782,6 +803,9 @@
             margin-top: 12px;
             color: #94a0b8;
             font-size: 13px;
+        }
+        .white-space-nowrap{
+            white-space: nowrap;
         }
     </style>
 </body>
