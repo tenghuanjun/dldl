@@ -87,6 +87,18 @@
                         <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
                     </div>
                     <div class="form-field full">
+                        <label class="form-label">完整登录地址</label>
+                        <div class="url-extract-row">
+                            <textarea
+                                v-model="loginUrlPaste"
+                                class="form-input form-textarea url-paste-input"
+                                rows="2"
+                                placeholder="粘贴浏览器地址栏中的 login.php?... 整段链接，点击右侧「提取」自动填入下方三项"
+                            ></textarea>
+                            <button type="button" class="btn url-extract-btn" @click="extractLoginParamsFromUrl">提取</button>
+                        </div>
+                    </div>
+                    <div class="form-field full">
                         <label class="form-label">token</label>
                         <textarea class="form-input form-textarea form-mono" v-model="accountForm.token" rows="3" placeholder="可选；留空则打开扫码页时会自动拉取"></textarea>
                     </div>
@@ -99,7 +111,7 @@
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
                     </div>
                 </div>
-                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。token / time / sign 可手动粘贴或通过「刷新 token」写入；三者通常需与登录接口返回一致。</div>
+                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
                 <div class="modal-actions">
                     <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
                     <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
@@ -122,6 +134,7 @@
                     accountModalVisible: false,
                     accountModalMode: 'create',
                     accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '' },
+                    loginUrlPaste: '',
                     editingAccountRef: null
                 };
             },
@@ -237,7 +250,57 @@
                 }
                 return group;
             },
+            parseLoginUrlToParams(raw) {
+                const s = String(raw || '').trim();
+                if (!s) return { error: 'empty' };
+                let u;
+                try {
+                    u = new URL(s);
+                } catch {
+                    try {
+                        u = new URL(s, 'https://dldl.50pk.com');
+                    } catch {
+                        return { error: 'invalid' };
+                    }
+                }
+                const q = u.searchParams;
+                return {
+                    token: (q.get('token') || '').trim(),
+                    time: (q.get('time') || '').trim(),
+                    sign: (q.get('sign') || '').trim()
+                };
+            },
+            extractLoginParamsFromUrl() {
+                const raw = this.loginUrlPaste;
+                if (!String(raw || '').trim()) {
+                    this.showError('请先粘贴完整登录地址');
+                    return;
+                }
+                const parsed = this.parseLoginUrlToParams(raw);
+                if (parsed.error === 'invalid') {
+                    this.showError('地址格式无效，请粘贴以 http(s):// 开头的完整链接，或从 ? 开始的查询串');
+                    return;
+                }
+                const { token, time, sign } = parsed;
+                if (!token && !time && !sign) {
+                    this.showError('链接中未找到 token、time、sign 参数，请确认是 login.php 带参地址');
+                    return;
+                }
+                this.accountForm.token = token;
+                this.accountForm.time = time;
+                this.accountForm.sign = sign;
+                if (token && time && sign) {
+                    this.showSuccess('已从地址中提取 token、time、sign');
+                } else {
+                    const missing = [];
+                    if (!token) missing.push('token');
+                    if (!time) missing.push('time');
+                    if (!sign) missing.push('sign');
+                    this.showMessage('warning', `已填入能解析到的项，仍缺少：${missing.join('、')}，请检查链接或手动补全`);
+                }
+            },
             openAccountModal(account = null) {
+                this.loginUrlPaste = '';
                 if (account) {
                     this.accountModalMode = 'edit';
                     this.accountForm = {
@@ -267,6 +330,7 @@
             },
             closeAccountModal() {
                 this.accountModalVisible = false;
+                this.loginUrlPaste = '';
                 this.editingAccountRef = null;
             },
             async submitAccountModal() {
@@ -810,6 +874,24 @@
             min-height: 72px;
             resize: vertical;
             line-height: 1.45;
+        }
+
+        .url-extract-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .url-paste-input {
+            flex: 1;
+            min-width: 0;
+            min-height: 52px;
+        }
+
+        .url-extract-btn {
+            flex-shrink: 0;
+            align-self: flex-start;
+            padding: 10px 14px;
         }
 
         .form-mono {
