@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use anyhow::Context;
 use tauri::webview::{NewWindowFeatures, NewWindowResponse};
-use tauri::{App, AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri::{App, AppHandle, Manager, RunEvent, Runtime, WebviewUrl, WebviewWindowBuilder};
 use url::Url;
 
 static POPUP_LABEL: AtomicU64 = AtomicU64::new(0);
@@ -111,11 +111,11 @@ fn allow_popup_url(u: &Url) -> bool {
     matches!(u.scheme(), "http" | "https" | "about")
 }
 
-fn build_popup_window(
-    app: &AppHandle,
+fn build_popup_window<R: Runtime>(
+    app: &AppHandle<R>,
     url: Url,
     features: NewWindowFeatures,
-) -> NewWindowResponse {
+) -> NewWindowResponse<R> {
     if !allow_popup_url(&url) {
         return NewWindowResponse::Deny;
     }
@@ -190,7 +190,7 @@ pub fn run() {
                 eprintln!("DLDL-Proxy 启动失败: {:#}", e);
                 std::process::exit(1);
             }
-            Ok::<(), Box<dyn std::error::Error + Send>>(())
+            Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
