@@ -1,10 +1,17 @@
 {
   "name": "dldl",
   "version": "1.0.0",
-  "description": "",
-  "main": "cc.js",
+  "description": "斗罗大陆 H5 本地代理与账号管理",
+  "main": "electron-main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "proxy": "node proxy.js",
+    "electron": "electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +20,55 @@
     "express": "^5.2.1",
     "http-proxy-middleware": "^4.0.0",
     "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "electron": "^35.1.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.dldl.localproxy",
+    "productName": "DLDL-Proxy",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!accounts.sqlite",
+      "!account.json"
+    ],
+    "npmRebuild": true,
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**"
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "publish": null
   }
 }

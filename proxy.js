@@ -5,11 +5,15 @@ const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const PORT = 8080;
+const PORT = Number(process.env.DLDL_PORT || process.env.PORT || 8080);
 const TARGET = 'https://dldl.50pk.com';
 const fixedQrTimeMs = String(process.env.DLDL_FIXED_TIME_MS || '1828368000000');
-const accountsFilePath = path.join(__dirname, 'account.json');
-const accountsDbPath = path.join(__dirname, 'accounts.sqlite');
+/** 静态资源目录（打包后只读，位于 asar 内） */
+const staticRoot = process.env.DLDL_STATIC_ROOT || __dirname;
+/** 用户可写目录：Electron 下为 app.getPath('userData')；直接 node proxy.js 时默认与脚本同目录 */
+const userDataDir = process.env.DLDL_USER_DATA || __dirname;
+const accountsFilePath = path.join(userDataDir, 'account.json');
+const accountsDbPath = path.join(userDataDir, 'accounts.sqlite');
 app.use(express.json({ limit: '1mb' }));
 
 const accountConfig = {
@@ -30,6 +34,24 @@ const tokenApiBaseParams = {
   sign: '865145b213b92f565e24b8022ad18ace'
 };
 let db = null;
+
+function ensureUserDataLayout() {
+  fs.mkdirSync(userDataDir, { recursive: true });
+  function copyIfMissing(legacyPath, targetPath) {
+    if (path.resolve(legacyPath) === path.resolve(targetPath)) return;
+    if (fs.existsSync(targetPath)) return;
+    if (!fs.existsSync(legacyPath)) return;
+    try {
+      fs.copyFileSync(legacyPath, targetPath);
+      console.log(`[Accounts] 已从旧位置复制到用户数据目录: ${path.basename(targetPath)}`);
+    } catch (error) {
+      console.warn(`[Accounts] 跳过复制 ${legacyPath}: ${error.message}`);
+    }
+  }
+  // 从「与 proxy.js 同目录」迁移（例如首次改用 Electron 而数据仍在项目根目录）
+  copyIfMissing(path.join(__dirname, 'accounts.sqlite'), accountsDbPath);
+  copyIfMissing(path.join(__dirname, 'account.json'), accountsFilePath);
+}
 
 function normalizeAccountsPayload(payload) {
   const source = payload && typeof payload === 'object' ? payload : {};
@@ -504,8 +526,8 @@ app.use('/api/h5sdk/login', async (req, res) => {
   }
 });
 
-// 静态文件服务
-app.use(express.static(__dirname));
+// 静态文件服务（只读资源；数据库与 account.json 在用户目录 userDataDir）
+app.use(express.static(staticRoot));
 // 代理所有其他请求
 app.use('/', createProxyMiddleware({
   target: TARGET,
@@ -613,22 +635,31 @@ app.use('/', createProxyMiddleware({
   },
   selfHandleResponse: true
 }));
-async function startServer() {
-  try {
-    await initDatabase();
-    await migrateJsonToDbIfNeeded();
-    app.listen(PORT, () => {
+async function startProxyServer() {
+  ensureUserDataLayout();
+  await initDatabase();
+  await migrateJsonToDbIfNeeded();
+  return await new Promise((resolve, reject) => {
+    const server = app.listen(PORT, () => {
       console.log(`✅ Proxy running at http://localhost:${PORT}`);
       console.log(`✅ Mock interceptors active`);
       console.log(`✅ Account uname: ${accountConfig.uname}`);
       console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
       console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
       console.log(`✅ Accounts storage: SQLite (${accountsDbPath})`);
+      console.log(`✅ Static root: ${staticRoot}`);
+      console.log(`✅ User data dir: ${userDataDir}`);
+      resolve(server);
     });
-  } catch (error) {
-    console.error(`❌ Failed to start server: ${error.message}`);
-    process.exit(1);
-  }
+    server.on('error', reject);
+  });
 }
 
-startServer();
+module.exports = { startProxyServer, PORT, accountsDbPath, userDataDir, staticRoot };
+
+if (require.main === module) {
+  startProxyServer().catch((error) => {
+    console.error(`❌ Failed to start server: ${error.message}`);
+    process.exit(1);
+  });
+}
