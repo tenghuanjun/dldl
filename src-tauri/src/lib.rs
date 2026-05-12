@@ -61,7 +61,23 @@ fn resolve_node_binary(app: &AppHandle) -> PathBuf {
             }
         }
     }
+    // 从 Finder / Dock 启动时 PATH 往往不含 Homebrew，裸用 "node" 会找不到。
+    #[cfg(target_os = "macos")]
+    for p in ["/opt/homebrew/bin/node", "/usr/local/bin/node"] {
+        let pb = PathBuf::from(p);
+        if pb.is_file() {
+            return pb;
+        }
+    }
     PathBuf::from("node")
+}
+
+fn show_startup_error(message: &str) {
+    let _ = rfd::MessageDialog::new()
+        .set_title("DLDL-Proxy")
+        .set_description(message)
+        .set_level(rfd::MessageLevel::Error)
+        .show();
 }
 
 fn spawn_proxy(
@@ -187,7 +203,9 @@ pub fn run() {
         }))
         .setup(|app| {
             if let Err(e) = try_setup(app) {
-                eprintln!("DLDL-Proxy 启动失败: {:#}", e);
+                let msg = format!("{:#}\n\n若已安装 Node，可在终端执行：\nexport DLDL_NODE_PATH=\"$(which node)\"\nopen -a \"DLDL-Proxy\"", e);
+                eprintln!("DLDL-Proxy 启动失败: {msg}");
+                show_startup_error(&msg);
                 std::process::exit(1);
             }
             Ok(())
