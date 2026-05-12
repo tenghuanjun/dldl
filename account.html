@@ -86,8 +86,20 @@
                         <label class="form-label">密码 upwd</label>
                         <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
                     </div>
+                    <div class="form-field full">
+                        <label class="form-label">token</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.token" rows="3" placeholder="可选；留空则打开扫码页时会自动拉取"></textarea>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">time</label>
+                        <input class="form-input" v-model="accountForm.time" placeholder="可选，与 sign 配套">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">sign</label>
+                        <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
+                    </div>
                 </div>
-                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。</div>
+                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。token / time / sign 可手动粘贴或通过「刷新 token」写入；三者通常需与登录接口返回一致。</div>
                 <div class="modal-actions">
                     <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
                     <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
@@ -109,7 +121,7 @@
                     areas: [],
                     accountModalVisible: false,
                     accountModalMode: 'create',
-                    accountForm: { area: '', name: '', uname: '', upwd: '' },
+                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '' },
                     editingAccountRef: null
                 };
             },
@@ -232,12 +244,23 @@
                         area: this.findAccountLocation(account)?.group.area || '',
                         name: account.name || '',
                         uname: account.uname || '',
-                        upwd: account.upwd || ''
+                        upwd: account.upwd || '',
+                        token: account.token != null ? String(account.token) : '',
+                        time: account.time != null ? String(account.time) : '',
+                        sign: account.sign != null ? String(account.sign) : ''
                     };
                     this.editingAccountRef = account;
                 } else {
                     this.accountModalMode = 'create';
-                    this.accountForm = { area: this.areas[0]?.area || '', name: '', uname: '', upwd: '' };
+                    this.accountForm = {
+                        area: this.areas[0]?.area || '',
+                        name: '',
+                        uname: '',
+                        upwd: '',
+                        token: '',
+                        time: '',
+                        sign: ''
+                    };
                     this.editingAccountRef = null;
                 }
                 this.accountModalVisible = true;
@@ -251,6 +274,9 @@
                 const name = String(this.accountForm.name || '').trim();
                 const uname = String(this.accountForm.uname || '').trim();
                 const upwd = String(this.accountForm.upwd || '').trim();
+                const token = String(this.accountForm.token || '').trim();
+                const time = String(this.accountForm.time || '').trim();
+                const sign = String(this.accountForm.sign || '').trim();
                 if (!area) return this.failWithMessage('请选择或填写区服');
                 if (!uname) return this.failWithMessage('请输入账号 uname');
                 if (!upwd) return this.failWithMessage('请输入密码 upwd');
@@ -258,7 +284,7 @@
                 if (!targetGroup) return;
                 if (this.accountModalMode === 'create') {
                     if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
-                    targetGroup.accounts.push({ name, uname, upwd });
+                    targetGroup.accounts.push({ name, uname, upwd, token, time, sign });
                 } else {
                     const location = this.findAccountLocation(this.editingAccountRef || {});
                     if (!location) return this.failWithMessage('未找到要编辑的账号');
@@ -272,6 +298,9 @@
                     target.name = name;
                     target.uname = uname;
                     target.upwd = upwd;
+                    target.token = token;
+                    target.time = time;
+                    target.sign = sign;
                 }
                 const saved = await this.saveAccounts();
                 if (!saved) return;
@@ -775,6 +804,17 @@
             padding: 10px 12px;
             font-size: 13px;
             outline: none;
+        }
+
+        textarea.form-input.form-textarea {
+            min-height: 72px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+
+        .form-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
         }
 
         .area-select {
