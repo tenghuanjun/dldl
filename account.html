@@ -14,7 +14,7 @@
 <body>
     <div id="app" class="container">
         <div class="title">多账号扫码入口</div>
-        <div class="toolbar">
+        <div class="toolbar toolbar-main">
             <button class="btn btn-secondary" type="button" @click="triggerImportDatabase">导入数据库</button>
             <input
                 ref="importDbInput"
@@ -29,6 +29,53 @@
             <button class="btn btn-secondary" type="button" @click="openAccountModal()">新增账号</button>
             <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <button class="btn btn-secondary" type="button" @click="showPwd = !showPwd">{{showPwd?'隐藏密码':'显示密码'}}</button>
+            <span class="separator">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <button
+                class="btn"
+                type="button"
+                :disabled="selectedAccountCount === 0"
+                @click="batchLaunchSelected"
+            >批量启动扫码页（已选 {{ selectedAccountCount }}）</button>
+        </div>
+
+        <div class="batch-area-panel">
+            <span class="batch-area-panel-title">同区服按批次启动</span>
+            <span class="batch-area-hint">按卡片顺序分批，与下方勾选无关。</span>
+            <div class="batch-area-row">
+                <label class="batch-inline-label">区服</label>
+                <el-select
+                    v-model="batchPanelArea"
+                    class="batch-area-select"
+                    filterable
+                    clearable
+                    placeholder="选择区服"
+                >
+                    <el-option
+                        v-for="g in areas"
+                        :key="'batch-opt-' + g.area"
+                        :label="g.area"
+                        :value="g.area"
+                    />
+                </el-select>
+                <label class="batch-inline-label">每批</label>
+                <input
+                    v-model.number="batchPanelSize"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="form-input batch-num-input"
+                >
+                <label class="batch-inline-label">第</label>
+                <input
+                    v-model.number="batchPanelBatchNo"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="form-input batch-num-input"
+                >
+                <label class="batch-inline-label">批</label>
+                <button class="btn" type="button" @click="batchLaunchByAreaSlice">启动该批次</button>
+            </div>
         </div>
 
         <section class="area" v-for="group in areas" :key="group.area">
@@ -36,12 +83,21 @@
                 <div class="area-title">{{ group.area }}</div>
                 <div class="area-sub">
                     {{ group.accounts.length }} 个账号
+                    <button type="button" class="btn-link" @click="selectAllInArea(group, true)">全选</button>
+                    <button type="button" class="btn-link" @click="selectAllInArea(group, false)">取消全选</button>
                     <button class="btn btn-danger btn-mini" type="button" @click="deleteArea(group)">删除区服</button>
                 </div>
             </div>
 
             <div class="cards" v-account-cards-sortable="group">
                 <div class="card sortable-account-card" v-for="account in group.accounts" :key="`${group.area}-${account.uname}`">
+                    <label class="card-check-wrap" @mousedown.stop @click.stop>
+                        <input
+                            type="checkbox"
+                            :checked="isAccountSelected(group.area, account)"
+                            @change="onAccountCheckboxChange($event, group.area, account)"
+                        >
+                    </label>
                     <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序">⋮⋮</button>
                     <div class="card-main">
                         <div class="card-top">
@@ -64,7 +120,8 @@
                 </div>
             </div>
         </section>
-        <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
+        <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动扫码页」会按列表顺序约每隔 1.5 秒依次打开（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」。</div>
+        <div class="tip tip-secondary">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
         <div class="tip tip-secondary">换电脑时可用「导出数据库」将当前 <code>accounts.sqlite</code> 存到本机任意位置；在新电脑安装后点「导入数据库」选择该文件即可整体恢复账号（导入前会自动备份当前库到用户数据目录）。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
@@ -198,8 +255,20 @@
                     accountModalMode: 'create',
                     accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '' },
                     loginUrlPaste: '',
-                    editingAccountRef: null
+                    editingAccountRef: null,
+                    /** 勾选批量启动：key = accountSelectKey(area, account) */
+                    accountSelectMap: {},
+                    /** 同区服按批次：区服、每批个数、第几批（从 1 开始） */
+                    batchPanelArea: '',
+                    batchPanelSize: 5,
+                    batchPanelBatchNo: 1
                 };
+            },
+            computed: {
+                selectedAccountCount() {
+                    const m = this.accountSelectMap;
+                    return Object.keys(m).filter((k) => m[k]).length;
+                }
             },
             mounted() {
                 // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
@@ -325,6 +394,11 @@
                         const json = await resp.json();
                         const parsed = this.normalizeAccounts(json);
                         this.areas = parsed;
+                        this.pruneStaleSelections();
+                        const names = parsed.map((g) => g.area);
+                        if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) {
+                            this.batchPanelArea = names[0] || '';
+                        }
                     } catch (e) {
                         console.error('load accounts failed', e);
                     }
@@ -768,6 +842,101 @@
                         this.showError(`获取 token 失败：${e?.message || e}`);
                     }
                 },
+                accountSelectKey(area, account) {
+                    return `${String(area || '')}\t${String(account && account.uname || '')}\t${String(account && account.upwd || '')}`;
+                },
+                isAccountSelected(area, account) {
+                    return !!this.accountSelectMap[this.accountSelectKey(area, account)];
+                },
+                onAccountCheckboxChange(ev, area, account) {
+                    const k = this.accountSelectKey(area, account);
+                    const next = { ...this.accountSelectMap };
+                    if (ev.target.checked) next[k] = true;
+                    else delete next[k];
+                    this.accountSelectMap = next;
+                },
+                selectAllInArea(group, on) {
+                    if (!group || !Array.isArray(group.accounts)) return;
+                    const next = { ...this.accountSelectMap };
+                    for (const account of group.accounts) {
+                        const k = this.accountSelectKey(group.area, account);
+                        if (on) next[k] = true;
+                        else delete next[k];
+                    }
+                    this.accountSelectMap = next;
+                },
+                pruneStaleSelections() {
+                    const valid = new Set();
+                    for (const g of this.areas) {
+                        for (const a of g.accounts) {
+                            valid.add(this.accountSelectKey(g.area, a));
+                        }
+                    }
+                    const next = {};
+                    for (const k of Object.keys(this.accountSelectMap)) {
+                        if (valid.has(k) && this.accountSelectMap[k]) next[k] = true;
+                    }
+                    this.accountSelectMap = next;
+                },
+                delay(ms) {
+                    return new Promise((resolve) => setTimeout(resolve, ms));
+                },
+                getSelectedAccountsOrdered() {
+                    const out = [];
+                    const m = this.accountSelectMap;
+                    for (const group of this.areas) {
+                        for (const account of group.accounts) {
+                            if (m[this.accountSelectKey(group.area, account)]) out.push(account);
+                        }
+                    }
+                    return out;
+                },
+                async batchLaunchAccounts(accounts, opts = {}) {
+                    const list = Array.isArray(accounts) ? accounts : [];
+                    if (!list.length) return;
+                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : 1500;
+                    for (let i = 0; i < list.length; i++) {
+                        if (i > 0) await this.delay(gapMs);
+                        try {
+                            await this.openLogin(list[i]);
+                        } catch (e) {
+                            console.error('batchLaunchAccounts item failed', e);
+                        }
+                    }
+                    if (opts.silentSuccess) return;
+                    this.showSuccess(`已按顺序打开 ${list.length} 个扫码页（间隔约 ${gapMs / 1000} 秒）`);
+                },
+                async batchLaunchSelected() {
+                    const list = this.getSelectedAccountsOrdered();
+                    if (!list.length) {
+                        this.showError('请先勾选要启动的账号');
+                        return;
+                    }
+                    await this.batchLaunchAccounts(list);
+                },
+                async batchLaunchByAreaSlice() {
+                    const area = String(this.batchPanelArea || '').trim();
+                    if (!area) {
+                        this.showError('请选择区服');
+                        return;
+                    }
+                    const group = this.areas.find((g) => g.area === area);
+                    if (!group || !group.accounts.length) {
+                        this.showError('该区服下没有账号');
+                        return;
+                    }
+                    const size = Math.max(1, Math.floor(Number(this.batchPanelSize)) || 5);
+                    const batchNo = Math.max(1, Math.floor(Number(this.batchPanelBatchNo)) || 1);
+                    const start = (batchNo - 1) * size;
+                    const slice = group.accounts.slice(start, start + size);
+                    if (!slice.length) {
+                        this.showError(
+                            `第 ${batchNo} 批没有账号（当前区服共 ${group.accounts.length} 个，每批 ${size} 个，有效批次为 1～${Math.max(1, Math.ceil(group.accounts.length / size))}）`
+                        );
+                        return;
+                    }
+                    await this.batchLaunchAccounts(slice);
+                },
                 async refreshToken(account) {
                     try {
                         const tokenInfo = await this.fetchToken(account, { forceApi: true });
@@ -857,6 +1026,72 @@
             display: flex;
             justify-content: flex-end;
             margin: 10px 0 16px;
+            flex-wrap: wrap;
+            gap: 8px 0;
+            align-items: center;
+        }
+
+        .toolbar-main .separator {
+            flex-shrink: 0;
+        }
+
+        .batch-area-panel {
+            background: #141821;
+            border: 1px solid #242936;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+        }
+
+        .batch-area-panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e6e8eb;
+            margin-right: 8px;
+        }
+
+        .batch-area-hint {
+            font-size: 12px;
+            color: #7a869f;
+        }
+
+        .batch-area-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 10px;
+            margin-top: 10px;
+        }
+
+        .batch-inline-label {
+            font-size: 12px;
+            color: #94a0b8;
+            white-space: nowrap;
+        }
+
+        .batch-area-select {
+            min-width: 160px;
+            max-width: 260px;
+        }
+
+        .batch-num-input {
+            width: 72px;
+            flex: 0 0 auto;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            padding: 0 4px;
+            font-size: 12px;
+            color: #2f81f7;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .btn-link:hover {
+            color: #5a9dff;
         }
 
         .area {
@@ -911,6 +1146,23 @@
             align-items: stretch;
             gap: 10px;
             padding: 10px 12px;
+        }
+
+        .card-check-wrap {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            cursor: pointer;
+        }
+
+        .card-check-wrap input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #2f81f7;
         }
 
         .sortable-account-card .card-main {

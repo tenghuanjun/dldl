@@ -1,0 +1,29 @@
+# 在 Windows 上为当前项目打 Win 安装包（含 sqlite3 等原生模块的 node-gyp 编译）。
+# 在 macOS 本机执行 `electron-builder --win` 时，若从 GitHub 拉取 sqlite3 的 Windows 预编译失败，
+# 会回退到 node-gyp，而 node-gyp 不支持在 Mac 上为 Windows 交叉编译，因此会报错。
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dist-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installers
+        run: npm run dist:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dldl-dist-win
+          path: dist/
