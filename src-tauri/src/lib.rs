@@ -1,14 +1,11 @@
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use anyhow::Context;
 use tauri::webview::{NewWindowFeatures, NewWindowResponse};
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime, WebviewUrl, WebviewWindowBuilder};
 use url::Url;
-
-static POPUP_LABEL: AtomicU64 = AtomicU64::new(0);
 
 struct ProxyChild {
     inner: Mutex<Option<Child>>,
@@ -127,42 +124,20 @@ fn allow_popup_url(u: &Url) -> bool {
     matches!(u.scheme(), "http" | "https" | "about")
 }
 
-fn build_popup_window<R: Runtime>(
-    app: &AppHandle<R>,
+/// `window.open` 策略：仅允许 http(s)/about。
+///
+/// 使用 [`NewWindowResponse::Allow`] 交给 Wry/WebKit 按系统方式创建弹窗，而不是
+/// [`NewWindowResponse::Create`] 自建 `WebviewWindow`。后者在部分版本/时机下与
+/// Wry 桥接时可能在运行时 `unwrap` 失败，导致**整进程闪退**；批量打开扫码页时
+/// 连续触发，更容易复现。
+fn popup_window_policy<R: Runtime>(
     url: Url,
-    features: NewWindowFeatures,
+    _features: NewWindowFeatures,
 ) -> NewWindowResponse<R> {
-    if !allow_popup_url(&url) {
-        return NewWindowResponse::Deny;
-    }
-    let label = format!(
-        "popup-{}",
-        POPUP_LABEL.fetch_add(1, Ordering::SeqCst)
-    );
-    let h2 = app.clone();
-    let mut b = WebviewWindowBuilder::new(app, &label, WebviewUrl::External(url.clone()))
-        .window_features(features)
-        .title(truncate_title(url.as_str()))
-        .visible(true)
-        .on_new_window(move |u2, f2| build_popup_window(&h2, u2, f2));
-    if url.scheme() == "about" {
-        b = b.inner_size(360.0, 660.0);
-    }
-    match b.build() {
-        Ok(w) => NewWindowResponse::Create { window: w },
-        Err(e) => {
-            eprintln!("[dldl-proxy] 创建子窗口失败: {e}");
-            NewWindowResponse::Deny
-        }
-    }
-}
-
-fn truncate_title(s: &str) -> String {
-    const MAX: usize = 120;
-    if s.len() <= MAX {
-        s.to_string()
+    if allow_popup_url(&url) {
+        NewWindowResponse::Allow
     } else {
-        format!("{}…", &s[..MAX.saturating_sub(1)])
+        NewWindowResponse::Deny
     }
 }
 
@@ -182,12 +157,11 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
         inner: Mutex::new(Some(child)),
     });
     let account_url = Url::parse(&format!("http://127.0.0.1:{port}/account.html"))?;
-    let popup_handle = app_handle.clone();
     let _main = WebviewWindowBuilder::new(&app_handle, "main", WebviewUrl::External(account_url))
         .title("DLDL-Proxy")
         .inner_size(1280.0, 800.0)
         .min_inner_size(800.0, 600.0)
-        .on_new_window(move |url, features| build_popup_window(&popup_handle, url, features))
+        .on_new_window(|url, features| popup_window_policy(url, features))
         .build()?;
     Ok(())
 }
