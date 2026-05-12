@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/dist/index.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/theme-chalk/dark/css-vars.css" />
     <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/dist/index.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 </head>
 
 <body>
@@ -28,28 +29,31 @@
                 </div>
             </div>
 
-            <div class="cards">
-                <div class="card" v-for="account in group.accounts" :key="`${group.area}-${account.uname}`">
-                    <div class="card-top">
-                        <div class="card-name">
-                            <div class="nick">{{ account.name || '-' }}</div>
-                            <div class="uname white-space-nowrap" v-if="showPwd">{{ account.uname }}</div>
+            <div class="cards" v-account-cards-sortable="group">
+                <div class="card sortable-account-card" v-for="account in group.accounts" :key="`${group.area}-${account.uname}`">
+                    <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序">⋮⋮</button>
+                    <div class="card-main">
+                        <div class="card-top">
+                            <div class="card-name">
+                                <div class="nick white-space-nowrap">{{ account.name || '-' }}</div>
+                                <div class="uname white-space-nowrap" v-if="showPwd">{{ account.uname }}</div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
+                                <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
+                                <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                            </div>
                         </div>
-                        <div class="card-actions">
-                            <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
-                            <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
-                            <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
-                        </div>
-                    </div>
 
-                    <div class="card-row">
-                        <div class="label">密码</div>
-                        <input class="pwd" :type="showPwd?'text':'password'" :value="account.upwd" readonly>
+                        <div class="card-row">
+                            <div class="label">密码</div>
+                            <input class="pwd" :type="showPwd?'text':'password'" :value="account.upwd" readonly>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
-        <div class="tip">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
+        <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -125,6 +129,53 @@
         const { createApp } = Vue;
         const ElMessage = window.ElementPlus?.ElMessage;
         const ElMessageBox = window.ElementPlus?.ElMessageBox;
+
+        function destroyAccountCardsSortable(el) {
+            if (el._accountCardsSortable) {
+                el._accountCardsSortable.destroy();
+                el._accountCardsSortable = null;
+            }
+        }
+
+        const accountCardsSortableDirective = {
+            mounted(el, binding) {
+                el._sortableGroupRef = binding.value;
+                const SortableCtor = window.Sortable;
+                if (typeof SortableCtor !== 'function' || !binding.value || !Array.isArray(binding.value.accounts)) {
+                    return;
+                }
+                el._accountCardsSortable = SortableCtor.create(el, {
+                    animation: 180,
+                    handle: '.card-drag-handle',
+                    draggable: '.sortable-account-card',
+                    ghostClass: 'card-sortable-ghost',
+                    chosenClass: 'card-sortable-chosen',
+                    dragClass: 'card-sortable-drag',
+                    forceFallback: true,
+                    fallbackTolerance: 5,
+                    onEnd(evt) {
+                        const g = el._sortableGroupRef;
+                        if (!g || !Array.isArray(g.accounts)) return;
+                        const oldIndex = evt.oldIndex;
+                        const newIndex = evt.newIndex;
+                        if (oldIndex === newIndex || oldIndex == null || newIndex == null) return;
+                        const list = g.accounts;
+                        const moved = list.splice(oldIndex, 1)[0];
+                        list.splice(newIndex, 0, moved);
+                        const vm = binding.instance;
+                        if (vm && typeof vm.onAccountCardsSorted === 'function') {
+                            void vm.onAccountCardsSorted();
+                        }
+                    }
+                });
+            },
+            updated(el, binding) {
+                el._sortableGroupRef = binding.value;
+            },
+            unmounted(el) {
+                destroyAccountCardsSortable(el);
+            }
+        };
 
         const app = createApp({
             data() {
@@ -218,6 +269,14 @@
                     return false;
                 }
                 return true;
+            },
+            async onAccountCardsSorted() {
+                const saved = await this.saveAccounts();
+                if (!saved) {
+                    await this.loadAccounts();
+                    return;
+                }
+                this.showSuccess('排序已保存');
             },
             findAccountLocation(account) {
                 for (const group of this.areas) {
@@ -641,6 +700,7 @@
 
             }
         });
+        app.directive('account-cards-sortable', accountCardsSortableDirective);
         app.use(ElementPlus);
         app.mount("#app");
     </script>
@@ -757,6 +817,62 @@
             border: 1px solid #242936;
             border-radius: 10px;
             padding: 12px;
+        }
+
+        .sortable-account-card {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px 12px;
+        }
+
+        .sortable-account-card .card-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-drag-handle {
+            flex-shrink: 0;
+            width: 28px;
+            align-self: stretch;
+            margin: 0;
+            padding: 0;
+            border: 1px solid #2f3545;
+            border-radius: 8px;
+            background: #1a1f2e;
+            color: #7a869f;
+            font-size: 12px;
+            line-height: 1;
+            letter-spacing: -1px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card-drag-handle:hover {
+            color: #c5ccd8;
+            border-color: #3d4a63;
+        }
+
+        .card-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .card-sortable-ghost {
+            opacity: 0.45;
+        }
+
+        .card-sortable-chosen {
+            border-color: #2f81f7;
+            box-shadow: 0 0 0 1px rgba(47, 129, 247, 0.35);
+        }
+
+        .card-sortable-drag {
+            opacity: 0.95;
         }
 
         .card-top {
