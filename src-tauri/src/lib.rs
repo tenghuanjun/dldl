@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::io::{ErrorKind, Write};
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
@@ -39,12 +40,57 @@ fn resolve_port() -> u16 {
         .unwrap_or(8080)
 }
 
+/// 在 `base/<version>/rel` 中选字典序最后一项（通常对应较新的 Node 版本）。
+fn newest_versioned_child_file(base: &Path, rel: &str) -> Option<PathBuf> {
+    let mut dirs: Vec<PathBuf> = std::fs::read_dir(base)
+        .ok()?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .map(|e| e.path())
+        .collect();
+    dirs.sort();
+    for d in dirs.into_iter().rev() {
+        let cand = d.join(rel);
+        if cand.is_file() {
+            return Some(cand);
+        }
+    }
+    None
+}
+
+/// 从访达启动时没有 shell 注入的 PATH；补充常见 nvm / fnm / mise / Volta 路径。
+#[cfg(target_os = "macos")]
+fn discover_node_in_user_dirs() -> Option<PathBuf> {
+    let home = std::env::var_os("HOME").map(PathBuf::from)?;
+    let volta = home.join(".volta/bin/node");
+    if volta.is_file() {
+        return Some(volta);
+    }
+    if let Some(p) = newest_versioned_child_file(&home.join(".nvm/versions/node"), "bin/node") {
+        return Some(p);
+    }
+    let fnm_root = home.join(".local/share/fnm/node-versions");
+    if let Some(p) = newest_versioned_child_file(&fnm_root, "installation/bin/node") {
+        return Some(p);
+    }
+    if let Some(p) = newest_versioned_child_file(&home.join(".local/share/mise/installs/node"), "bin/node") {
+        return Some(p);
+    }
+    None
+}
+
+#[cfg(not(target_os = "macos"))]
+fn discover_node_in_user_dirs() -> Option<PathBuf> {
+    None
+}
+
 fn resolve_node_binary(app: &AppHandle) -> PathBuf {
     if let Ok(p) = std::env::var("DLDL_NODE_PATH") {
         return PathBuf::from(p);
     }
     if !cfg!(debug_assertions) {
         if let Ok(dir) = app.path().resource_dir() {
+            // 与 tauri.conf.json 中 `_embed/nodejs` -> `app/nodejs` 对应（beforeBuildCommand 生成）
             let nix = dir.join("app/nodejs/bin/node");
             if nix.is_file() {
                 return nix;
@@ -65,6 +111,10 @@ fn resolve_node_binary(app: &AppHandle) -> PathBuf {
         if pb.is_file() {
             return pb;
         }
+    }
+    #[cfg(target_os = "macos")]
+    if let Some(p) = discover_node_in_user_dirs() {
+        return p;
     }
     PathBuf::from("node")
 }
@@ -90,6 +140,13 @@ fn spawn_proxy(
         proxy_js.display()
     );
     let node = resolve_node_binary(app);
+    let node_is_bare = node.as_os_str() == std::ffi::OsStr::new("node");
+    if !node_is_bare && !node.is_file() {
+        anyhow::bail!(
+            "未找到 Node 可执行文件: {}。请安装 Node，或将 DLDL_NODE_PATH 设为 node 的绝对路径。",
+            node.display()
+        );
+    }
     let mut cmd = Command::new(&node);
     cmd.stdin(Stdio::null())
         .stdout(Stdio::inherit())
@@ -99,12 +156,29 @@ fn spawn_proxy(
         .env("DLDL_STATIC_ROOT", static_root)
         .env("DLDL_PORT", port.to_string())
         .arg(&proxy_js);
-    cmd.spawn().with_context(|| {
-        format!(
-            "无法启动 Node 代理（请确认已安装 Node 且在 PATH 中，或设置 DLDL_NODE_PATH）；node={:?} proxy={:?}",
-            node, proxy_js
-        )
-    })
+    match cmd.spawn() {
+        Ok(child) => Ok(child),
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            anyhow::bail!(
+                "无法启动 Node 代理：系统找不到可执行文件「{}」。\n\
+                 从访达或程序坞启动时，PATH 通常不含终端里的 Node（若使用 nvm、fnm、mise 等更容易出现）。\n\
+                 请将 Node 安装到 /opt/homebrew/bin 或 /usr/local/bin，或设置环境变量 DLDL_NODE_PATH，例如：\n\
+                 export DLDL_NODE_PATH=\"$(which node)\"\n\
+                 open -a \"DLDL-Proxy\"\n\
+                 \n\
+                 （排查）node={:?}，代理脚本={}",
+                node.display(),
+                node,
+                proxy_js.display()
+            );
+        }
+        Err(e) => Err(e).with_context(|| {
+            format!(
+                "无法启动 Node 代理；node={:?} proxy={:?}",
+                node, proxy_js
+            )
+        }),
+    }
 }
 
 fn wait_for_port(port: u16, attempts: u32) -> anyhow::Result<()> {
@@ -141,14 +215,48 @@ fn popup_window_policy<R: Runtime>(
     }
 }
 
+fn append_startup_log(handle: &AppHandle, msg: &str) {
+    let Ok(base) = handle.path().app_data_dir() else {
+        return;
+    };
+    let log = base.join("dldl-proxy").join("startup.log");
+    let Some(parent) = log.parent() else {
+        return;
+    };
+    let _ = std::fs::create_dir_all(parent);
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log)
+    {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        let line: String = msg.chars().map(|c| if c == '\n' { ' ' } else { c }).collect();
+        let _ = writeln!(f, "{ts}\t{line}");
+    }
+}
+
 fn try_setup(app: &mut App) -> anyhow::Result<()> {
     let app_handle = app.handle().clone();
+    append_startup_log(&app_handle, "try_setup 开始");
     let static_root = resolve_static_root(&app_handle);
     let user_data = resolve_user_data(&app_handle);
+    append_startup_log(
+        &app_handle,
+        &format!(
+            "static_root={} user_data={}",
+            static_root.display(),
+            user_data.display()
+        ),
+    );
     std::fs::create_dir_all(&user_data)?;
     let port = resolve_port();
     let mut child = spawn_proxy(&app_handle, &static_root, &user_data, port)?;
+    append_startup_log(&app_handle, "已 spawn Node 子进程，等待端口");
     if let Err(e) = wait_for_port(port, 250) {
+        append_startup_log(&app_handle, &format!("等待端口失败: {e:#}"));
         let _ = child.kill();
         let _ = child.wait();
         return Err(e);
@@ -162,7 +270,12 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
         .inner_size(1280.0, 800.0)
         .min_inner_size(800.0, 600.0)
         .on_new_window(|url, features| popup_window_policy(url, features))
-        .build()?;
+        .build()
+        .map_err(|e| {
+            append_startup_log(&app_handle, &format!("创建主窗口失败: {e}"));
+            e
+        })?;
+    append_startup_log(&app_handle, "主窗口已创建");
     Ok(())
 }
 
@@ -177,7 +290,9 @@ pub fn run() {
         }))
         .setup(|app| {
             if let Err(e) = try_setup(app) {
-                let msg = format!("{:#}\n\n若已安装 Node，可在终端执行：\nexport DLDL_NODE_PATH=\"$(which node)\"\nopen -a \"DLDL-Proxy\"", e);
+                let handle = app.handle().clone();
+                append_startup_log(&handle, &format!("启动失败: {e:#}"));
+                let msg = format!("{:#}\n\n若终端里能运行 node，可在终端执行：\nexport DLDL_NODE_PATH=\"$(which node)\"\nopen -a \"DLDL-Proxy\"\n\n启动日志（便于排查）：\n~/Library/Application Support/com.dldl.localproxy/dldl-proxy/startup.log", e);
                 eprintln!("DLDL-Proxy 启动失败: {msg}");
                 show_startup_error(&msg);
                 std::process::exit(1);

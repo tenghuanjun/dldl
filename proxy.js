@@ -785,7 +785,7 @@ async function startProxyServer() {
   await initDatabase();
   await migrateJsonToDbIfNeeded();
   return await new Promise((resolve, reject) => {
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '127.0.0.1', () => {
       console.log(`✅ Proxy running at http://localhost:${PORT}`);
       console.log(`✅ Mock interceptors active`);
       console.log(`✅ Account uname: ${accountConfig.uname}`);

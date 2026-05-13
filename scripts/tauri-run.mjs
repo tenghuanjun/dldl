@@ -15,6 +15,17 @@ if (fs.existsSync(cargoBin)) {
   process.env.PATH = `${cargoBin}${path.delimiter}${process.env.PATH || ""}`;
 }
 
+// Tauri CLI 2.x 将环境变量 CI 映射为 --ci，只接受 true/false；部分环境会设 CI=1 导致构建失败。
+const ciEnv = process.env.CI;
+if (
+  ciEnv !== undefined &&
+  ciEnv !== "" &&
+  ciEnv !== "true" &&
+  ciEnv !== "false"
+) {
+  delete process.env.CI;
+}
+
 const cargoName = process.platform === "win32" ? "cargo.exe" : "cargo";
 const cargoPath = path.join(cargoBin, cargoName);
 const cargoCmd = fs.existsSync(cargoPath) ? cargoPath : "cargo";
@@ -33,6 +44,40 @@ if (check.status !== 0) {
   console.error('    source "$HOME/.cargo/env"');
   console.error("  并确认存在:  ~/.cargo/bin/cargo\n");
   process.exit(1);
+}
+
+/** 与 src-tauri/Cargo.toml 的 rust-version 及当前 Tauri 依赖链一致（ darling / time 等要求 1.88+ ） */
+const REQUIRED_RUST_MINOR = 88;
+
+const rustcName = process.platform === "win32" ? "rustc.exe" : "rustc";
+const rustcPath = path.join(cargoBin, rustcName);
+const rustcCmd = fs.existsSync(rustcPath) ? rustcPath : "rustc";
+const rv = spawnSync(rustcCmd, ["--version"], { encoding: "utf8", env: process.env, stdio: "pipe" });
+if (rv.status !== 0) {
+  console.error("\n[错误] 未找到 rustc，请确认已安装 Rust 且 ~/.cargo/bin 在 PATH 中。\n");
+  process.exit(1);
+}
+const m = /rustc (\d+)\.(\d+)\.(\d+)/.exec(rv.stdout || "");
+if (m) {
+  const cur = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const req = [1, 88, 0];
+  let ok = true;
+  for (let i = 0; i < 3; i++) {
+    if (cur[i] > req[i]) break;
+    if (cur[i] < req[i]) {
+      ok = false;
+      break;
+    }
+  }
+  if (!ok) {
+    console.error(
+      `\n[错误] Rust 版本过低：当前 ${m[1]}.${m[2]}.${m[3]}，本项目依赖需要 rustc >= 1.${REQUIRED_RUST_MINOR}。\n`
+    );
+    console.error("  请升级工具链后重试：");
+    console.error("    rustup update stable");
+    console.error("    rustc --version\n");
+    process.exit(1);
+  }
 }
 
 const tauriArgs = process.argv.slice(2);
