@@ -16,6 +16,22 @@ const accountsFilePath = path.join(userDataDir, 'account.json');
 const accountsDbPath = path.join(userDataDir, 'accounts.sqlite');
 app.use(express.json({ limit: '1mb' }));
 
+/** Tauri 轮询直到 200；listen 早于 SQLite 初始化，避免壳在 DB 慢/锁等待时误判端口超时 */
+let proxyReady = false;
+app.get('/__dldl_ready', (req, res) => {
+  if (proxyReady) {
+    res.status(200).type('text/plain').send('ok');
+  } else {
+    res.status(503).type('text/plain').send('starting');
+  }
+});
+app.use((req, res, next) => {
+  if (proxyReady) {
+    return next();
+  }
+  res.status(503).type('text/plain').send('DLDL proxy is starting, retry shortly');
+});
+
 const IMPORT_DB_MAX_BYTES = 50 * 1024 * 1024;
 const SQLITE_MAGIC = Buffer.from('SQLite format 3\0');
 
@@ -203,6 +219,7 @@ function dbAll(sql, params = []) {
 async function initDatabase() {
   await closeDatabase();
   db = await openDatabase();
+  await dbRun('PRAGMA busy_timeout = 15000');
   await dbRun('PRAGMA foreign_keys = ON');
   await dbRun(`
     CREATE TABLE IF NOT EXISTS areas (
@@ -782,22 +799,31 @@ app.use('/', createProxyMiddleware({
 }));
 async function startProxyServer() {
   ensureUserDataLayout();
-  await initDatabase();
-  await migrateJsonToDbIfNeeded();
-  return await new Promise((resolve, reject) => {
-    const server = app.listen(PORT, '127.0.0.1', () => {
-      console.log(`✅ Proxy running at http://localhost:${PORT}`);
-      console.log(`✅ Mock interceptors active`);
-      console.log(`✅ Account uname: ${accountConfig.uname}`);
-      console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
-      console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
-      console.log(`✅ Accounts storage: SQLite (${accountsDbPath})`);
-      console.log(`✅ Static root: ${staticRoot}`);
-      console.log(`✅ User data dir: ${userDataDir}`);
-      resolve(server);
-    });
-    server.on('error', reject);
+  const server = await new Promise((resolve, reject) => {
+    const s = app.listen(PORT, '127.0.0.1', () => resolve(s));
+    s.on('error', reject);
   });
+  try {
+    await initDatabase();
+    await migrateJsonToDbIfNeeded();
+  } catch (error) {
+    try {
+      server.close();
+    } catch (_) {
+      // ignore
+    }
+    throw error;
+  }
+  proxyReady = true;
+  console.log(`✅ Proxy running at http://localhost:${PORT}`);
+  console.log(`✅ Mock interceptors active`);
+  console.log(`✅ Account uname: ${accountConfig.uname}`);
+  console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);
+  console.log(`✅ Multi-account mode via login.php?uname=xxx&upwd=xxx`);
+  console.log(`✅ Accounts storage: SQLite (${accountsDbPath})`);
+  console.log(`✅ Static root: ${staticRoot}`);
+  console.log(`✅ User data dir: ${userDataDir}`);
+  return server;
 }
 
 module.exports = { startProxyServer, PORT, accountsDbPath, userDataDir, staticRoot };

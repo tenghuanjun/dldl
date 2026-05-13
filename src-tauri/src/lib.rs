@@ -1,4 +1,4 @@
-use std::io::{ErrorKind, Write};
+use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
@@ -149,13 +149,18 @@ fn spawn_proxy(
     }
     let mut cmd = Command::new(&node);
     cmd.stdin(Stdio::null())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
         .current_dir(static_root)
         .env("DLDL_USER_DATA", user_data)
         .env("DLDL_STATIC_ROOT", static_root)
         .env("DLDL_PORT", port.to_string())
         .arg(&proxy_js);
+    // 从访达启动时没有终端：子进程 inherit 父进程的 stdout/stderr 时，写入可能阻塞在满管道上，
+    // Node 大量 console.log 会导致代理进程卡住，表现为整个应用「卡死」。开发模式仍继承终端便于调试。
+    if cfg!(debug_assertions) {
+        cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+    } else {
+        cmd.stdout(Stdio::null()).stderr(Stdio::null());
+    }
     match cmd.spawn() {
         Ok(child) => Ok(child),
         Err(e) if e.kind() == ErrorKind::NotFound => {
@@ -181,17 +186,42 @@ fn spawn_proxy(
     }
 }
 
-fn wait_for_port(port: u16, attempts: u32) -> anyhow::Result<()> {
+/// 等待 Node 侧 `GET /__dldl_ready` 返回 200（SQLite 等初始化完成），避免仅 TCP 连通但页面 503。
+fn http_get_status_line(port: u16, path: &str) -> Option<String> {
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    let mut stream = std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(500))
+        .ok()?;
+    let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(2)));
+    let req = format!(
+        "GET {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\nAccept: */*\r\n\r\n"
+    );
+    stream.write_all(req.as_bytes()).ok()?;
+    let mut reader = BufReader::new(stream);
+    let mut line = String::new();
+    reader.read_line(&mut line).ok()?;
+    Some(line)
+}
+
+fn parse_http_status(first_line: &str) -> Option<u16> {
+    let mut parts = first_line.split_whitespace();
+    let _http = parts.next()?;
+    let code = parts.next()?.parse().ok()?;
+    Some(code)
+}
+
+fn wait_for_proxy_ready(port: u16, attempts: u32) -> anyhow::Result<()> {
     for i in 0..attempts {
-        if std::net::TcpStream::connect(("127.0.0.1", port)).is_ok() {
-            return Ok(());
+        if let Some(line) = http_get_status_line(port, "/__dldl_ready") {
+            if parse_http_status(&line) == Some(200) {
+                return Ok(());
+            }
         }
         if i + 1 == attempts {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(120));
     }
-    anyhow::bail!("等待本地代理 127.0.0.1:{port} 超时");
+    anyhow::bail!("等待本地代理就绪 127.0.0.1:{port}/__dldl_ready 超时（SQLite 初始化过慢或 Node 启动失败）");
 }
 
 fn allow_popup_url(u: &Url) -> bool {
@@ -254,9 +284,9 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
     std::fs::create_dir_all(&user_data)?;
     let port = resolve_port();
     let mut child = spawn_proxy(&app_handle, &static_root, &user_data, port)?;
-    append_startup_log(&app_handle, "已 spawn Node 子进程，等待端口");
-    if let Err(e) = wait_for_port(port, 250) {
-        append_startup_log(&app_handle, &format!("等待端口失败: {e:#}"));
+    append_startup_log(&app_handle, "已 spawn Node 子进程，等待 /__dldl_ready");
+    if let Err(e) = wait_for_proxy_ready(port, 500) {
+        append_startup_log(&app_handle, &format!("等待代理就绪失败: {e:#}"));
         let _ = child.kill();
         let _ = child.wait();
         return Err(e);
