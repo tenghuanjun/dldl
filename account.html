@@ -34,6 +34,12 @@
                         :disabled="selectedAccountCount === 0"
                         @click="batchLaunchSelected"
                     >批量启动（{{ selectedAccountCount }}）</button>
+                    <button
+                        class="btn btn-compact"
+                        :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
+                        type="button"
+                        @click="toggleProxyAndRefreshIP"
+                    >{{ useProxy ? '代理IP: 已启用（切换IP）' : '代理IP: 未启用（点击启用并切换IP）' }}</button>
                 </div>
             </div>
             <div class="sticky-row sticky-row-batch">
@@ -118,6 +124,7 @@
         <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动扫码页」会按列表顺序约每隔 2 秒依次打开（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」。</div>
         <div class="tip tip-secondary">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
         <div class="tip tip-secondary">换电脑时可用「导出数据库」将当前 <code>accounts.sqlite</code> 存到本机任意位置；在新电脑安装后点「导入数据库」选择该文件即可整体恢复账号（导入前会自动备份当前库到用户数据目录）。</div>
+        <div class="tip tip-secondary">「代理IP」功能使用 Cloudflare Workers 代理请求登录接口，可绕过IP请求次数限制。点击「切换IP」会切换 Cloudflare 出口IP。使用前请先部署 <code>cloudflare-worker.js</code> 到 Cloudflare Workers，并将 Worker URL 填入配置。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -256,7 +263,11 @@
                     /** 同区服按批次：区服、每批个数、第几批（从 1 开始） */
                     batchPanelArea: '',
                     batchPanelSize: 5,
-                    batchPanelBatchNo: 1
+                    batchPanelBatchNo: 1,
+                    /** 代理IP配置 */
+                    useProxy: false,
+                    proxyWorkerUrl: 'https://red-moon-ff95.tenghuanjun.workers.dev',
+                    proxyIP: '直连',
                 };
             },
             computed: {
@@ -268,6 +279,8 @@
             mounted() {
                 // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
                 this.loadAccounts();
+                // 从 localStorage 读取代理配置，如果为空则修复
+                this.fixAndLoadProxyConfig();
             },
             methods: {
                 showMessage(type, message) {
@@ -774,8 +787,37 @@
                         over: "18.5"
                     };
                     const sign = this.getSign(signParams, API_KEY);
-                    const url = `https://s-api.37.com.cn/h5sdk/login?${new URLSearchParams({ ...signParams, sign }).toString()}`;
-                    const payload = await this.jsonp(url, "callback", 15000);
+                    const params = new URLSearchParams({ ...signParams, sign }).toString();
+                    
+                    // 根据是否使用代理选择不同的请求方式
+                    let payload;
+                    if (this.useProxy && this.proxyWorkerUrl) {
+                        // 使用代理请求
+                        try {
+                            const proxyUrl = `${this.proxyWorkerUrl}/h5sdk/login?${params}`;
+                            const resp = await fetch(proxyUrl);
+                            const text = await resp.text();
+                            // 解析 JSONP 响应
+                            const match = text.match(/^callback\(([\s\S]+)\);?$/);
+                            if (match) {
+                                payload = JSON.parse(match[1]);
+                            } else {
+                                // 尝试直接解析 JSON
+                                payload = JSON.parse(text);
+                            }
+                        } catch (e) {
+                            console.error('proxy fetch failed', e);
+                            this.showError(`代理请求失败：${e?.message || e}，尝试直连...`);
+                            // 降级到直连
+                            const url = `https://s-api.37.com.cn/h5sdk/login?${params}`;
+                            payload = await this.jsonp(url, "callback", 15000);
+                        }
+                    } else {
+                        // 直连请求
+                        const url = `https://s-api.37.com.cn/h5sdk/login?${params}`;
+                        payload = await this.jsonp(url, "callback", 15000);
+                    }
+                    
                     if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
                         this.showError(payload?.msg || "login api failed");
                         return null;
@@ -967,6 +1009,81 @@
                         console.error("refreshToken failed", e);
                         this.showError(`刷新 token 失败：${e?.message || e}`);
                     }
+                },
+                /** 代理IP相关方法 */
+                loadProxyConfig() {
+                    try {
+                        this.useProxy = localStorage.getItem('dldl_useProxy') === 'true';
+                        const savedUrl = localStorage.getItem('dldl_proxyWorkerUrl');
+                        // 如果没有保存过 URL，或保存的是空值，使用默认值
+                        if (!savedUrl || savedUrl.trim() === '') {
+                            this.proxyWorkerUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                            localStorage.setItem('dldl_proxyWorkerUrl', this.proxyWorkerUrl);
+                        } else {
+                            this.proxyWorkerUrl = savedUrl;
+                        }
+                        if (this.useProxy && this.proxyWorkerUrl) {
+                            this.proxyIP = '代理中';
+                        }
+                    } catch (e) {
+                        console.error('loadProxyConfig failed', e);
+                        this.proxyWorkerUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                    }
+                },
+                fixAndLoadProxyConfig() {
+                    const defaultUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                    try {
+                        // 强制修复：如果 URL 为空，设置默认值
+                        const savedUrl = localStorage.getItem('dldl_proxyWorkerUrl');
+                        if (!savedUrl || savedUrl.trim() === '') {
+                            localStorage.setItem('dldl_proxyWorkerUrl', defaultUrl);
+                        }
+                        this.loadProxyConfig();
+                    } catch (e) {
+                        console.error('fixAndLoadProxyConfig failed', e);
+                        this.proxyWorkerUrl = defaultUrl;
+                    }
+                },
+                saveProxyConfig() {
+                    try {
+                        localStorage.setItem('dldl_useProxy', String(this.useProxy));
+                        localStorage.setItem('dldl_proxyWorkerUrl', this.proxyWorkerUrl);
+                    } catch (e) {
+                        console.error('saveProxyConfig failed', e);
+                    }
+                },
+                async toggleProxyAndRefreshIP() {
+                    if (!this.proxyWorkerUrl) {
+                        this.showError('请先配置 Worker URL');
+                        return;
+                    }
+                    
+                    this.proxyIP = '切换中...';
+                    
+                    if (!this.useProxy) {
+                        // 首次点击，启用代理
+                        this.useProxy = true;
+                    }
+                    
+                    try {
+                        // 访问 Worker 切换 IP
+                        const testUrl = `${this.proxyWorkerUrl}/h5sdk/login?test=1&_t=${Date.now()}`;
+                        await fetch(testUrl, { method: 'GET' });
+                        this.proxyIP = '已切换';
+                        this.saveProxyConfig();
+                        this.showSuccess('已启用代理并切换IP，下次请求将使用新IP');
+                    } catch (e) {
+                        console.error('toggleProxyAndRefreshIP failed', e);
+                        this.proxyIP = '切换失败';
+                        this.showError(`切换IP失败：${e?.message || e}`);
+                    }
+                    
+                    // 3秒后恢复显示
+                    setTimeout(() => {
+                        if (this.useProxy) {
+                            this.proxyIP = '代理中';
+                        }
+                    }, 3000);
                 },
 
             }
@@ -1556,6 +1673,15 @@
         }
         .white-space-nowrap{
             white-space: nowrap;
+        }
+
+        .btn-proxy-active {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .btn-proxy-active:hover {
+            background: #059669;
         }
     </style>
 </body>
