@@ -39,7 +39,7 @@
                         :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
                         type="button"
                         @click="toggleProxyAndRefreshIP"
-                    >{{ useProxy ? '代理IP: 已启用（切换IP）' : '代理IP: 未启用（点击启用并切换IP）' }}</button>
+                    >{{ useProxy ? (proxyIP === '代理中' ? '代理IP: 已启用（切换IP）' : proxyIP) : '代理IP: 未启用（点击启用并切换IP）' }}</button>
                 </div>
             </div>
             <div class="sticky-row sticky-row-batch">
@@ -1066,24 +1066,101 @@
                     }
                     
                     try {
-                        // 访问 Worker 切换 IP
-                        const testUrl = `${this.proxyWorkerUrl}/h5sdk/login?test=1&_t=${Date.now()}`;
-                        await fetch(testUrl, { method: 'GET' });
-                        this.proxyIP = '已切换';
+                        // 清理过期的IP记录（48小时）
+                        this.cleanExpiredIPs();
+                        
+                        // 获取当前IP
+                        const currentIP = await this.getProxyIP();
+                        if (!currentIP) {
+                            throw new Error('无法获取当前IP');
+                        }
+                        
+                        // 检查当前IP是否已被使用
+                        const usedIPs = this.getUsedIPs();
+                        if (usedIPs[currentIP]) {
+                            // 当前IP已被使用，尝试多次切换
+                            let newIP = currentIP;
+                            let attempts = 0;
+                            const maxAttempts = 10;
+                            
+                            while (usedIPs[newIP] && attempts < maxAttempts) {
+                                // 等待一下再重试
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                newIP = await this.getProxyIP();
+                                attempts++;
+                            }
+                            
+                            if (usedIPs[newIP]) {
+                                this.showError(`切换${maxAttempts}次仍无法获取新IP，请稍后再试`);
+                                this.proxyIP = '切换失败';
+                                return;
+                            }
+                            
+                            currentIP = newIP;
+                        }
+                        
+                        // 记录当前IP
+                        this.recordUsedIP(currentIP);
+                        this.proxyIP = `IP: ${currentIP}`;
                         this.saveProxyConfig();
-                        this.showSuccess('已启用代理并切换IP，下次请求将使用新IP');
+                        this.showSuccess(`已切换到新IP: ${currentIP}`);
                     } catch (e) {
                         console.error('toggleProxyAndRefreshIP failed', e);
                         this.proxyIP = '切换失败';
                         this.showError(`切换IP失败：${e?.message || e}`);
                     }
-                    
-                    // 3秒后恢复显示
-                    setTimeout(() => {
-                        if (this.useProxy) {
-                            this.proxyIP = '代理中';
+                },
+                
+                // 获取当前代理IP
+                async getProxyIP() {
+                    try {
+                        const response = await fetch(`${this.proxyWorkerUrl}/get-ip`);
+                        const data = await response.json();
+                        return data.ip;
+                    } catch (e) {
+                        console.error('getProxyIP failed', e);
+                        return null;
+                    }
+                },
+                
+                // 获取已使用的IP列表
+                getUsedIPs() {
+                    try {
+                        const data = localStorage.getItem('dldl_used_ips');
+                        return data ? JSON.parse(data) : {};
+                    } catch (e) {
+                        return {};
+                    }
+                },
+                
+                // 记录已使用的IP
+                recordUsedIP(ip) {
+                    try {
+                        const usedIPs = this.getUsedIPs();
+                        usedIPs[ip] = Date.now();
+                        localStorage.setItem('dldl_used_ips', JSON.stringify(usedIPs));
+                    } catch (e) {
+                        console.error('recordUsedIP failed', e);
+                    }
+                },
+                
+                // 清理过期的IP记录（48小时）
+                cleanExpiredIPs() {
+                    try {
+                        const usedIPs = this.getUsedIPs();
+                        const now = Date.now();
+                        const expireTime = 48 * 60 * 60 * 1000; // 48小时
+                        
+                        for (const ip in usedIPs) {
+                            if (now - usedIPs[ip] > expireTime) {
+                                delete usedIPs[ip];
+                            }
                         }
-                    }, 3000);
+                        
+                        localStorage.setItem('dldl_used_ips', JSON.stringify(usedIPs));
+                    } catch (e) {
+                        console.error('cleanExpiredIPs failed', e);
+                    }
                 },
 
             }

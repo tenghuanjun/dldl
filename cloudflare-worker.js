@@ -17,6 +17,18 @@ export default {
     try {
       const url = new URL(request.url);
       
+      // 获取当前出口IP的接口
+      if (url.pathname === '/get-ip') {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        return new Response(JSON.stringify({ ip: ipData.ip }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+      
       // 构建目标 URL
       const targetUrl = `https://s-api.37.com.cn${url.pathname}${url.search}`;
       
