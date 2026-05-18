@@ -245,6 +245,12 @@ fn popup_window_policy<R: Runtime>(
     }
 }
 
+/// 优化子窗口配置，提升性能
+fn optimize_child_window(window: &tauri::WebviewWindow) {
+    // 禁用不必要的功能以提升性能
+    let _ = window.set_skip_taskbar(true);
+}
+
 fn append_startup_log(handle: &AppHandle, msg: &str) {
     let Ok(base) = handle.path().app_data_dir() else {
         return;
@@ -305,6 +311,7 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
             append_startup_log(&app_handle, &format!("创建主窗口失败: {e}"));
             e
         })?;
+    
     append_startup_log(&app_handle, "主窗口已创建");
     Ok(())
 }

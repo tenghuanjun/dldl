@@ -37,6 +37,9 @@
       "../package.json": "app/package.json",
       "../node_modules": "app/node_modules",
       "_embed/nodejs": "app/nodejs"
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
     }
   }
 }
