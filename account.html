@@ -136,6 +136,7 @@
                                 <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
                                 <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                                <button class="btn btn-forest" type="button" @click="openLoginWithForest(account)" title="打开并自动执行魂兽森林任务">魂兽森林</button>
                             </div>
                         </div>
                     </div>
@@ -1091,11 +1092,76 @@
                                 window.open(url, windowName, winOpts);
                             }
                         } else {
-                            // 弹窗被拦截时，尽量保持“新开窗口”行为
+                            // 弹窗被拦截时，尽量保持"新开窗口"行为
                             window.open(url, windowName, "width=400,height=600");
                         }
                     } catch (e) {
                         console.error("openLogin token failed", e);
+                        this.showError(`获取 token 失败：${e?.message || e}`);
+                    }
+                },
+                async openLoginWithForest(account) {
+                    // 打开扫码页并自动执行魂兽森林任务
+                    const windowName = `dldl_forest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                    const winOpts = "width=400,height=700";
+                    const cachedTok = String(account.token || "").trim();
+
+                    const buildForestUrl = (tokenInfo) => {
+                        const params = new URLSearchParams({
+                            gid: "1003279",
+                            pid: "46",
+                            token: tokenInfo.token || "",
+                            time: tokenInfo.time || "",
+                            sign: tokenInfo.sign || "",
+                            appVer: "",
+                            platCode: "37wan",
+                            IMEI: "",
+                            isPcLauncher: "true",
+                            uname: account.uname || "",
+                            upwd: account.upwd || "",
+                            dldl_forest: "1"  // 启用魂兽森林自动化
+                        });
+                        return `https://dldl.50pk.com/login.php?${params.toString()}`;
+                    };
+
+                    if (cachedTok) {
+                        const url = buildForestUrl({
+                            token: cachedTok,
+                            time: String(account.time || ""),
+                            sign: String(account.sign || "")
+                        });
+                        const w = window.open(url, windowName, winOpts);
+                        if (!w) {
+                            this.showError("弹窗被拦截，请允许本应用打开新窗口");
+                        }
+                        this.showSuccess("已打开魂兽森林自动任务窗口");
+                        return;
+                    }
+
+                    const win = window.open("about:blank", windowName, winOpts);
+                    try {
+                        const tokenInfo = await this.fetchToken(account);
+                        if (!tokenInfo) return;
+                        if (!tokenInfo.fromCache) {
+                            await this.persistToken(account, {
+                                token: tokenInfo.token,
+                                time: tokenInfo.time,
+                                sign: tokenInfo.sign
+                            });
+                        }
+                        const url = buildForestUrl(tokenInfo);
+                        if (win && !win.closed) {
+                            try {
+                                win.location.href = url;
+                            } catch (e) {
+                                window.open(url, windowName, winOpts);
+                            }
+                        } else {
+                            window.open(url, windowName, "width=400,height=700");
+                        }
+                        this.showSuccess("已打开魂兽森林自动任务窗口");
+                    } catch (e) {
+                        console.error("openLoginWithForest failed", e);
                         this.showError(`获取 token 失败：${e?.message || e}`);
                     }
                 },
@@ -1982,6 +2048,15 @@
 
         .btn-proxy-active:hover {
             background: #059669;
+        }
+
+        .btn-forest {
+            background: #059669;
+            color: #fff;
+        }
+
+        .btn-forest:hover {
+            background: #047857;
         }
     </style>
 </body>
