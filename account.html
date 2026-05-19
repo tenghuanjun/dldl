@@ -1103,7 +1103,10 @@
                 async openLoginWithForest(account) {
                     // 打开扫码页并自动执行魂兽森林任务
                     const windowName = `dldl_forest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                    const winOpts = "width=400,height=700";
+                    const winW = 400, winH = 700;
+                    const left = Math.round((screen.width - winW) / 2);
+                    const top = Math.round((screen.height - winH) / 2);
+                    const winOpts = `width=${winW},height=${winH},left=${left},top=${top}`;
                     const cachedTok = String(account.token || "").trim();
 
                     const buildForestUrl = (tokenInfo) => {
@@ -1157,7 +1160,7 @@
                                 window.open(url, windowName, winOpts);
                             }
                         } else {
-                            window.open(url, windowName, "width=400,height=700");
+                            window.open(url, windowName, winOpts);
                         }
                         this.showSuccess("已打开魂兽森林自动任务窗口");
                     } catch (e) {
