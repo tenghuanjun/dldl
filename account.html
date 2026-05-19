@@ -134,6 +134,7 @@
                             <div class="card-actions">
                                 <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
                                 <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
+                                <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
                             </div>
                         </div>
@@ -1096,6 +1097,41 @@
                     } catch (e) {
                         console.error("openLogin token failed", e);
                         this.showError(`获取 token 失败：${e?.message || e}`);
+                    }
+                },
+                async copyLoginUrl(account) {
+                    try {
+                        const cachedTok = String(account.token || "").trim();
+                        let url;
+                        if (cachedTok) {
+                            url = this.buildLoginUrl({
+                                ...account,
+                                token: cachedTok,
+                                time: String(account.time || ""),
+                                sign: String(account.sign || "")
+                            });
+                        } else {
+                            const tokenInfo = await this.fetchToken(account);
+                            if (!tokenInfo) return;
+                            if (!tokenInfo.fromCache) {
+                                await this.persistToken(account, {
+                                    token: tokenInfo.token,
+                                    time: tokenInfo.time,
+                                    sign: tokenInfo.sign
+                                });
+                            }
+                            url = this.buildLoginUrl({
+                                ...account,
+                                token: tokenInfo.token,
+                                time: tokenInfo.time,
+                                sign: tokenInfo.sign
+                            });
+                        }
+                        await navigator.clipboard.writeText(url);
+                        this.showSuccess("网址已复制到剪贴板");
+                    } catch (e) {
+                        console.error("copyLoginUrl failed", e);
+                        this.showError(`复制失败：${e?.message || e}`);
                     }
                 },
                 accountSelectKey(area, account) {
