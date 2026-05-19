@@ -234,23 +234,33 @@
         <div v-if="userManageModalVisible" class="modal-mask" @click.self="closeUserManageModal">
             <div class="modal" style="max-width: 600px;">
                 <div class="modal-title">用户管理</div>
-                <div class="user-manage-tip">点击启用/禁用按钮切换用户状态，tenghuanjun 为管理员不可禁用</div>
+                <div class="user-manage-tip">tenghuanjun 为管理员，不可禁用和删除</div>
                 <div class="user-manage-list">
                     <div class="user-manage-item" v-for="user in allUsers" :key="user.id">
                         <span class="user-manage-name">{{ user.username }}</span>
                         <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
                         <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
-                        <button 
-                            class="btn btn-mini" 
-                            :class="user.enabled ? 'btn-danger' : 'btn-success'"
-                            type="button" 
-                            @click="toggleUserEnabled(user)"
-                            :disabled="user.username === 'tenghuanjun'"
-                        >{{ user.enabled ? '禁用' : '启用' }}</button>
+                        <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
+                        <button class="btn btn-secondary btn-mini" type="button" @click="openChangePwdModal(user)">改密码</button>
+                        <button class="btn btn-danger btn-mini" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" type="button" @click="closeUserManageModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="changePwdModalVisible" class="modal-mask" @click.self="closeChangePwdModal">
+            <div class="modal" style="max-width: 360px;">
+                <div class="modal-title">修改密码 - {{ changePwdUser?.username }}</div>
+                <div class="login-field">
+                    <label class="login-label">新密码</label>
+                    <input class="login-input" type="password" v-model="newPassword" placeholder="请输入新密码" @keyup.enter="submitChangePwd">
+                </div>
+                <div class="modal-actions" style="margin-top: 16px;">
+                    <button class="btn btn-secondary" type="button" @click="closeChangePwdModal">取消</button>
+                    <button class="btn" type="button" @click="submitChangePwd">确认修改</button>
                 </div>
             </div>
         </div>
@@ -343,6 +353,9 @@
                     areaSortList: [],
                     userManageModalVisible: false,
                     allUsers: [],
+                    changePwdModalVisible: false,
+                    changePwdUser: null,
+                    newPassword: '',
                 };
             },
             computed: {
@@ -483,6 +496,44 @@
                         this.showSuccess(`已${newStatus ? '启用' : '禁用'}用户 ${user.username}`);
                     } catch (e) {
                         this.showError(`操作失败：${e.message}`);
+                    }
+                },
+                async deleteUser(user) {
+                    if (user.username === 'tenghuanjun') return;
+                    const confirmed = await this.confirmAction(`确认删除用户 ${user.username} 吗？该用户下的所有区服和账号将一并删除，不可恢复。`, '删除用户');
+                    if (!confirmed) return;
+                    try {
+                        await db.from('accounts').delete().eq('user_id', user.id);
+                        await db.from('areas').delete().eq('user_id', user.id);
+                        const { error } = await db.from('users').delete().eq('id', user.id);
+                        if (error) throw error;
+                        this.allUsers = this.allUsers.filter(u => u.id !== user.id);
+                        this.showSuccess(`已删除用户 ${user.username}`);
+                    } catch (e) {
+                        this.showError(`删除失败：${e.message}`);
+                    }
+                },
+                openChangePwdModal(user) {
+                    this.changePwdUser = user;
+                    this.newPassword = '';
+                    this.changePwdModalVisible = true;
+                },
+                closeChangePwdModal() {
+                    this.changePwdModalVisible = false;
+                    this.changePwdUser = null;
+                },
+                async submitChangePwd() {
+                    const pwd = String(this.newPassword || '').trim();
+                    if (!pwd) { this.showError('请输入新密码'); return; }
+                    if (pwd.length < 6) { this.showError('密码至少6位'); return; }
+                    try {
+                        const password_hash = this.hashPassword(pwd);
+                        const { error } = await db.from('users').update({ password_hash }).eq('id', this.changePwdUser.id);
+                        if (error) throw error;
+                        this.showSuccess(`已修改用户 ${this.changePwdUser.username} 的密码`);
+                        this.closeChangePwdModal();
+                    } catch (e) {
+                        this.showError(`修改密码失败：${e.message}`);
                     }
                 },
                 showMessage(type, message) {
