@@ -264,6 +264,11 @@
                 </div>
             </div>
         </div>
+
+        <div v-if="loadingVisible" class="loading-mask">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ loadingText || '加载中...' }}</div>
+        </div>
         </template>
     </div>
     <script src="md5.js"></script>
@@ -356,6 +361,8 @@
                     changePwdModalVisible: false,
                     changePwdUser: null,
                     newPassword: '',
+                    loadingVisible: false,
+                    loadingText: '',
                 };
             },
             computed: {
@@ -849,19 +856,23 @@
                     this.showError(`删除区服失败：${e?.message || e}`);
                 }
             },
-            async persistToken(account, tokenInfo) {
-                const location = this.findAccountLocation(account);
-                if (!location) return;
-                const target = location.group.accounts[location.index];
-                target.token = tokenInfo.token;
-                target.time = tokenInfo.time;
-                target.sign = tokenInfo.sign;
-                try {
-                    await this.saveAccounts();
-                } catch (e) {
-                    console.error('save token failed', e);
-                    this.showError(`token 已获取，但写回数据库失败：${e?.message || e}`);
-                }
+                async persistToken(account, tokenInfo) {
+                    const location = this.findAccountLocation(account);
+                    if (!location) return;
+                    const target = location.group.accounts[location.index];
+                    target.token = tokenInfo.token;
+                    target.time = tokenInfo.time;
+                    target.sign = tokenInfo.sign;
+                    try {
+                        const { error } = await db.from('accounts')
+                            .update({ token: tokenInfo.token, time: tokenInfo.time, sign: tokenInfo.sign })
+                            .eq('user_id', this.currentUser.id)
+                            .eq('uname', account.uname);
+                        if (error) throw error;
+                    } catch (e) {
+                        console.error('save token failed', e);
+                        this.showError(`token 已获取，但写回数据库失败：${e?.message || e}`);
+                    }
                 },
                 jsonp(url, callbackParam = "callback", timeoutMs = 15000) {
                     return new Promise((resolve, reject) => {
@@ -1162,6 +1173,8 @@
                     await this.batchLaunchAccounts(slice);
                 },
                 async refreshToken(account) {
+                    this.loadingText = `正在刷新 ${account.uname} 的 token...`;
+                    this.loadingVisible = true;
                     try {
                         const tokenInfo = await this.fetchToken(account, { forceApi: true });
                         if (!tokenInfo) return;
@@ -1174,6 +1187,9 @@
                     } catch (e) {
                         console.error("refreshToken failed", e);
                         this.showError(`刷新 token 失败：${e?.message || e}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
                     }
                 },
                 /** 代理IP相关方法 */
@@ -1318,6 +1334,10 @@
         .btn-success { background: #10b981; color: #fff; }
         .btn-success:hover { background: #059669; }
         .btn-mini { padding: 3px 8px; font-size: 11px; }
+        .loading-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
+        .loading-spinner { width: 36px; height: 36px; border: 3px solid #242936; border-top-color: #2f81f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: #e6e8eb; }
 
         .container {
             max-width: min(1320px, 100%);
