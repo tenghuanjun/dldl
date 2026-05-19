@@ -58,6 +58,7 @@
                         type="button"
                         @click="toggleProxyAndRefreshIP"
                     >{{ useProxy ? (proxyIP === '代理中' ? '代理IP: 已启用（切换IP）' : proxyIP) : '代理IP: 未启用（点击启用并切换IP）' }}</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="openAreaSortModal">区服排序</button>
                 </div>
             </div>
             <div class="sticky-row sticky-row-batch">
@@ -211,6 +212,23 @@
                 </div>
             </div>
         </div>
+
+        <div v-if="areaSortModalVisible" class="modal-mask" @click.self="closeAreaSortModal">
+            <div class="modal">
+                <div class="modal-title">区服排序</div>
+                <div class="area-sort-tip">拖拽下方区服调整顺序，松手后自动保存</div>
+                <div class="area-sort-list" ref="areaSortList">
+                    <div class="area-sort-item" v-for="group in areaSortList" :key="group.area" :data-area="group.area">
+                        <span class="area-sort-handle">⋮⋮</span>
+                        <span class="area-sort-name">{{ group.area }}</span>
+                        <span class="area-sort-count">{{ group.accounts.length }} 个账号</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeAreaSortModal">关闭</button>
+                </div>
+            </div>
+        </div>
         </template>
     </div>
     <script src="md5.js"></script>
@@ -296,6 +314,8 @@
                     useProxy: false,
                     proxyWorkerUrl: 'https://red-moon-ff95.tenghuanjun.workers.dev',
                     proxyIP: '直连',
+                    areaSortModalVisible: false,
+                    areaSortList: [],
                 };
             },
             computed: {
@@ -365,6 +385,47 @@
                     this.isLoggedIn = false; this.currentUser = null; this.areas = [];
                     localStorage.removeItem('dldl_user');
                 },
+                openAreaSortModal() {
+                    this.areaSortList = this.areas.map(g => ({ area: g.area, accounts: g.accounts }));
+                    this.areaSortModalVisible = true;
+                    this.$nextTick(() => this.initAreaSort());
+                },
+                closeAreaSortModal() {
+                    this.areaSortModalVisible = false;
+                },
+                initAreaSort() {
+                    const el = this.$refs.areaSortList;
+                    if (!el || el._areaSortable) return;
+                    el._areaSortable = new Sortable(el, {
+                        animation: 180,
+                        handle: '.area-sort-handle',
+                        draggable: '.area-sort-item',
+                        ghostClass: 'area-sort-ghost',
+                        chosenClass: 'area-sort-chosen',
+                        onEnd: (evt) => {
+                            const list = this.areaSortList;
+                            const moved = list.splice(evt.oldIndex, 1)[0];
+                            list.splice(evt.newIndex, 0, moved);
+                            this.saveAreaSort();
+                        }
+                    });
+                },
+                async saveAreaSort() {
+                    if (!this.currentUser) return;
+                    try {
+                        for (let i = 0; i < this.areaSortList.length; i++) {
+                            const { error } = await db.from('areas').update({ sort_order: i })
+                                .eq('user_id', this.currentUser.id)
+                                .eq('name', this.areaSortList[i].area);
+                            if (error) throw error;
+                        }
+                        this.areas = this.areaSortList.map(g => ({ area: g.area, accounts: g.accounts }));
+                        this.showSuccess('区服排序已保存');
+                    } catch (e) {
+                        this.showError(`保存排序失败：${e.message}`);
+                        await this.loadAccounts();
+                    }
+                },
                 showMessage(type, message) {
                     if (typeof ElMessage === 'function') {
                         ElMessage({
@@ -413,13 +474,15 @@
                         const { data: accountsData, error: accountsError } = await db
                             .from('accounts').select('*').eq('user_id', this.currentUser.id).order('id');
                         if (accountsError) throw accountsError;
-                        const areaMap = {};
-                        for (const area of (areasData || [])) areaMap[area.name] = { area: area.name, accounts: [] };
+                        const accountsByArea = {};
                         for (const account of (accountsData || [])) {
-                            if (!areaMap[account.area_name]) areaMap[account.area_name] = { area: account.area_name, accounts: [] };
-                            areaMap[account.area_name].accounts.push({ id: account.id, uname: account.uname, upwd: account.upwd, name: account.name, token: account.token, time: account.time, sign: account.sign });
+                            if (!accountsByArea[account.area_name]) accountsByArea[account.area_name] = [];
+                            accountsByArea[account.area_name].push({ id: account.id, uname: account.uname, upwd: account.upwd, name: account.name, token: account.token, time: account.time, sign: account.sign });
                         }
-                        this.areas = Object.values(areaMap);
+                        this.areas = (areasData || []).map(area => ({
+                            area: area.name,
+                            accounts: accountsByArea[area.name] || []
+                        }));
                         this.pruneStaleSelections();
                         const names = this.areas.map(g => g.area);
                         if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
@@ -1124,6 +1187,15 @@
         .login-error { color: #d14343; font-size: 13px; text-align: center; margin-top: 4px; }
         .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
         .username { font-size: 14px; color: #94a0b8; }
+        .area-sort-tip { font-size: 13px; color: #94a0b8; margin-bottom: 12px; }
+        .area-sort-list { max-height: 400px; overflow-y: auto; }
+        .area-sort-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 8px; margin-bottom: 6px; cursor: default; }
+        .area-sort-handle { flex-shrink: 0; color: #7a869f; font-size: 14px; cursor: grab; user-select: none; letter-spacing: -1px; }
+        .area-sort-handle:active { cursor: grabbing; }
+        .area-sort-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
+        .area-sort-count { font-size: 12px; color: #94a0b8; }
+        .area-sort-ghost { opacity: 0.4; }
+        .area-sort-chosen { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,0.35); }
 
         .container {
             max-width: min(1320px, 100%);
