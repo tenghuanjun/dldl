@@ -9,23 +9,41 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/theme-chalk/dark/css-vars.css" />
     <script src="https://cdn.jsdelivr.net/npm/element-plus@2.9.9/dist/index.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js"></script>
 </head>
 
 <body>
     <div id="app" class="container">
+        <div v-if="!isLoggedIn" class="login-container">
+            <div class="login-box">
+                <h2 class="login-title">用户登录</h2>
+                <div class="login-form">
+                    <div class="login-field">
+                        <label class="login-label">用户名</label>
+                        <input class="login-input" v-model="loginForm.username" placeholder="请输入用户名" @keyup.enter="handleLogin">
+                    </div>
+                    <div class="login-field">
+                        <label class="login-label">密码</label>
+                        <input class="login-input" type="password" v-model="loginForm.password" placeholder="请输入密码" @keyup.enter="handleLogin">
+                    </div>
+                    <div class="login-actions">
+                        <button class="btn login-btn" type="button" @click="handleLogin" :disabled="loginLoading">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                        <button class="btn btn-secondary login-btn" type="button" @click="handleRegister" :disabled="loginLoading">注册</button>
+                    </div>
+                    <div v-if="loginError" class="login-error">{{ loginError }}</div>
+                </div>
+            </div>
+        </div>
+        <template v-if="isLoggedIn">
         <header class="account-controls-sticky">
             <div class="sticky-row sticky-row-top">
                 <h1 class="sticky-page-title">多账号扫码入口</h1>
+                <div class="user-info">
+                    <span class="username">{{ currentUser?.username }}</span>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
+                </div>
                 <div class="sticky-tools">
-                    <button class="btn btn-secondary btn-compact" type="button" @click="triggerImportDatabase">导入库</button>
-                    <input
-                        ref="importDbInput"
-                        type="file"
-                        accept=".sqlite,.db,application/x-sqlite3,application/octet-stream,*/*"
-                        class="visually-hidden"
-                        @change="onImportDatabaseFile"
-                    >
-                    <button class="btn btn-secondary btn-compact" type="button" @click="exportDatabase">导出库</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
                     <button
@@ -122,8 +140,7 @@
             </div>
         </section>
         <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动扫码页」会按列表顺序约每隔 2 秒依次打开（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」。</div>
-        <div class="tip tip-secondary">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到 SQLite。点击「刷新 token」会强制重新登录并覆盖保存。</div>
-        <div class="tip tip-secondary">换电脑时可用「导出数据库」将当前 <code>accounts.sqlite</code> 存到本机任意位置；在新电脑安装后点「导入数据库」选择该文件即可整体恢复账号（导入前会自动备份当前库到用户数据目录）。</div>
+        <div class="tip tip-secondary">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到数据库。点击「刷新 token」会强制重新登录并覆盖保存。</div>
         <div class="tip tip-secondary">「代理IP」功能使用 Cloudflare Workers 代理请求登录接口，可绕过IP请求次数限制。点击「切换IP」会切换 Cloudflare 出口IP。使用前请先部署 <code>cloudflare-worker.js</code> 到 Cloudflare Workers，并将 Worker URL 填入配置。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
@@ -186,7 +203,7 @@
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
                     </div>
                 </div>
-                <div class="form-help">保存后会写入 SQLite 数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
+                <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
                 <div class="modal-actions">
                     <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
                     <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
@@ -194,6 +211,7 @@
                 </div>
             </div>
         </div>
+        </template>
     </div>
     <script src="md5.js"></script>
     <script>
@@ -248,10 +266,20 @@
             }
         };
 
+        const supabaseUrl = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+        const db = supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase initialized OK');
+
         const app = createApp({
             data() {
                 return {
-                    showPwd: false, // 是否显示密码
+                    isLoggedIn: false,
+                    currentUser: null,
+                    loginForm: { username: '', password: '' },
+                    loginLoading: false,
+                    loginError: '',
+                    showPwd: false,
                     areas: [],
                     accountModalVisible: false,
                     accountModalMode: 'create',
@@ -277,12 +305,66 @@
                 }
             },
             mounted() {
-                // 从后端读取账号数据（SQLite），保持 UI/代理数据一致
-                this.loadAccounts();
-                // 从 localStorage 读取代理配置，如果为空则修复
+                this.checkLoginState();
                 this.fixAndLoadProxyConfig();
             },
             methods: {
+                hashPassword(password) {
+                    const hash = CryptoJS.PBKDF2(password, 'salt', { keySize: 64 / 4, iterations: 100000, hasher: CryptoJS.algo.SHA512 });
+                    return hash.toString(CryptoJS.enc.Hex);
+                },
+                checkLoginState() {
+                    const savedUser = localStorage.getItem('dldl_user');
+                    if (savedUser) {
+                        try {
+                            this.currentUser = JSON.parse(savedUser);
+                            this.isLoggedIn = true;
+                            this.loadAccounts();
+                        } catch (e) {
+                            localStorage.removeItem('dldl_user');
+                        }
+                    }
+                },
+                async handleLogin() {
+                    const username = String(this.loginForm.username || '').trim();
+                    const password = String(this.loginForm.password || '').trim();
+                    if (!username || !password) { this.loginError = '请输入用户名和密码'; return; }
+                    this.loginLoading = true; this.loginError = '';
+                    try {
+                        const { data, error } = await db.from('users').select('*').eq('username', username).single();
+                        if (error || !data) throw new Error('用户不存在');
+                        const hash = this.hashPassword(password);
+                        if (hash !== data.password_hash) throw new Error('密码错误');
+                        const { password_hash, ...userInfo } = data;
+                        this.currentUser = userInfo; this.isLoggedIn = true;
+                        localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                        this.loginForm = { username: '', password: '' };
+                        this.loadAccounts();
+                    } catch (e) { this.loginError = e.message || '登录失败'; }
+                    finally { this.loginLoading = false; }
+                },
+                async handleRegister() {
+                    const username = String(this.loginForm.username || '').trim();
+                    const password = String(this.loginForm.password || '').trim();
+                    if (!username || !password) { this.loginError = '请输入用户名和密码'; return; }
+                    if (password.length < 6) { this.loginError = '密码至少6位'; return; }
+                    this.loginLoading = true; this.loginError = '';
+                    try {
+                        const password_hash = this.hashPassword(password);
+                        const { data, error } = await db.from('users').insert({ username, password_hash }).select().single();
+                        if (error) { if (error.code === '23505') throw new Error('用户名已存在'); throw error; }
+                        const { password_hash: _, ...userInfo } = data;
+                        this.currentUser = userInfo; this.isLoggedIn = true;
+                        localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                        this.loginForm = { username: '', password: '' };
+                        this.showSuccess('注册成功');
+                    } catch (e) { this.loginError = e.message || '注册失败'; }
+                    finally { this.loginLoading = false; }
+                },
+                handleLogout() {
+                    this.isLoggedIn = false; this.currentUser = null; this.areas = [];
+                    localStorage.removeItem('dldl_user');
+                },
                 showMessage(type, message) {
                     if (typeof ElMessage === 'function') {
                         ElMessage({
@@ -322,122 +404,61 @@
                         return false;
                     }
                 },
-                triggerImportDatabase() {
-                    const el = this.$refs.importDbInput;
-                    if (el) el.click();
-                },
-                async onImportDatabaseFile(ev) {
-                    const input = ev.target;
-                    const file = input.files && input.files[0];
-                    if (!file) return;
-                    try {
-                        const ok = await this.confirmAction(
-                            '将用所选文件替换当前账号数据库（当前列表会被完全替换）。\n\n建议先使用「导出数据库」备份。是否继续？',
-                            '导入数据库'
-                        );
-                        if (!ok) {
-                            input.value = '';
-                            return;
-                        }
-                        const buf = await file.arrayBuffer();
-                        const resp = await fetch('/accounts/database/import', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/octet-stream' },
-                            body: buf
-                        });
-                        const result = await resp.json().catch(() => ({}));
-                        if (!resp.ok || !result.ok) {
-                            this.showError(result?.message || '导入失败');
-                            input.value = '';
-                            return;
-                        }
-                        let msg = '导入成功，列表已更新';
-                        if (result.backup) msg += `（原库已备份为 ${result.backup}）`;
-                        this.showSuccess(msg);
-                        await this.loadAccounts();
-                    } catch (e) {
-                        this.showError(e && e.message ? e.message : '导入失败');
-                    }
-                    input.value = '';
-                },
-                async exportDatabase() {
-                    try {
-                        const resp = await fetch('/accounts/database/export', { cache: 'no-store' });
-                        if (!resp.ok) {
-                            let msg = '导出失败';
-                            try {
-                                const j = await resp.json();
-                                if (j && j.message) msg = j.message;
-                            } catch (_) {
-                                /* ignore */
-                            }
-                            this.showError(msg);
-                            return;
-                        }
-                        const blob = await resp.blob();
-                        const cd = resp.headers.get('Content-Disposition') || '';
-                        let filename = 'dldl-accounts.sqlite';
-                        const m = /filename\*=UTF-8''([^;\n]+)|filename="([^"]+)"/i.exec(cd);
-                        if (m) {
-                            const raw = (m[1] || m[2] || '').trim();
-                            if (raw) filename = decodeURIComponent(raw);
-                        }
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = filename;
-                        a.rel = 'noopener';
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        URL.revokeObjectURL(url);
-                        this.showSuccess('已保存数据库文件到下载目录（或浏览器提示的位置）');
-                    } catch (e) {
-                        this.showError(e && e.message ? e.message : '导出失败');
-                    }
-                },
                 async loadAccounts() {
+                    if (!this.currentUser) return;
                     try {
-                        const resp = await fetch('/accounts', { cache: 'no-store' });
-                        const json = await resp.json();
-                        const parsed = this.normalizeAccounts(json);
-                        this.areas = parsed;
-                        this.pruneStaleSelections();
-                        const names = parsed.map((g) => g.area);
-                        if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) {
-                            this.batchPanelArea = names[0] || '';
+                        const { data: areasData, error: areasError } = await db
+                            .from('areas').select('*').eq('user_id', this.currentUser.id).order('sort_order');
+                        if (areasError) throw areasError;
+                        const { data: accountsData, error: accountsError } = await db
+                            .from('accounts').select('*').eq('user_id', this.currentUser.id).order('id');
+                        if (accountsError) throw accountsError;
+                        const areaMap = {};
+                        for (const area of (areasData || [])) areaMap[area.name] = { area: area.name, accounts: [] };
+                        for (const account of (accountsData || [])) {
+                            if (!areaMap[account.area_name]) areaMap[account.area_name] = { area: account.area_name, accounts: [] };
+                            areaMap[account.area_name].accounts.push({ id: account.id, uname: account.uname, upwd: account.upwd, name: account.name, token: account.token, time: account.time, sign: account.sign });
                         }
+                        this.areas = Object.values(areaMap);
+                        this.pruneStaleSelections();
+                        const names = this.areas.map(g => g.area);
+                        if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
                     } catch (e) {
                         console.error('load accounts failed', e);
+                        this.showError(`加载数据失败：${e.message}`);
                     }
                 },
                 async saveAccounts() {
-                const payload = {
-                    area: this.areas.map(group => group.area),
-                    list: {}
-                };
-                for (const group of this.areas) {
-                    payload.list[group.area] = group.accounts.map(account => ({
-                        uname: account.uname,
-                        upwd: account.upwd,
-                        name: account.name,
-                        token: account.token,
-                        time: account.time,
-                        sign: account.sign
-                    }));
-                }
-                const resp = await fetch('/accounts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accounts: payload })
-                });
-                const result = await resp.json();
-                if (!resp.ok || !result.ok) {
-                    this.showError(result?.message || '保存账号失败');
-                    return false;
-                }
-                return true;
-            },
+                    if (!this.currentUser) return false;
+                    try {
+                        const userId = this.currentUser.id;
+                        const { data: existingAreas } = await db.from('areas').select('name').eq('user_id', userId);
+                        const { data: existingAccounts } = await db.from('accounts').select('id, area_name, uname').eq('user_id', userId);
+                        const currentAreaNames = new Set(this.areas.map(g => g.area));
+                        const currentAccountKeys = new Set();
+                        for (const group of this.areas) for (const acc of group.accounts) currentAccountKeys.add(`${group.area}|${acc.uname}`);
+                        const areasToDelete = (existingAreas || []).filter(a => !currentAreaNames.has(a.name)).map(a => a.name);
+                        if (areasToDelete.length > 0) await db.from('areas').delete().eq('user_id', userId).in('name', areasToDelete);
+                        for (const areaName of currentAreaNames) {
+                            if (!(existingAreas || []).some(a => a.name === areaName)) await db.from('areas').insert({ name: areaName, user_id: userId, sort_order: 0 });
+                        }
+                        const accountsToDelete = (existingAccounts || []).filter(a => !currentAccountKeys.has(`${a.area_name}|${a.uname}`)).map(a => a.id);
+                        if (accountsToDelete.length > 0) await db.from('accounts').delete().eq('user_id', userId).in('id', accountsToDelete);
+                        for (const group of this.areas) {
+                            for (const acc of group.accounts) {
+                                const existing = (existingAccounts || []).find(a => a.area_name === group.area && a.uname === acc.uname);
+                                const accountData = { area_name: group.area, uname: acc.uname, upwd: acc.upwd, name: acc.name, token: acc.token, time: acc.time, sign: acc.sign };
+                                if (existing) await db.from('accounts').update(accountData).eq('id', existing.id).eq('user_id', userId);
+                                else await db.from('accounts').insert({ ...accountData, user_id: userId });
+                            }
+                        }
+                        return true;
+                    } catch (e) {
+                        console.error('save accounts failed', e);
+                        this.showError(`保存失败：${e.message}`);
+                        return false;
+                    }
+                },
             async onAccountCardsSorted() {
                 const saved = await this.saveAccounts();
                 if (!saved) {
@@ -668,38 +689,6 @@
                     console.error('save token failed', e);
                     this.showError(`token 已获取，但写回数据库失败：${e?.message || e}`);
                 }
-            },
-                normalizeAccounts(payload) {
-                    // 严格新格式：{ area: string[], list: Record<string, Account[]> }
-                    if (!payload || typeof payload !== 'object') {
-                        console.error('invalid /accounts response (expected object)', payload);
-                        return [];
-                    }
-
-                    const areaOrder = Array.isArray(payload.area) ? payload.area : [];
-                    const list = (payload.list && typeof payload.list === 'object') ? payload.list : {};
-
-                    if (!areaOrder.length) {
-                        console.error('invalid /accounts response (missing area)', payload);
-                        return [];
-                    }
-                    if (!Object.keys(list).length) {
-                        console.error('invalid /accounts response (missing list)', payload);
-                        return [];
-                    }
-
-                    const out = [];
-
-                    for (const areaName of areaOrder) {
-                        const accounts = list[areaName];
-                        if (!Array.isArray(accounts)) {
-                            console.error(`invalid /accounts response (list[${areaName}] not array)`, payload);
-                            return [];
-                        }
-                        out.push({ area: String(areaName), accounts });
-                    }
-
-                    return out;
                 },
                 jsonp(url, callbackParam = "callback", timeoutMs = 15000) {
                     return new Promise((resolve, reject) => {
@@ -1121,6 +1110,20 @@
             color: #e6e8eb;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         }
+        .login-container { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+        .login-box { width: 100%; max-width: 400px; background: linear-gradient(180deg, #171a21 0%, #141821 100%); border: 1px solid #242936; border-radius: 16px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+        .login-title { margin: 0 0 24px; font-size: 24px; font-weight: 700; text-align: center; color: #e6e8eb; }
+        .login-form { display: flex; flex-direction: column; gap: 16px; }
+        .login-field { display: flex; flex-direction: column; gap: 6px; }
+        .login-label { font-size: 14px; color: #94a0b8; }
+        .login-input { width: 100%; box-sizing: border-box; background: #0f1115; border: 1px solid #242936; border-radius: 8px; color: #e6e8eb; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .login-input:focus { border-color: #2f81f7; }
+        .login-input::placeholder { color: #4a5568; }
+        .login-actions { display: flex; gap: 12px; margin-top: 8px; }
+        .login-btn { flex: 1; padding: 12px; font-size: 15px; }
+        .login-error { color: #d14343; font-size: 13px; text-align: center; margin-top: 4px; }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .username { font-size: 14px; color: #94a0b8; }
 
         .container {
             max-width: min(1320px, 100%);
