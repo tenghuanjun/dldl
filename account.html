@@ -28,8 +28,8 @@
                         <input class="login-input" type="password" v-model="loginForm.password" placeholder="请输入密码" @keyup.enter="handleLogin">
                     </div>
                     <div class="login-actions">
-                        <button class="btn login-btn" type="button" @click="handleLogin" :disabled="loginLoading">{{ loginLoading ? '登录中...' : '登录' }}</button>
-                        <button class="btn btn-secondary login-btn" type="button" @click="handleRegister" :disabled="loginLoading">注册</button>
+                        <button class="btn login-btn" type="button" @click="handleLogin" :disabled="loginLoading" :class="{ 'btn-loading': loginLoading }">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                        <button class="btn btn-secondary login-btn" type="button" @click="handleRegister" :disabled="loginLoading" :class="{ 'btn-loading': loginLoading }">{{ loginLoading ? '注册中...' : '注册' }}</button>
                     </div>
                     <div v-if="loginError" class="login-error">{{ loginError }}</div>
                 </div>
@@ -41,6 +41,7 @@
                 <h1 class="sticky-page-title">多账号扫码入口</h1>
                 <div class="user-info">
                     <span class="username">{{ currentUser?.username }}</span>
+                    <button v-if="isAdmin" class="btn btn-secondary btn-compact" type="button" @click="openUserManageModal">用户管理</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
                 </div>
                 <div class="sticky-tools">
@@ -229,6 +230,30 @@
                 </div>
             </div>
         </div>
+
+        <div v-if="userManageModalVisible" class="modal-mask" @click.self="closeUserManageModal">
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-title">用户管理</div>
+                <div class="user-manage-tip">点击启用/禁用按钮切换用户状态，tenghuanjun 为管理员不可禁用</div>
+                <div class="user-manage-list">
+                    <div class="user-manage-item" v-for="user in allUsers" :key="user.id">
+                        <span class="user-manage-name">{{ user.username }}</span>
+                        <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
+                        <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
+                        <button 
+                            class="btn btn-mini" 
+                            :class="user.enabled ? 'btn-danger' : 'btn-success'"
+                            type="button" 
+                            @click="toggleUserEnabled(user)"
+                            :disabled="user.username === 'tenghuanjun'"
+                        >{{ user.enabled ? '禁用' : '启用' }}</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeUserManageModal">关闭</button>
+                </div>
+            </div>
+        </div>
         </template>
     </div>
     <script src="md5.js"></script>
@@ -316,12 +341,17 @@
                     proxyIP: '直连',
                     areaSortModalVisible: false,
                     areaSortList: [],
+                    userManageModalVisible: false,
+                    allUsers: [],
                 };
             },
             computed: {
                 selectedAccountCount() {
                     const m = this.accountSelectMap;
                     return Object.keys(m).filter((k) => m[k]).length;
+                },
+                isAdmin() {
+                    return this.currentUser?.username === 'tenghuanjun';
                 }
             },
             mounted() {
@@ -355,6 +385,7 @@
                         if (error || !data) throw new Error('用户不存在');
                         const hash = this.hashPassword(password);
                         if (hash !== data.password_hash) throw new Error('密码错误');
+                        if (data.enabled === false) throw new Error('账号已被禁用，请联系管理员');
                         const { password_hash, ...userInfo } = data;
                         this.currentUser = userInfo; this.isLoggedIn = true;
                         localStorage.setItem('dldl_user', JSON.stringify(userInfo));
@@ -424,6 +455,34 @@
                     } catch (e) {
                         this.showError(`保存排序失败：${e.message}`);
                         await this.loadAccounts();
+                    }
+                },
+                async openUserManageModal() {
+                    this.userManageModalVisible = true;
+                    await this.loadAllUsers();
+                },
+                closeUserManageModal() {
+                    this.userManageModalVisible = false;
+                },
+                async loadAllUsers() {
+                    try {
+                        const { data, error } = await db.from('users').select('id, username, enabled').order('id');
+                        if (error) throw error;
+                        this.allUsers = data || [];
+                    } catch (e) {
+                        this.showError(`加载用户失败：${e.message}`);
+                    }
+                },
+                async toggleUserEnabled(user) {
+                    if (user.username === 'tenghuanjun') return;
+                    try {
+                        const newStatus = !user.enabled;
+                        const { error } = await db.from('users').update({ enabled: newStatus }).eq('id', user.id);
+                        if (error) throw error;
+                        user.enabled = newStatus;
+                        this.showSuccess(`已${newStatus ? '启用' : '禁用'}用户 ${user.username}`);
+                    } catch (e) {
+                        this.showError(`操作失败：${e.message}`);
                     }
                 },
                 showMessage(type, message) {
@@ -1185,17 +1244,29 @@
         .login-actions { display: flex; gap: 12px; margin-top: 8px; }
         .login-btn { flex: 1; padding: 12px; font-size: 15px; }
         .login-error { color: #d14343; font-size: 13px; text-align: center; margin-top: 4px; }
+        .btn-loading { opacity: 0.7; cursor: not-allowed; }
         .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
         .username { font-size: 14px; color: #94a0b8; }
-        .area-sort-tip { font-size: 13px; color: #94a0b8; margin-bottom: 12px; }
-        .area-sort-list { max-height: 400px; overflow-y: auto; }
-        .area-sort-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 8px; margin-bottom: 6px; cursor: default; }
-        .area-sort-handle { flex-shrink: 0; color: #7a869f; font-size: 14px; cursor: grab; user-select: none; letter-spacing: -1px; }
+        .area-sort-tip { font-size: 12px; color: #94a0b8; margin-bottom: 8px; }
+        .area-sort-list { max-height: 70vh; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+        .area-sort-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; cursor: default; font-size: 12px; }
+        .area-sort-handle { flex-shrink: 0; color: #7a869f; font-size: 11px; cursor: grab; user-select: none; letter-spacing: -1px; }
         .area-sort-handle:active { cursor: grabbing; }
-        .area-sort-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
-        .area-sort-count { font-size: 12px; color: #94a0b8; }
+        .area-sort-name { font-size: 12px; font-weight: 600; color: #e6e8eb; white-space: nowrap; }
+        .area-sort-count { font-size: 11px; color: #94a0b8; white-space: nowrap; }
         .area-sort-ghost { opacity: 0.4; }
         .area-sort-chosen { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,0.35); }
+        .user-manage-tip { font-size: 12px; color: #94a0b8; margin-bottom: 10px; }
+        .user-manage-list { max-height: 60vh; overflow-y: auto; }
+        .user-manage-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; margin-bottom: 4px; }
+        .user-manage-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
+        .user-manage-role { font-size: 11px; color: #2f81f7; background: rgba(47,129,247,0.1); padding: 2px 6px; border-radius: 4px; }
+        .user-manage-status { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+        .status-enabled { color: #10b981; background: rgba(16,185,129,0.1); }
+        .status-disabled { color: #d14343; background: rgba(209,67,67,0.1); }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-success:hover { background: #059669; }
+        .btn-mini { padding: 3px 8px; font-size: 11px; }
 
         .container {
             max-width: min(1320px, 100%);
