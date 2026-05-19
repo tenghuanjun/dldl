@@ -1089,14 +1089,16 @@
                 // 获取当前代理IP
                 async getProxyIP() {
                     try {
-                        const response = await fetch(`${this.proxyWorkerUrl}/get-ip`);
+                        const timestamp = Date.now();
+                        const response = await fetch(`${this.proxyWorkerUrl}/get-ip?t=${timestamp}`);
                         const data = await response.json();
                         return data.ip;
                     } catch (e) {
                         console.error('getProxyIP failed, trying fallback', e);
                         // 备用方案：直接调用 ipify API
                         try {
-                            const fallbackResponse = await fetch('https://api.ipify.org?format=json');
+                            const timestamp = Date.now();
+                            const fallbackResponse = await fetch(`https://api.ipify.org?format=json&t=${timestamp}`);
                             const fallbackData = await fallbackResponse.json();
                             return fallbackData.ip;
                         } catch (fallbackError) {

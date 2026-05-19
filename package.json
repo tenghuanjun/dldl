@@ -1,7 +1,7 @@
 {
   "name": "dldl",
   "version": "1.0.0",
-  "description": "斗罗大陆 H5 本地代理与账号管理",
+  "description": "本地代理与账号管理",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "proxy": "node proxy.js",

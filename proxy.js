@@ -1,9 +1,11 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const https = require('https');
+const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const { getInstance: getProxyPool } = require('./proxy-pool');
 const app = express();
 const PORT = Number(process.env.DLDL_PORT || process.env.PORT || 8080);
 const TARGET = 'https://dldl.50pk.com';
@@ -39,6 +41,45 @@ const accountConfig = {
   uname: process.env.DLDL_UNAME,
   upwd: process.env.DLDL_UPWD
 };
+
+// 初始化代理池
+const proxyPool = getProxyPool({
+  validateUrl: 'https://dldl.50pk.com',
+  validateTimeout: 5000,
+  maxProxies: 30,
+  refreshInterval: 300000
+});
+
+// 代理池状态 API
+app.get('/proxy-pool/status', (req, res) => {
+  res.json(proxyPool.getStatus());
+});
+
+// 手动刷新代理池
+app.post('/proxy-pool/refresh', async (req, res) => {
+  try {
+    await proxyPool.init();
+    res.json({ ok: true, ...proxyPool.getStatus() });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+// 切换IP（获取一个与当前不同的IP）
+app.post('/proxy-pool/switch', async (req, res) => {
+  try {
+    const newProxy = await proxyPool.switchProxy();
+    const lastUsed = proxyPool.getLastUsedProxy();
+    res.json({ 
+      ok: true, 
+      currentProxy: newProxy,
+      lastUsedProxy: lastUsed,
+      ...proxyPool.getStatus() 
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+});
 const qrSessionAccountMap = new Map();
 const tokenApiBaseParams = {
   autoLogin: 'true',
@@ -281,15 +322,56 @@ async function initDatabase() {
   await dbRun('CREATE INDEX IF NOT EXISTS idx_accounts_area_name ON accounts(area_name)');
 }
 
-function fetchText(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (resp) => {
+function fetchText(url, useProxy = false) {
+  return new Promise(async (resolve, reject) => {
+    let proxyConfig = null;
+    if (useProxy) {
+      const pool = getProxyPool();
+      const proxyUrl = await pool.getProxy(); // 使用当前代理
+      if (proxyUrl) {
+        proxyConfig = pool.createProxyAgent(proxyUrl);
+        console.log(`[Proxy] 使用代理: ${proxyUrl}`);
+      }
+    }
+
+    const urlObj = new URL(url);
+    const isHttps = urlObj.protocol === 'https:';
+    
+    const options = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || (isHttps ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0'
+      }
+    };
+
+    // 如果有代理配置，通过代理连接
+    if (proxyConfig) {
+      options.hostname = proxyConfig.host;
+      options.port = proxyConfig.port;
+      options.path = url; // 代理模式下 path 是完整 URL
+      options.headers['Host'] = urlObj.hostname;
+    }
+
+    const protocol = (proxyConfig ? http : (isHttps ? https : http));
+    
+    const req = protocol.request(options, (resp) => {
       let data = '';
       resp.on('data', (chunk) => {
         data += chunk.toString();
       });
       resp.on('end', () => resolve(data));
-    }).on('error', reject);
+    });
+
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+
+    req.end();
   });
 }
 
@@ -621,7 +703,7 @@ async function getDynamicTokenInfo(account) {
     callback
   });
   const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
-  const responseText = await fetchText(url);
+  const responseText = await fetchText(url, true); // 使用当前代理
   const jsonpPrefix = `${callback}(`;
   if (!responseText.startsWith(jsonpPrefix) || !responseText.endsWith(');')) {
     throw new Error(`unexpected jsonp response: ${responseText.slice(0, 80)}`);
@@ -679,7 +761,7 @@ app.use('/api/h5sdk/login', async (req, res) => {
   const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
   console.log('[h5sdk/login] forwarding to:', url);
   try {
-    const responseText = await fetchText(url);
+    const responseText = await fetchText(url, true); // 使用当前代理
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.end(responseText);
   } catch (error) {
