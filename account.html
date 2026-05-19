@@ -1093,8 +1093,16 @@
                         const data = await response.json();
                         return data.ip;
                     } catch (e) {
-                        console.error('getProxyIP failed', e);
-                        return null;
+                        console.error('getProxyIP failed, trying fallback', e);
+                        // 备用方案：直接调用 ipify API
+                        try {
+                            const fallbackResponse = await fetch('https://api.ipify.org?format=json');
+                            const fallbackData = await fallbackResponse.json();
+                            return fallbackData.ip;
+                        } catch (fallbackError) {
+                            console.error('Fallback getIP failed', fallbackError);
+                            return null;
+                        }
                     }
                 },
 
