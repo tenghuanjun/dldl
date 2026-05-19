@@ -43,7 +43,7 @@
                   upwd: upwd,
                   autoLogin: 'true',
                   pid: '46',
-                  gid: '1005176',
+                  gid: '1003279',
                   sversion: 'undefined',
                   version: '1.0.4',
                   time: time,
