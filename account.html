@@ -776,28 +776,52 @@
                 if (!targetGroup) return;
                 if (this.accountModalMode === 'create') {
                     if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
-                    targetGroup.accounts.push({ name, uname, upwd, token, time, sign });
+                    try {
+                        const { data, error } = await db.from('accounts').insert({
+                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign
+                        }).select().single();
+                        if (error) {
+                            if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
+                            throw error;
+                        }
+                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign });
+                        this.showSuccess('账号已添加');
+                    } catch (e) {
+                        return this.failWithMessage(`添加失败：${e.message}`);
+                    }
                 } else {
                     const location = this.findAccountLocation(this.editingAccountRef || {});
                     if (!location) return this.failWithMessage('未找到要编辑的账号');
                     const target = location.group.accounts[location.index];
                     const existing = this.findAccountByUname(uname);
                     if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
-                    if (location.group.area !== targetGroup.area) {
-                        location.group.accounts.splice(location.index, 1);
-                        targetGroup.accounts.push(target);
+                    try {
+                        const updateData = { area_name: area, uname, upwd, name, token, time, sign };
+                        const { error } = await db.from('accounts').update(updateData)
+                            .eq('id', target.id).eq('user_id', this.currentUser.id);
+                        if (error) {
+                            if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
+                            throw error;
+                        }
+                        if (location.group.area !== area) {
+                            if (!this.areas.find(g => g.area === area)) {
+                                await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 999 });
+                            }
+                            location.group.accounts.splice(location.index, 1);
+                            targetGroup.accounts.push(target);
+                        }
+                        target.name = name;
+                        target.uname = uname;
+                        target.upwd = upwd;
+                        target.token = token;
+                        target.time = time;
+                        target.sign = sign;
+                        this.showSuccess('账号已更新');
+                    } catch (e) {
+                        return this.failWithMessage(`保存失败：${e.message}`);
                     }
-                    target.name = name;
-                    target.uname = uname;
-                    target.upwd = upwd;
-                    target.token = token;
-                    target.time = time;
-                    target.sign = sign;
                 }
-                const saved = await this.saveAccounts();
-                if (!saved) return;
                 this.closeAccountModal();
-                await this.loadAccounts();
             },
             editAccount(account) {
                 this.openAccountModal(account);
@@ -816,14 +840,15 @@
                     const target = location.group.accounts[location.index];
                     const confirmed = await this.confirmAction(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`, '删除账号');
                     if (!confirmed) return;
+                    const { error } = await db.from('accounts').delete()
+                        .eq('id', target.id).eq('user_id', this.currentUser.id);
+                    if (error) throw error;
                     location.group.accounts.splice(location.index, 1);
                     if (!location.group.accounts.length) {
                         this.areas = this.areas.filter(item => item.area !== location.group.area);
                     }
-                    const saved = await this.saveAccounts();
-                    if (!saved) return;
+                    this.showSuccess('账号已删除');
                     this.closeAccountModal();
-                    await this.loadAccounts();
                 } catch (e) {
                     this.showError(`删除账号失败：${e?.message || e}`);
                 }
@@ -842,6 +867,8 @@
                     }
                     const confirmed = await this.confirmAction(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`, '删除区服');
                     if (!confirmed) return;
+                    await db.from('accounts').delete().eq('user_id', this.currentUser.id).eq('area_name', areaName);
+                    await db.from('areas').delete().eq('user_id', this.currentUser.id).eq('name', areaName);
                     this.areas = this.areas.filter(item => item.area !== areaName);
                     if (this.accountModalVisible && this.accountModalMode === 'edit') {
                         const editingArea = this.findAccountLocation(this.editingAccountRef || {})?.group?.area;
@@ -849,9 +876,7 @@
                             this.closeAccountModal();
                         }
                     }
-                    const saved = await this.saveAccounts();
-                    if (!saved) return;
-                    await this.loadAccounts();
+                    this.showSuccess(`已删除区服 ${areaName}`);
                 } catch (e) {
                     this.showError(`删除区服失败：${e?.message || e}`);
                 }
