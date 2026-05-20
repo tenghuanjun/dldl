@@ -33,9 +33,12 @@
       "../index.html": "app/index.html",
       "../md5.js": "app/md5.js",
       "../proxy.js": "app/proxy.js",
+      "../proxy-pool.js": "app/proxy-pool.js",
+      "../skin.js": "app/skin.js",
       "../vue.global.js": "app/vue.global.js",
       "../package.json": "app/package.json",
       "../node_modules": "app/node_modules",
+      "../lib": "app/lib",
       "_embed/nodejs": "app/nodejs"
     },
     "macOS": {

@@ -770,17 +770,6 @@ app.use('/api/h5sdk/login', async (req, res) => {
   }
 });
 
-// 魂兽森林自动化脚本
-app.get('/forest-fight-auto.js', (req, res) => {
-  const scriptPath = path.join(staticRoot, 'forest-fight-auto.js');
-  if (fs.existsSync(scriptPath)) {
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.sendFile(scriptPath);
-  } else {
-    res.status(404).send('// 脚本不存在');
-  }
-});
-
 // 静态文件服务（只读资源；数据库与 account.json 在用户目录 userDataDir）
 app.use(express.static(staticRoot));
 // 代理所有其他请求
@@ -810,18 +799,6 @@ app.use('/', createProxyMiddleware({
             `<script>(function(){\n  window.__PC_QR_FIXED_TIME_MS=${fixedQrTimeMs};\n  try{var p=new URLSearchParams(location.search||\"\");window.__DLDL_PROXY_UNAME=p.get(\"uname\")||\"\";window.__DLDL_PROXY_UPWD=p.get(\"upwd\")||\"\";}catch(_){window.__DLDL_PROXY_UNAME=\"\";window.__DLDL_PROXY_UPWD=\"\";}\n\n  function injectRefreshButton(){\n    try{\n      if(document.getElementById(\"dldl-refresh-token-btn\")) return;\n      var btn=document.createElement(\"button\");\n      btn.id=\"dldl-refresh-token-btn\";\n      btn.type=\"button\";\n      btn.textContent=\"刷新 token\";\n      btn.style.cssText=\"position:fixed;right:16px;top:16px;z-index:99999;background:#2f81f7;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:14px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25);\";\n      btn.addEventListener(\"click\", async function(){\n        try{\n          btn.disabled=true;\n          btn.textContent=\"刷新中...\";\n          var uname=window.__DLDL_PROXY_UNAME||\"\";\n          var upwd=window.__DLDL_PROXY_UPWD||\"\";\n          if(!uname||!upwd) throw new Error(\"缺少账号信息\");\n          var resp=await fetch(\"/accounts\", {cache:\"no-store\"});\n          var json=await resp.json();\n          var area=Array.isArray(json.area)?json.area:[];\n          var list=(json.list&&typeof json.list===\"object\")?json.list:{};\n          var found=false;\n          for(var i=0;i<area.length;i++){\n            var key=String(area[i]||\"\");\n            var arr=list[key];\n            if(!Array.isArray(arr)) continue;\n            for(var j=0;j<arr.length;j++){\n              var acc=arr[j];\n              if(String(acc&&acc.uname||\"\")===uname && String(acc&&acc.upwd||\"\")===upwd){\n                var time=String(Math.floor(Date.now()/1000));\n                var signParams={uname:uname,upwd:upwd,autoLogin:\"true\",pid:\"46\",gid:\"1003279\",sversion:\"undefined\",version:\"1.0.4\",time:time,dev:\"9c71cbfa62ecfd4f5a1125d9c6c51367\",os:\"iOS\",over:\"18.5\"};\n                var API_KEY=\"Jp*4Y8vQOYck2*&Z\";\n                var sorted=Object.keys(signParams).sort();\n                var str=\"\";\n                for(var s=0;s<sorted.length;s++) str+=sorted[s]+\"=\"+signParams[sorted[s]];\n                var sign=hex_md5(str+API_KEY);\n                var url=\"https://s-api.37.com.cn/h5sdk/login?\"+new URLSearchParams(Object.assign({}, signParams, {sign:sign})).toString();\n                var payload=await new Promise(function(resolve,reject){\n                  var cb=\"__dldl_refresh_\"+Date.now()+\"_\"+Math.random().toString(36).slice(2);\n                  var u=new URL(url);\n                  u.searchParams.set(\"callback\", cb);\n                  var script=document.createElement(\"script\");\n                  var timer=setTimeout(function(){cleanup();reject(new Error(\"jsonp timeout\"));},15000);\n                  function cleanup(){ if(script&&script.parentNode) script.parentNode.removeChild(script); try{delete window[cb];}catch(_){window[cb]=undefined;} clearTimeout(timer); }\n                  window[cb]=function(data){ cleanup(); resolve(data); };\n                  script.onerror=function(){ cleanup(); reject(new Error(\"jsonp network error\")); };\n                  script.src=u.toString(); document.head.appendChild(script);\n                });\n                if(!payload||payload.state!==1||!payload.data||!payload.data.token) throw new Error((payload&&payload.msg)||\"login api failed\");\n                acc.token=String(payload.data.token);\n                acc.time=String(payload.data.time||time);\n                acc.sign=String(payload.data.sign||\"\");\n                found=true;\n                break;\n              }\n            }\n            if(found) break;\n          }\n          if(!found) throw new Error(\"未找到对应账号\");\n          var save=await fetch(\"/accounts\", {method:\"POST\", headers:{\"Content-Type\":\"application/json\"}, body:JSON.stringify({accounts:{area:area,list:list}})});\n          var saveJson=await save.json();\n          if(!save.ok || !saveJson.ok) throw new Error((saveJson&&saveJson.message)||\"保存失败\");\n          btn.textContent=\"刷新成功\";\n          setTimeout(function(){ btn.disabled=false; btn.textContent=\"刷新 token\"; }, 1200);\n        }catch(err){\n          console.error(err);\n          alert(\"刷新 token 失败：\" + (err&&err.message ? err.message : err));\n          btn.disabled=false;\n          btn.textContent=\"刷新 token\";\n        }\n      });\n      document.body.appendChild(btn);\n    }catch(_){ }\n  }\n  if(document.readyState===\"loading\") document.addEventListener(\"DOMContentLoaded\", injectRefreshButton); else injectRefreshButton();\n\n  // 兜底：不依赖 enter.js 的字符串替换是否命中，运行时强制给扫码请求补上 uname/upwd。\n  try{\n    var _open=XMLHttpRequest.prototype.open;\n    XMLHttpRequest.prototype.open=function(method,url){\n      try{\n        var uStr=String(url||\"\");\n        if(uStr){\n          var a=window.__DLDL_PROXY_UNAME||\"\";\n          var b=window.__DLDL_PROXY_UPWD||\"\";\n          if((uStr.indexOf(\"/pc/getId\")==0||uStr.indexOf(\"/pc/getCodeInfo\")==0) && (a||b)){\n            var u=new URL(uStr, location.origin);\n            if(a && !u.searchParams.has(\"uname\")) u.searchParams.set(\"uname\", a);\n            if(b && !u.searchParams.has(\"upwd\")) u.searchParams.set(\"upwd\", b);\n            url=u.pathname + (u.search||\"\");\n            arguments[1]=url;\n          }\n        }\n      }catch(_){ }\n      return _open.apply(this, arguments);\n    };\n  }catch(_){ }\n})();</script>\n    $1`
           );
           
-          // 注入魂兽森林自动化脚本（如果 URL 包含 dldl_forest=1）
-          try {
-            const urlParams = new URL(req.url, 'http://localhost').searchParams;
-            if (urlParams.get('dldl_forest') === '1') {
-              body = body.replace(
-                '</head>',
-                `<script src="/forest-fight-auto.js"></script></head>`
-              );
-              console.log('[ForestFight] 已注入自动化脚本');
-            }
-          } catch (_) {}
-
           // 同步上游状态和基础响应头（修改 body 后移除长度/压缩相关头）
           res.statusCode = proxyRes.statusCode;
           Object.entries(proxyRes.headers || {}).forEach(([key, value]) => {

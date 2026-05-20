@@ -120,9 +120,10 @@ function installFromCache(cachePath, distKey, version, base) {
 }
 
 async function main() {
-  if (process.env.DLDL_SKIP_EMBED_NODE === "1") {
-    console.warn(
-      "[ensure-bundled-node] DLDL_SKIP_EMBED_NODE=1：从当前运行脚本的 Node 复制到 _embed（不访问 nodejs.org）。"
+  // 默认使用系统 Node.js，设置 DLDL_USE_EMBED_NODE=1 从网上下载
+  if (process.env.DLDL_USE_EMBED_NODE !== "1") {
+    console.log(
+      "[ensure-bundled-node] 使用系统 Node.js 复制到 _embed（设置 DLDL_USE_EMBED_NODE=1 从 nodejs.org 下载）。"
     );
     rimraf(embedRoot);
     fs.mkdirSync(embedRoot, { recursive: true });

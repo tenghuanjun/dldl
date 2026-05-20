@@ -37,7 +37,7 @@ fn resolve_port() -> u16 {
     std::env::var("DLDL_PORT")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(8080)
+        .unwrap_or(18080)
 }
 
 /// 在 `base/<version>/rel` 中选字典序最后一项（通常对应较新的 Node 版本）。
