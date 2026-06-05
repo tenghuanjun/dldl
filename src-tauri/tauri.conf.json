@@ -10,8 +10,10 @@
   },
   "app": {
     "windows": [],
+    "withGlobalTauri": true,
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": ["default"]
     }
   },
   "bundle": {
@@ -34,6 +36,8 @@
       "../md5.js": "app/md5.js",
       "../proxy.js": "app/proxy.js",
       "../proxy-pool.js": "app/proxy-pool.js",
+      "../config.js": "app/config.js",
+      "../dldl-uinfo.js": "app/dldl-uinfo.js",
       "../skin.js": "app/skin.js",
       "../vue.global.js": "app/vue.global.js",
       "../package.json": "app/package.json",

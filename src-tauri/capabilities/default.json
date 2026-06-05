@@ -1,5 +1,18 @@
 {
+  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "主窗口与扫码弹窗",
-  "permissions": ["core:default"]
+  "description": "主窗口：账号列表与快捷登录（含本地代理页面）",
+  "windows": ["main"],
+  "remote": {
+    "urls": [
+      "http://127.0.0.1:*",
+      "http://127.0.0.1:*/*",
+      "http://localhost:*",
+      "http://localhost:*/*"
+    ]
+  },
+  "permissions": [
+    "core:default",
+    "allow-open-quick-login"
+  ]
 }

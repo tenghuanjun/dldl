@@ -136,6 +136,7 @@
                                 <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
                                 <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
+                                <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button>
                             </div>
                         </div>
                     </div>
@@ -143,7 +144,8 @@
             </div>
         </section>
         <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动扫码页」会按列表顺序约每隔 2 秒依次打开（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」。</div>
-        <div class="tip tip-secondary">点击「打开扫码页」会新开窗口跳转到 login.php：若当前账号已缓存 token，则直接使用，不请求登录接口也不重复写入；仅在没有 token 时会请求 h5sdk/login 并保存到数据库。点击「刷新 token」会强制重新登录并覆盖保存。</div>
+        <div class="tip tip-secondary">点击「打开扫码页」会经本地代理打开 login.php：若当前账号已缓存 token，则直接使用；仅在没有 token 时会请求 h5sdk/login 并写入 Supabase。账号页或扫码页内「刷新 token」成功后，会将新 token/time/sign 更新到 Supabase 对应账号行（按 id 匹配）。</div>
+        <div class="tip tip-secondary">「快捷登录」携带该账号的 uname、upwd、uinfo 打开新窗口，在 <code>37.com.cn/h5game/public/?pid=46&amp;gid=1005176</code> 注入 UINFO/HISTORY cookie 完成登录。无 uinfo 时按 uname/upwd 自动生成。需使用 DLDL-Proxy 桌面客户端。</div>
         <div class="tip tip-secondary">「代理IP」功能使用 Cloudflare Workers 代理请求登录接口，可绕过IP请求次数限制。点击「切换IP」会切换 Cloudflare 出口IP。使用前请先部署 <code>cloudflare-worker.js</code> 到 Cloudflare Workers，并将 Worker URL 填入配置。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
@@ -204,6 +206,14 @@
                     <div class="form-field">
                         <label class="form-label">sign</label>
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">uinfo</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.uinfo" rows="2" placeholder="可选；快捷登录将优先使用该值注入 UINFO"></textarea>
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">history</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.history" rows="2" placeholder='可选；建议为 JSON 数组，如 [{"uname":"xxx","upwd":"yyy"}]'></textarea>
                     </div>
                 </div>
                 <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
@@ -342,7 +352,7 @@
                     areas: [],
                     accountModalVisible: false,
                     accountModalMode: 'create',
-                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '' },
+                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '', uinfo: '', history: '' },
                     loginUrlPaste: '',
                     editingAccountRef: null,
                     /** 勾选批量启动：key = accountSelectKey(area, account) */
@@ -378,6 +388,18 @@
             mounted() {
                 this.checkLoginState();
                 this.fixAndLoadProxyConfig();
+                this._onLoginPageTokenMessage = (event) => {
+                    if (event.origin !== window.location.origin) return;
+                    const payload = event.data;
+                    if (!payload || payload.type !== 'dldl_token_refreshed') return;
+                    void this.handleTokenRefreshedFromLoginPage(payload);
+                };
+                window.addEventListener('message', this._onLoginPageTokenMessage);
+            },
+            beforeUnmount() {
+                if (this._onLoginPageTokenMessage) {
+                    window.removeEventListener('message', this._onLoginPageTokenMessage);
+                }
             },
             methods: {
                 hashPassword(password) {
@@ -595,7 +617,17 @@
                         const accountsByArea = {};
                         for (const account of (accountsData || [])) {
                             if (!accountsByArea[account.area_name]) accountsByArea[account.area_name] = [];
-                            accountsByArea[account.area_name].push({ id: account.id, uname: account.uname, upwd: account.upwd, name: account.name, token: account.token, time: account.time, sign: account.sign });
+                            accountsByArea[account.area_name].push({
+                                id: account.id,
+                                uname: account.uname,
+                                upwd: account.upwd,
+                                name: account.name,
+                                token: account.token,
+                                time: account.time,
+                                sign: account.sign,
+                                uinfo: account.uinfo || '',
+                                history: account.history || ''
+                            });
                         }
                         this.areas = (areasData || []).map(area => ({
                             area: area.name,
@@ -628,7 +660,17 @@
                         for (const group of this.areas) {
                             for (const acc of group.accounts) {
                                 const existing = (existingAccounts || []).find(a => a.area_name === group.area && a.uname === acc.uname);
-                                const accountData = { area_name: group.area, uname: acc.uname, upwd: acc.upwd, name: acc.name, token: acc.token, time: acc.time, sign: acc.sign };
+                                const accountData = {
+                                    area_name: group.area,
+                                    uname: acc.uname,
+                                    upwd: acc.upwd,
+                                    name: acc.name,
+                                    token: acc.token,
+                                    time: acc.time,
+                                    sign: acc.sign,
+                                    uinfo: acc.uinfo || '',
+                                    history: acc.history || ''
+                                };
                                 if (existing) await db.from('accounts').update(accountData).eq('id', existing.id).eq('user_id', userId);
                                 else await db.from('accounts').insert({ ...accountData, user_id: userId });
                             }
@@ -739,7 +781,9 @@
                         upwd: account.upwd || '',
                         token: account.token != null ? String(account.token) : '',
                         time: account.time != null ? String(account.time) : '',
-                        sign: account.sign != null ? String(account.sign) : ''
+                        sign: account.sign != null ? String(account.sign) : '',
+                        uinfo: account.uinfo != null ? String(account.uinfo) : '',
+                        history: account.history != null ? String(account.history) : ''
                     };
                     this.editingAccountRef = account;
                 } else {
@@ -751,7 +795,9 @@
                         upwd: '',
                         token: '',
                         time: '',
-                        sign: ''
+                        sign: '',
+                        uinfo: '',
+                        history: ''
                     };
                     this.editingAccountRef = null;
                 }
@@ -770,6 +816,8 @@
                 const token = String(this.accountForm.token || '').trim();
                 const time = String(this.accountForm.time || '').trim();
                 const sign = String(this.accountForm.sign || '').trim();
+                const uinfo = String(this.accountForm.uinfo || '').trim();
+                const history = String(this.accountForm.history || '').trim();
                 if (!area) return this.failWithMessage('请选择或填写区服');
                 if (!uname) return this.failWithMessage('请输入账号 uname');
                 if (!upwd) return this.failWithMessage('请输入密码 upwd');
@@ -779,13 +827,13 @@
                     if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
                     try {
                         const { data, error } = await db.from('accounts').insert({
-                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign
+                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history
                         }).select().single();
                         if (error) {
                             if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
                             throw error;
                         }
-                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign });
+                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history });
                         this.showSuccess('账号已添加');
                     } catch (e) {
                         return this.failWithMessage(`添加失败：${e.message}`);
@@ -797,7 +845,7 @@
                     const existing = this.findAccountByUname(uname);
                     if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
                     try {
-                        const updateData = { area_name: area, uname, upwd, name, token, time, sign };
+                        const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history };
                         const { error } = await db.from('accounts').update(updateData)
                             .eq('id', target.id).eq('user_id', this.currentUser.id);
                         if (error) {
@@ -817,6 +865,8 @@
                         target.token = token;
                         target.time = time;
                         target.sign = sign;
+                        target.uinfo = uinfo;
+                        target.history = history;
                         this.showSuccess('账号已更新');
                     } catch (e) {
                         return this.failWithMessage(`保存失败：${e.message}`);
@@ -883,22 +933,56 @@
                 }
             },
                 async persistToken(account, tokenInfo) {
+                    if (!account || !account.id || !this.currentUser) {
+                        this.showError('无法保存 token：缺少账号 ID 或未登录');
+                        return false;
+                    }
                     const location = this.findAccountLocation(account);
-                    if (!location) return;
-                    const target = location.group.accounts[location.index];
-                    target.token = tokenInfo.token;
-                    target.time = tokenInfo.time;
-                    target.sign = tokenInfo.sign;
+                    const target = location ? location.group.accounts[location.index] : account;
+                    target.token = String(tokenInfo.token || '');
+                    target.time = String(tokenInfo.time || '');
+                    target.sign = String(tokenInfo.sign || '');
                     try {
                         const { error } = await db.from('accounts')
-                            .update({ token: tokenInfo.token, time: tokenInfo.time, sign: tokenInfo.sign })
-                            .eq('user_id', this.currentUser.id)
-                            .eq('uname', account.uname);
+                            .update({
+                                token: target.token,
+                                time: target.time,
+                                sign: target.sign
+                            })
+                            .eq('id', account.id)
+                            .eq('user_id', this.currentUser.id);
                         if (error) throw error;
+                        return true;
                     } catch (e) {
                         console.error('save token failed', e);
-                        this.showError(`token 已获取，但写回数据库失败：${e?.message || e}`);
+                        this.showError(`token 已获取，但写回 Supabase 失败：${e?.message || e}`);
+                        return false;
                     }
+                },
+                /** 扫码页（login.php）内刷新 token 后，通过 postMessage 回写 Supabase */
+                async handleTokenRefreshedFromLoginPage(payload) {
+                    let account = null;
+                    const accountId = payload && payload.accountId;
+                    if (accountId != null && accountId !== '') {
+                        for (const group of this.areas) {
+                            account = group.accounts.find((a) => String(a.id) === String(accountId));
+                            if (account) break;
+                        }
+                    }
+                    if (!account && payload && payload.uname) {
+                        const found = this.findAccountByUname(payload.uname);
+                        account = found && found.account;
+                    }
+                    if (!account) {
+                        console.warn('login page token refresh: account not found', payload);
+                        return;
+                    }
+                    const ok = await this.persistToken(account, {
+                        token: payload.token,
+                        time: payload.time,
+                        sign: payload.sign
+                    });
+                    if (ok) this.showSuccess(`已从扫码页刷新并保存 ${account.uname} 的 token`);
                 },
                 jsonp(url, callbackParam = "callback", timeoutMs = 15000) {
                     return new Promise((resolve, reject) => {
@@ -1040,9 +1124,89 @@
                         appVer: "",
                         platCode: "37wan",
                         IMEI: "",
-                        isPcLauncher: "true"
+                        isPcLauncher: "true",
+                        uname: account.uname || "",
+                        upwd: account.upwd || ""
                     });
-                    return `https://dldl.50pk.com/login.php?${params.toString()}`;
+                    if (account.id != null) params.set('dldl_account_id', String(account.id));
+                    return `/login.php?${params.toString()}`;
+                },
+                /**
+                 * 快捷登录：携带 uname、upwd、uinfo 打开新窗口，在 37 公开门户注入 cookie。
+                 * @param {string} area
+                 * @param {{ id?: number|string, uname?: string, upwd?: string, uinfo?: string, history?: string }} account
+                 */
+                async openQuickLogin(area, account) {
+                    const uname = String(account && account.uname || "").trim();
+                    const upwd = String(account && account.upwd || "").trim();
+                    const uinfo = String(account && account.uinfo || "").trim();
+                    const history = String(account && account.history || "").trim();
+                    if (!uname || !upwd) {
+                        this.showError("快捷登录需要账号与密码，请先编辑账号填写 uname、upwd");
+                        return;
+                    }
+                    const tauri = window.__TAURI__;
+                    if (!tauri) {
+                        this.showError("快捷登录需要在 DLDL-Proxy 桌面客户端中使用（需注入 37.com.cn cookie）");
+                        return;
+                    }
+                    try {
+                        const resp = await fetch("/api/quick-login/ensure", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ uname, upwd, uinfo, history })
+                        });
+                        const data = await resp.json();
+                        if (!resp.ok || !data.ok) {
+                            this.showError(data.message || "快捷登录准备失败");
+                            return;
+                        }
+                        const portalUrl = String(data.portalUrl || "").trim();
+                        const uinfoVal = String(data.uinfo || "").trim();
+                        const historyVal = String(data.history || history || "").trim();
+                        if (!portalUrl || !uinfoVal) {
+                            this.showError("快捷登录准备失败：未获取到 UINFO 或门户地址。请完全退出并重新打开 DLDL-Proxy（需重启本地代理以加载最新接口）。");
+                            return;
+                        }
+                        const payload = { url: portalUrl, uname, upwd, uinfo: uinfoVal, history: historyVal };
+                        const syncQuickLoginProfile = async () => {
+                            if (!account || (account.uinfo === uinfoVal && account.history === historyVal)) {
+                                return;
+                            }
+                            account.uinfo = uinfoVal;
+                            account.history = historyVal;
+                            if (this.currentUser && account.id != null) {
+                                const { error } = await db
+                                    .from('accounts')
+                                    .update({ uinfo: uinfoVal, history: historyVal })
+                                    .eq('id', account.id)
+                                    .eq('user_id', this.currentUser.id);
+                                if (error) {
+                                    console.warn('quick login writeback failed', error?.message || error);
+                                }
+                            }
+                        };
+                        if (tauri.event && typeof tauri.event.emit === "function") {
+                            await tauri.event.emit("dldl-open-quick-login", payload);
+                            await syncQuickLoginProfile();
+                            return;
+                        }
+                        if (tauri.core && typeof tauri.core.invoke === "function") {
+                            await tauri.core.invoke("open_quick_login", {
+                                url: portalUrl,
+                                uname,
+                                upwd,
+                                uinfo: uinfoVal,
+                                history: historyVal
+                            });
+                            await syncQuickLoginProfile();
+                            return;
+                        }
+                        this.showError("快捷登录需要在 DLDL-Proxy 桌面客户端中使用（未找到 Tauri 通信接口）");
+                    } catch (e) {
+                        console.error("openQuickLogin failed", e);
+                        this.showError(`快捷登录失败：${e?.message || e}`);
+                    }
                 },
                 async openLogin(account) {
                     // 使用唯一窗口名，保证每次点击都新开窗口，不复用旧窗口
@@ -1234,17 +1398,30 @@
                     await this.batchLaunchAccounts(slice);
                 },
                 async refreshToken(account) {
-                    this.loadingText = `正在刷新 ${account.uname} 的 token...`;
+                    const uname = String(account && account.uname || '').trim();
+                    const upwd = String(account && account.upwd || '').trim();
+                    if (!uname || !upwd) {
+                        this.showError('刷新 token 需要账号与密码');
+                        return;
+                    }
+                    this.loadingText = `正在刷新 ${uname} 的 token...`;
                     this.loadingVisible = true;
                     try {
-                        const tokenInfo = await this.fetchToken(account, { forceApi: true });
-                        if (!tokenInfo) return;
-                        await this.persistToken(account, {
-                            token: tokenInfo.token,
-                            time: tokenInfo.time,
-                            sign: tokenInfo.sign
+                        const resp = await fetch('/api/token/refresh', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uname, upwd })
                         });
-                        this.showSuccess(`已刷新并保存 ${account.uname} 的 token`);
+                        const data = await resp.json();
+                        if (!resp.ok || !data.ok || !data.token) {
+                            throw new Error((data && data.message) || '刷新失败');
+                        }
+                        const ok = await this.persistToken(account, {
+                            token: data.token,
+                            time: data.time,
+                            sign: data.sign
+                        });
+                        if (ok) this.showSuccess(`已刷新并保存 ${uname} 的 token 到 Supabase`);
                     } catch (e) {
                         console.error("refreshToken failed", e);
                         this.showError(`刷新 token 失败：${e?.message || e}`);

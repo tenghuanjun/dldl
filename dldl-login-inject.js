@@ -25,94 +25,39 @@
           var uname = window.__DLDL_PROXY_UNAME || '';
           var upwd = window.__DLDL_PROXY_UPWD || '';
           if (!uname || !upwd) throw new Error('缺少账号信息');
-          var resp = await fetch('/accounts', { cache: 'no-store' });
-          var json = await resp.json();
-          var area = Array.isArray(json.area) ? json.area : [];
-          var list = json.list && typeof json.list === 'object' ? json.list : {};
-          var found = false;
-          for (var i = 0; i < area.length; i++) {
-            var key = String(area[i] || '');
-            var arr = list[key];
-            if (!Array.isArray(arr)) continue;
-            for (var j = 0; j < arr.length; j++) {
-              var acc = arr[j];
-              if (String((acc && acc.uname) || '') === uname && String((acc && acc.upwd) || '') === upwd) {
-                var time = String(Math.floor(Date.now() / 1000));
-                var signParams = {
-                  uname: uname,
-                  upwd: upwd,
-                  autoLogin: 'true',
-                  pid: '46',
-                  gid: '1003279',
-                  sversion: 'undefined',
-                  version: '1.0.4',
-                  time: time,
-                  dev: '9c71cbfa62ecfd4f5a1125d9c6c51367',
-                  os: 'iOS',
-                  over: '18.5'
-                };
-                var API_KEY = 'Jp*4Y8vQOYck2*&Z';
-                var sorted = Object.keys(signParams).sort();
-                var str = '';
-                for (var s = 0; s < sorted.length; s++) str += sorted[s] + '=' + signParams[sorted[s]];
-                var sign = hex_md5(str + API_KEY);
-                var url =
-                  'https://s-api.37.com.cn/h5sdk/login?' +
-                  new URLSearchParams(Object.assign({}, signParams, { sign: sign })).toString();
-                var payload = await new Promise(function (resolve, reject) {
-                  var cb = '__dldl_refresh_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-                  var u = new URL(url);
-                  u.searchParams.set('callback', cb);
-                  var script = document.createElement('script');
-                  var timer = setTimeout(function () {
-                    cleanup();
-                    reject(new Error('jsonp timeout'));
-                  }, 15000);
-                  function cleanup() {
-                    if (script && script.parentNode) script.parentNode.removeChild(script);
-                    try {
-                      delete window[cb];
-                    } catch (_) {
-                      window[cb] = undefined;
-                    }
-                    clearTimeout(timer);
-                  }
-                  window[cb] = function (data) {
-                    cleanup();
-                    resolve(data);
-                  };
-                  script.onerror = function () {
-                    cleanup();
-                    reject(new Error('jsonp network error'));
-                  };
-                  script.src = u.toString();
-                  document.head.appendChild(script);
-                });
-                if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
-                  throw new Error((payload && payload.msg) || 'login api failed');
-                }
-                acc.token = String(payload.data.token);
-                acc.time = String(payload.data.time || time);
-                acc.sign = String(payload.data.sign || '');
-                found = true;
-                break;
-              }
-            }
-            if (found) break;
-          }
-          if (!found) throw new Error('未找到对应账号');
-          var save = await fetch('/accounts', {
+          var resp = await fetch('/api/token/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accounts: { area: area, list: list } })
+            body: JSON.stringify({ uname: uname, upwd: upwd })
           });
-          var saveJson = await save.json();
-          if (!save.ok || !saveJson.ok) throw new Error((saveJson && saveJson.message) || '保存失败');
-          btn.textContent = '刷新成功';
-          setTimeout(function () {
-            btn.disabled = false;
-            btn.textContent = '刷新 token';
-          }, 1200);
+          var data = await resp.json();
+          if (!resp.ok || !data.ok || !data.token) {
+            throw new Error((data && data.message) || '刷新失败');
+          }
+          if (window.opener && !window.opener.closed) {
+            try {
+              var pageUrl = new URL(location.href);
+              window.opener.postMessage(
+                {
+                  type: 'dldl_token_refreshed',
+                  accountId: pageUrl.searchParams.get('dldl_account_id'),
+                  uname: uname,
+                  upwd: upwd,
+                  token: String(data.token),
+                  time: String(data.time || ''),
+                  sign: String(data.sign || '')
+                },
+                window.location.origin
+              );
+            } catch (postErr) {
+              console.warn('postMessage to opener failed', postErr);
+            }
+          }
+          var u = new URL(location.href);
+          u.searchParams.set('token', String(data.token));
+          u.searchParams.set('time', String(data.time || ''));
+          u.searchParams.set('sign', String(data.sign || ''));
+          location.href = u.toString();
         } catch (err) {
           console.error(err);
           alert('刷新 token 失败：' + (err && err.message ? err.message : err));

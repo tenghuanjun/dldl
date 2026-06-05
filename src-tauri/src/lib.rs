@@ -4,8 +4,10 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 
 use anyhow::Context;
-use tauri::webview::{NewWindowFeatures, NewWindowResponse};
-use tauri::{App, AppHandle, Manager, RunEvent, Runtime, WebviewUrl, WebviewWindowBuilder};
+use cookie::{Cookie, SameSite};
+use tauri::webview::{Cookie as TauriCookie, NewWindowFeatures, NewWindowResponse, PageLoadEvent};
+use tauri::{App, AppHandle, Listener, Manager, RunEvent, Runtime, WebviewUrl, WebviewWindowBuilder};
+use time::Duration;
 use url::Url;
 
 struct ProxyChild {
@@ -245,6 +247,233 @@ fn popup_window_policy<R: Runtime>(
     }
 }
 
+#[derive(serde::Deserialize)]
+struct QuickLoginPayload {
+    url: String,
+    #[serde(default)]
+    uname: String,
+    #[serde(default)]
+    upwd: String,
+    uinfo: Option<String>,
+    #[serde(default)]
+    history: String,
+}
+
+#[derive(serde::Deserialize)]
+struct HistoryLoginPair {
+    uname: String,
+    upwd: String,
+}
+
+fn percent_encode_component_utf8(s: &str) -> String {
+    // Roughly matches JS `encodeURIComponent`:
+    // encodeURIComponent doesn't escape: A-Z a-z 0-9 - _ . ! ~ * ' ( )
+    // and escapes everything else as %XX (using UTF-8 bytes).
+    let mut out = String::with_capacity(s.len());
+    for &b in s.as_bytes() {
+        let keep = (b'A'..=b'Z').contains(&b)
+            || (b'a'..=b'z').contains(&b)
+            || (b'0'..=b'9').contains(&b)
+            || b == b'-'
+            || b == b'_'
+            || b == b'.'
+            || b == b'!'
+            || b == b'~'
+            || b == b'*'
+            || b == b'\''
+            || b == b'('
+            || b == b')';
+        if keep {
+            out.push(b as char);
+        } else {
+            out.push_str(&format!("%{:02X}", b));
+        }
+    }
+    out
+}
+
+fn encode_uinfo_plain(plain: &str) -> String {
+    // Mirrors `encodeUinfoPlain` in `dldl-uinfo.js`:
+    //   c0 = code[0] + code.length
+    //   ci = code[i] + code[i-1]
+    // then `encodeURIComponent(c)`.
+    let units: Vec<u16> = plain.encode_utf16().collect();
+    let len = units.len();
+    if len == 0 {
+        return String::new();
+    }
+
+    let mut out_units: Vec<u16> = Vec::with_capacity(len);
+    out_units.push(units[0].wrapping_add(len as u16));
+    for i in 1..len {
+        out_units.push(units[i].wrapping_add(units[i - 1]));
+    }
+
+    // JS allows surrogate halves; Rust can't represent all cases losslessly.
+    // For typical ASCII accounts this matches exactly.
+    let c = String::from_utf16_lossy(&out_units);
+    percent_encode_component_utf8(&c)
+}
+
+fn build_uinfo_from_uname_upwd(uname: &str, upwd: &str) -> Result<String, String> {
+    #[derive(serde::Serialize)]
+    struct UinfoObj<'a> {
+        uname: &'a str,
+        upwd: &'a str,
+        autoLogin: bool,
+    }
+
+    let plain = serde_json::to_string(&UinfoObj {
+        uname,
+        upwd,
+        // Must match `proxy.js -> build37CookieValues({ ..., autoLogin: true })`.
+        autoLogin: true,
+    })
+    .map_err(|e| format!("生成 UINFO 失败: {e}"))?;
+
+    Ok(encode_uinfo_plain(&plain))
+}
+
+fn derive_uinfo_from_history(history: &str) -> Result<String, String> {
+    let history = history.trim();
+    if history.is_empty() {
+        return Err("缺少 uinfo 且 history 为空".into());
+    }
+
+    let items: Vec<HistoryLoginPair> =
+        serde_json::from_str(history).map_err(|e| format!("history 不是合法 JSON: {e}"))?;
+    let item = items.get(0).ok_or_else(|| "history 为空数组".to_string())?;
+    build_uinfo_from_uname_upwd(&item.uname, &item.upwd)
+}
+
+fn derive_uinfo_from_uname_upwd(uname: &str, upwd: &str) -> Result<String, String> {
+    let uname = uname.trim();
+    let upwd = upwd.trim();
+    if uname.is_empty() || upwd.is_empty() {
+        return Err("缺少 uname 或 upwd".into());
+    }
+    build_uinfo_from_uname_upwd(uname, upwd)
+}
+
+fn parse_quick_login_payload(payload: &str) -> Result<(String, String, String), String> {
+    let parsed: QuickLoginPayload =
+        serde_json::from_str(payload).map_err(|e| format!("payload 不是合法 JSON: {e}"))?;
+    let history = parsed.history;
+    let uinfo = match parsed.uinfo {
+        Some(u) if !u.trim().is_empty() => u,
+        _ => derive_uinfo_from_uname_upwd(&parsed.uname, &parsed.upwd)
+            .or_else(|_| derive_uinfo_from_history(&history))?,
+    };
+    if uinfo.trim().is_empty() {
+        return Err("payload 缺少 uinfo 且无法生成".into());
+    }
+    Ok((parsed.url, uinfo, history))
+}
+
+fn build_37_portal_cookie(name: &str, value: &str) -> TauriCookie<'static> {
+    Cookie::build((name, value))
+        .domain("37.com.cn")
+        .path("/")
+        .secure(true)
+        .http_only(false)
+        .same_site(SameSite::Lax)
+        .max_age(Duration::days(365 * 100))
+        .build()
+        .into_owned()
+}
+
+/// 用原生 cookie API 写入 UINFO/HISTORY，再打开 37 公开门户（等同 Electron session.cookies.set）。
+fn open_quick_login_window(
+    app: &AppHandle,
+    url: String,
+    uinfo: String,
+    history: String,
+) -> Result<(), String> {
+    let portal = Url::parse(&url).map_err(|e| format!("URL 无效: {e}"))?;
+    if !allow_popup_url(&portal) {
+        return Err("仅允许 http(s) 或 about 链接".into());
+    }
+    if uinfo.trim().is_empty() {
+        return Err("UINFO 为空".into());
+    }
+    let label = format!(
+        "quick_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0)
+    );
+    let blank = Url::parse("about:blank").map_err(|e| format!("内部 URL 无效: {e}"))?;
+    let window = WebviewWindowBuilder::new(app, &label, WebviewUrl::External(blank))
+        .title("快捷登录")
+        .inner_size(420.0, 720.0)
+        .min_inner_size(360.0, 600.0)
+        .visible(false)
+        .on_page_load(|win, payload| {
+            if payload.event() != PageLoadEvent::Finished {
+                return;
+            }
+            let Ok(current) = win.url() else {
+                return;
+            };
+            if current.host_str() == Some("37.com.cn") {
+                let _ = win.show();
+                let _ = win.set_focus();
+            }
+        })
+        .build()
+        .map_err(|e| format!("创建快捷登录窗口失败: {e}"))?;
+
+    window
+        .set_cookie(build_37_portal_cookie("UINFO", &uinfo))
+        .map_err(|e| format!("设置 UINFO cookie 失败: {e}"))?;
+    if !history.trim().is_empty() {
+        window
+            .set_cookie(build_37_portal_cookie("HISTORY", &history))
+            .map_err(|e| format!("设置 HISTORY cookie 失败: {e}"))?;
+    }
+    window
+        .navigate(portal)
+        .map_err(|e| format!("打开门户失败: {e}"))?;
+    Ok(())
+}
+
+/// 快捷登录：供 account.html 通过 invoke 调用（需 ACL 授权）。
+#[tauri::command]
+fn open_quick_login(
+    app: tauri::AppHandle,
+    url: String,
+    uname: Option<String>,
+    upwd: Option<String>,
+    uinfo: Option<String>,
+    history: Option<String>,
+) -> Result<(), String> {
+    let history_val = history.unwrap_or_default();
+    let uinfo_val = match uinfo {
+        Some(u) if !u.trim().is_empty() => u,
+        _ => {
+            let u = uname.unwrap_or_default();
+            let p = upwd.unwrap_or_default();
+            derive_uinfo_from_uname_upwd(&u, &p).or_else(|_| derive_uinfo_from_history(&history_val))?
+        }
+    };
+    open_quick_login_window(&app, url, uinfo_val, history_val)
+}
+
+fn register_quick_login_event_listener(app: &AppHandle) {
+    let handle = app.clone();
+    app.listen("dldl-open-quick-login", move |event| {
+        match parse_quick_login_payload(event.payload()) {
+            Ok((url, uinfo, history)) => {
+                if let Err(e) = open_quick_login_window(&handle, url, uinfo, history) {
+                    eprintln!("[dldl-open-quick-login] {e}");
+                }
+            }
+            Err(e) => eprintln!("[dldl-open-quick-login] {e}"),
+        }
+    });
+}
+
 
 fn append_startup_log(handle: &AppHandle, msg: &str) {
     let Ok(base) = handle.path().app_data_dir() else {
@@ -284,6 +513,7 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
     );
     std::fs::create_dir_all(&user_data)?;
     let port = resolve_port();
+    register_quick_login_event_listener(&app_handle);
     let mut child = spawn_proxy(&app_handle, &static_root, &user_data, port)?;
     append_startup_log(&app_handle, "已 spawn Node 子进程，等待 /__dldl_ready");
     if let Err(e) = wait_for_proxy_ready(port, 500) {
@@ -314,6 +544,7 @@ fn try_setup(app: &mut App) -> anyhow::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![open_quick_login])
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.unminimize();
