@@ -2,15 +2,16 @@
   "name": "dldl",
   "version": "1.0.0",
   "description": "本地代理与账号管理",
+  "main": "electron-main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "proxy": "node proxy.js",
-    "tauri": "node scripts/tauri-run.mjs",
-    "tauri:dev": "node scripts/tauri-run.mjs dev",
-    "tauri:build": "node scripts/tauri-run.mjs build",
-    "dist": "node scripts/tauri-run.mjs build",
-    "dist:mac": "node scripts/tauri-run.mjs build",
-    "dist:win": "node scripts/tauri-run.mjs build --target x86_64-pc-windows-msvc"
+    "start": "electron .",
+    "dev": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [],
   "author": "",
@@ -18,11 +19,57 @@
   "dependencies": {
     "crypto-js": "^4.2.0",
     "express": "^5.2.1",
-    "http-proxy-middleware": "^2.0.7",
-    "sqlite3": "^6.0.1"
+    "http-proxy-middleware": "^2.0.7"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.6.0",
-    "semver": "^7.6.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.dldl.localproxy",
+    "productName": "DLDL-Proxy",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron-main.js",
+      "preload.js",
+      "proxy.js",
+      "proxy-pool.js",
+      "config.js",
+      "dldl-uinfo.js",
+      "account.html",
+      "index.html",
+      "bundle.js",
+      "cc.js",
+      "d3j4a5s8d3.js",
+      "dldl-login-inject.js",
+      "enter.js",
+      "md5.js",
+      "skin.js",
+      "package.json",
+      "node_modules/**/*",
+      "lib/**/*",
+      "logo.png"
+    ],
+    "asarUnpack": [],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "minimumSystemVersion": "10.15",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

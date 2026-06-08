@@ -377,7 +377,7 @@ fn build_37_portal_cookie(name: &str, value: &str) -> TauriCookie<'static> {
         .secure(true)
         .http_only(false)
         .same_site(SameSite::Lax)
-        .max_age(Duration::days(365 * 100))
+        .max_age(Duration::seconds(99_999_999_999))
         .build()
         .into_owned()
 }

@@ -183,6 +183,16 @@
                         <label class="form-label">密码 upwd</label>
                         <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
                     </div>
+                    <div class="form-field full form-section-label">快捷登录 Cookie</div>
+                    <div class="form-field full">
+                        <label class="form-label">uinfo</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.uinfo" rows="2" placeholder="可选；快捷登录优先使用该值注入 UINFO，留空则按 uname/upwd 自动生成"></textarea>
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">history</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.history" rows="2" placeholder='可选；建议为 JSON 数组，如 [{"uname":"xxx","upwd":"yyy"}]'></textarea>
+                    </div>
+                    <div class="form-field full form-section-label">扫码登录 token</div>
                     <div class="form-field full">
                         <label class="form-label">完整登录地址</label>
                         <div class="url-extract-row">
@@ -206,14 +216,6 @@
                     <div class="form-field">
                         <label class="form-label">sign</label>
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
-                    </div>
-                    <div class="form-field full">
-                        <label class="form-label">uinfo</label>
-                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.uinfo" rows="2" placeholder="可选；快捷登录将优先使用该值注入 UINFO"></textarea>
-                    </div>
-                    <div class="form-field full">
-                        <label class="form-label">history</label>
-                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.history" rows="2" placeholder='可选；建议为 JSON 数组，如 [{"uname":"xxx","upwd":"yyy"}]'></textarea>
                     </div>
                 </div>
                 <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
@@ -339,6 +341,27 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
         const db = supabase.createClient(supabaseUrl, supabaseKey);
         console.log('Supabase initialized OK');
+
+        // 与 bundle.js SQUtil.encode 一致的 UINFO 编码函数
+        function encodeUinfoPlain(plain) {
+            const code = String(plain);
+            if (!code) return '';
+            let c = String.fromCharCode(code.charCodeAt(0) + code.length);
+            for (let i = 1; i < code.length; i++) {
+                c += String.fromCharCode(code.charCodeAt(i) + code.charCodeAt(i - 1));
+            }
+            return encodeURIComponent(c);
+        }
+
+        // 按 bundle.js 登录成功后的写法生成 UINFO、HISTORY cookie 值
+        function build37CookieValues(account) {
+            const uname = String(account.uname || '').trim();
+            const upwd = String(account.upwd || '').trim();
+            const uinfoObj = { uname, upwd, autoLogin: account.autoLogin !== false };
+            const uinfo = encodeUinfoPlain(JSON.stringify(uinfoObj));
+            const history = JSON.stringify([{ uname, upwd }]);
+            return { uinfo, history };
+        }
 
         const app = createApp({
             data() {
@@ -1129,56 +1152,60 @@
                         upwd: account.upwd || ""
                     });
                     if (account.id != null) params.set('dldl_account_id', String(account.id));
-                    return `/login.php?${params.toString()}`;
+                    return `https://dldl.50pk.com/login.php?${params.toString()}`;
                 },
                 /**
                  * 快捷登录：携带 uname、upwd、uinfo 打开新窗口，在 37 公开门户注入 cookie。
+                 * - 如果 uinfo 不存在或为空，调用 encodeUinfoPlain 自动生成
+                 * - 打开 https://37.com.cn/h5game/public/?pid=46&gid=1005176&token=&channelToken=&rand=
+                 * - 在页面加载前注入 UINFO cookie（domain: 37.com.cn, expirationDate: 99999999999）
                  * @param {string} area
                  * @param {{ id?: number|string, uname?: string, upwd?: string, uinfo?: string, history?: string }} account
                  */
                 async openQuickLogin(area, account) {
                     const uname = String(account && account.uname || "").trim();
                     const upwd = String(account && account.upwd || "").trim();
-                    const uinfo = String(account && account.uinfo || "").trim();
-                    const history = String(account && account.history || "").trim();
+                    let uinfo = String(account && account.uinfo || "").trim();
+                    let history = String(account && account.history || "").trim();
                     if (!uname || !upwd) {
                         this.showError("快捷登录需要账号与密码，请先编辑账号填写 uname、upwd");
                         return;
                     }
-                    const tauri = window.__TAURI__;
-                    if (!tauri) {
+                    const electron = window.__ELECTRON__;
+                    if (!electron) {
                         this.showError("快捷登录需要在 DLDL-Proxy 桌面客户端中使用（需注入 37.com.cn cookie）");
                         return;
                     }
                     try {
-                        const resp = await fetch("/api/quick-login/ensure", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ uname, upwd, uinfo, history })
-                        });
-                        const data = await resp.json();
-                        if (!resp.ok || !data.ok) {
-                            this.showError(data.message || "快捷登录准备失败");
+                        // 如果 uinfo 不存在或为空，调用本地方法生成
+                        if (!uinfo) {
+                            const cookies = build37CookieValues({ uname, upwd, autoLogin: true });
+                            uinfo = cookies.uinfo;
+                            history = cookies.history;
+                        } else if (!history) {
+                            // uinfo 存在但 history 为空时，自动生成 history
+                            history = JSON.stringify([{ uname, upwd }]);
+                        }
+                        if (!uinfo) {
+                            this.showError("快捷登录失败：无法生成 UINFO");
                             return;
                         }
-                        const portalUrl = String(data.portalUrl || "").trim();
-                        const uinfoVal = String(data.uinfo || "").trim();
-                        const historyVal = String(data.history || history || "").trim();
-                        if (!portalUrl || !uinfoVal) {
-                            this.showError("快捷登录准备失败：未获取到 UINFO 或门户地址。请完全退出并重新打开 DLDL-Proxy（需重启本地代理以加载最新接口）。");
-                            return;
-                        }
-                        const payload = { url: portalUrl, uname, upwd, uinfo: uinfoVal, history: historyVal };
+
+                        // 门户地址
+                        const portalUrl = "https://37.com.cn/h5game/public/?pid=46&gid=1005176&token=&channelToken=&rand=";
+
+                        // 同步写入数据库（如果 uinfo/history 是新生成的）
                         const syncQuickLoginProfile = async () => {
-                            if (!account || (account.uinfo === uinfoVal && account.history === historyVal)) {
-                                return;
-                            }
-                            account.uinfo = uinfoVal;
-                            account.history = historyVal;
+                            if (!account) return;
+                            const oldUinfo = String(account.uinfo || "").trim();
+                            const oldHistory = String(account.history || "").trim();
+                            if (oldUinfo === uinfo && oldHistory === history) return;
+                            account.uinfo = uinfo;
+                            account.history = history;
                             if (this.currentUser && account.id != null) {
                                 const { error } = await db
                                     .from('accounts')
-                                    .update({ uinfo: uinfoVal, history: historyVal })
+                                    .update({ uinfo, history })
                                     .eq('id', account.id)
                                     .eq('user_id', this.currentUser.id);
                                 if (error) {
@@ -1186,23 +1213,20 @@
                                 }
                             }
                         };
-                        if (tauri.event && typeof tauri.event.emit === "function") {
-                            await tauri.event.emit("dldl-open-quick-login", payload);
-                            await syncQuickLoginProfile();
+
+                        // 使用 Electron IPC（invoke 模式，有返回值）
+                        const result = await electron.openQuickLogin({
+                            url: portalUrl,
+                            uname,
+                            upwd,
+                            uinfo,
+                            history
+                        });
+                        if (!result.ok) {
+                            this.showError(result.message || "快捷登录失败");
                             return;
                         }
-                        if (tauri.core && typeof tauri.core.invoke === "function") {
-                            await tauri.core.invoke("open_quick_login", {
-                                url: portalUrl,
-                                uname,
-                                upwd,
-                                uinfo: uinfoVal,
-                                history: historyVal
-                            });
-                            await syncQuickLoginProfile();
-                            return;
-                        }
-                        this.showError("快捷登录需要在 DLDL-Proxy 桌面客户端中使用（未找到 Tauri 通信接口）");
+                        await syncQuickLoginProfile();
                     } catch (e) {
                         console.error("openQuickLogin failed", e);
                         this.showError(`快捷登录失败：${e?.message || e}`);
@@ -2020,11 +2044,21 @@
 
         .modal {
             width: min(560px, 100%);
+            max-height: min(92vh, 900px);
+            overflow-y: auto;
             background: #171a21;
             border: 1px solid #242936;
             border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
             padding: 18px;
+        }
+
+        .form-section-label {
+            margin: 4px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7d8aa0;
+            letter-spacing: 0.02em;
         }
 
         .modal-title {
