@@ -122,8 +122,8 @@ if (!gotTheLock) {
     const childWindow = new BrowserWindow({
       width: 420,
       height: 720,
-      minWidth: 360,
-      minHeight: 600,
+      minWidth: 100,
+      minHeight: 100,
       show: false,
       autoHideMenuBar: true,
       backgroundColor: '#1a1a2e',
