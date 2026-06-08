@@ -47,21 +47,22 @@
                 <div class="sticky-tools">
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
+                    <el-select
+                        v-model="batchLaunchMode"
+                        class="batch-launch-mode-select"
+                        size="default"
+                        title="批量启动方式"
+                        popper-class="batch-launch-mode-popper"
+                    >
+                        <el-option label="快捷登录" value="quick" />
+                        <el-option label="扫码页" value="scan" />
+                    </el-select>
                     <button
                         class="btn btn-compact"
                         type="button"
                         :disabled="selectedAccountCount === 0"
                         @click="batchLaunchSelected"
                     >批量启动（{{ selectedAccountCount }}）</button>
-                    <el-select
-                        v-model="batchLaunchMode"
-                        class="batch-launch-mode-select batch-select-ep"
-                        size="default"
-                        title="批量启动方式"
-                    >
-                        <el-option label="快捷登录" value="quick" />
-                        <el-option label="扫码页" value="scan" />
-                    </el-select>
                     <button
                         class="btn btn-compact"
                         :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
@@ -1690,6 +1691,12 @@
             min-width: 100px;
             max-width: 260px;
             width: 160px;
+        }
+
+        /* 批量启动方式下拉 - 固定 150px 宽度 */
+        .sticky-tools .batch-launch-mode-select {
+            width: 150px;
+            flex-shrink: 0;
         }
 
         /* 区服下拉与数字框同高，与 Element Plus 尺寸变量对齐 */
