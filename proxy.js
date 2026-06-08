@@ -356,7 +356,62 @@ app.get('/api/quick-login/config', (req, res) => {
   res.json({ ok: true, portalUrl: url, pid: q.pid, gid: q.gid });
 });
 
-// h5sdk/login 代理，处理签名并转发请求
+/**
+ * 快捷登录窗口 JSONP 拦截端点：统一处理 h5sdk/login 和 h5sdk/query_login
+ * 路径格式：/api/h5sdk-proxy/login 或 /api/h5sdk-proxy/query_login
+ * - login：从请求参数中提取 uname/upwd/sign 等，通过代理池 IP 真实调用 s-api.37.com.cn，
+ *   拿到真实数据后原样返回 JSONP 响应给子窗口。
+ * - query_login：返回伪造的已登录状态，阻止无限轮询。
+ */
+app.get('/api/h5sdk-proxy/:action', async (req, res) => {
+  const action = req.params.action;
+  const callbackName = String(req.query.callback || 'jsonp_callback_0');
+  console.log('[h5sdk-proxy/' + action + '] callback=' + callbackName + ', uname=' + (req.query.uname || ''));
+
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+
+  if (action === 'query_login') {
+    // query_login：直接返回伪造的已登录状态，不请求真实服务器
+    const fakeResp = { state: 1, data: { logined: true } };
+    const respBody = callbackName + '(' + JSON.stringify(fakeResp) + ');';
+    console.log('[h5sdk-proxy/query_login] 返回伪造已登录状态');
+    return res.end(respBody);
+  }
+
+  if (action === 'login') {
+    // login：从请求参数中提取所有参数，通过代理池 IP 真实调用 s-api.37.com.cn
+    // 去掉 callback（我们自己用 callbackName 组装返回），保留其他所有参数
+    const loginParams = new URLSearchParams(req.query);
+    loginParams.delete('callback');
+    const realUrl = `https://s-api.37.com.cn/h5sdk/login?${loginParams.toString()}`;
+    console.log('[h5sdk-proxy/login] 通过代理池请求真实接口...');
+
+    try {
+      const responseText = await fetchText(realUrl, true); // useProxy=true，走代理池
+      console.log('[h5sdk-proxy/login] 真实接口返回:', responseText.substring(0, 200));
+
+      // 解析真实返回的 JSONP，替换 callback 名称后返回
+      // 真实返回格式：jsonp_callback_xxxxx({...});
+      const match = responseText.match(/^(\w+)\(([\s\S]+)\);?$/);
+      if (match) {
+        const respBody = callbackName + '(' + match[2] + ');';
+        return res.end(respBody);
+      }
+      // 如果不是标准 JSONP 格式，直接返回原始响应
+      return res.end(responseText);
+    } catch (error) {
+      console.error('[h5sdk-proxy/login] 代理请求失败:', error.message);
+      // 失败时返回错误 JSONP 响应
+      const errResp = { state: 0, msg: '代理请求失败: ' + error.message, data: {} };
+      const respBody = callbackName + '(' + JSON.stringify(errResp) + ');';
+      return res.end(respBody);
+    }
+  }
+
+  res.status(404).send('unknown action: ' + action);
+});
+
+// h5sdk/login 代理（主窗口扫码页使用），处理签名并转发请求
 app.use('/api/h5sdk/login', async (req, res) => {
   console.log('[h5sdk/login] request:', req.query.uname);
   const callback = `jsonp_callback_${Date.now()}`;

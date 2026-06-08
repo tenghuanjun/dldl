@@ -47,16 +47,14 @@
                 <div class="sticky-tools">
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
-                    <el-select
+                    <select
                         v-model="batchLaunchMode"
                         class="batch-launch-mode-select"
-                        size="default"
                         title="批量启动方式"
-                        popper-class="batch-launch-mode-popper"
                     >
-                        <el-option label="快捷登录" value="quick" />
-                        <el-option label="扫码页" value="scan" />
-                    </el-select>
+                        <option value="quick">快捷登录</option>
+                        <option value="scan">扫码页</option>
+                    </select>
                     <button
                         class="btn btn-compact"
                         type="button"
@@ -1697,6 +1695,18 @@
         .sticky-tools .batch-launch-mode-select {
             width: 150px;
             flex-shrink: 0;
+            height: var(--batch-ctrl-h, 36px);
+            padding: 0 8px;
+            font-size: 14px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            cursor: pointer;
+            outline: none;
+        }
+        .sticky-tools .batch-launch-mode-select:focus {
+            border-color: #7c6ff7;
         }
 
         /* 区服下拉与数字框同高，与 Element Plus 尺寸变量对齐 */

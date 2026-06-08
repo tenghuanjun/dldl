@@ -23,6 +23,8 @@ if (!gotTheLock) {
   let PORT;
   try {
     ({ startProxyServer, PORT } = require('./proxy'));
+    // 设置环境变量，供 quick-login-preload.js 在渲染进程中读取
+    process.env.DLDL_PORT = String(PORT);
   } catch (error) {
     const message = error && error.message ? error.message : String(error);
     console.error('加载代理模块失败:', error);
@@ -131,9 +133,31 @@ if (!gotTheLock) {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        sandbox: true,
+        sandbox: false,
+        preload: path.join(__dirname, 'quick-login-preload.js'),
         session: quickSession
       }
+    });
+
+    // 拦截子窗口中所有发往 s-api.37.com.cn 的 JSONP 请求，
+    // redirect 到本地 Express 代理。Express 端点 /api/h5sdk-proxy/:action 会：
+    // - 对 login：用代理池 IP 真实调用 s-api.37.com.cn，拿到数据后返回
+    // - 对 query_login：返回伪造的已登录状态（logined: true）
+    const localProxyBase = `http://127.0.0.1:${PORT}`;
+
+    quickSession.webRequest.onBeforeRequest({ urls: ['*://s-api.37.com.cn/h5sdk/login*'] }, (details, callback) => {
+      console.log('[quick-login] 拦截 h5sdk/login，redirect 到本地代理');
+      const urlObj = new URL(details.url);
+      const redirectUrl = localProxyBase + '/api/h5sdk-proxy/login' + urlObj.search;
+      console.log('[quick-login] redirect to:', redirectUrl.substring(0, 120) + '...');
+      callback({ redirectURL: redirectUrl });
+    });
+
+    quickSession.webRequest.onBeforeRequest({ urls: ['*://s-api.37.com.cn/h5sdk/query_login*'] }, (details, callback) => {
+      console.log('[quick-login] 拦截 query_login，redirect 到本地代理');
+      const urlObj = new URL(details.url);
+      const redirectUrl = localProxyBase + '/api/h5sdk-proxy/query_login' + urlObj.search;
+      callback({ redirectURL: redirectUrl });
     });
 
     // 页面加载完成后再显示，避免白屏
