@@ -34,6 +34,7 @@
     "files": [
       "electron-main.js",
       "preload.js",
+      "quick-login-preload.js",
       "proxy.js",
       "proxy-pool.js",
       "config.js",
@@ -47,6 +48,7 @@
       "enter.js",
       "md5.js",
       "skin.js",
+      "vue.global.js",
       "package.json",
       "node_modules/**/*",
       "lib/**/*",

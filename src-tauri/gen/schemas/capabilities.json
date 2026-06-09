@@ -1,1 +1,0 @@
-{"default":{"identifier":"default","description":"主窗口：账号列表与快捷登录（含本地代理页面）","remote":{"urls":["http://127.0.0.1:*","http://127.0.0.1:*/*","http://localhost:*","http://localhost:*/*"]},"local":true,"windows":["main"],"permissions":["core:default","allow-open-quick-login"]}}
