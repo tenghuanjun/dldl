@@ -8,6 +8,26 @@
 const path = require('path');
 const { app, BrowserWindow, ipcMain, session, dialog } = require('electron');
 
+// ========== GPU 加速 & 渲染优化 ==========
+// 禁用 GPU 沙箱（在某些 Windows 系统上可提升渲染性能）
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+// 启用 2D Canvas 硬件加速
+app.commandLine.appendSwitch('enable-accelerated-2d-canvas');
+// 启用 GPU 光栅化（将页面内容交由 GPU 渲染）
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+// 启用零拷贝（减少 CPU-GPU 之间的内存拷贝）
+app.commandLine.appendSwitch('enable-zero-copy');
+// 使用 ANGLE 的 D3D11 后端（Windows 下性能更好）
+app.commandLine.appendSwitch('use-angle', 'd3d11');
+// 禁用 Chromium 的帧率限制
+app.commandLine.appendSwitch('disable-frame-rate-limit');
+// 忽略 GPU 黑名单（强制启用硬件加速，即使驱动在 Chromium 黑名单中）
+app.commandLine.appendSwitch('ignore-gpu-blacklist');
+// 启用 QUIC 协议优化网络
+app.commandLine.appendSwitch('enable-quic');
+// 增加渲染进程的共享内存大小（默认 8MB → 128MB，减少内存映射失败）
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096');
+
 // ========== 单实例锁 ==========
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -130,14 +150,22 @@ if (!gotTheLock) {
       autoHideMenuBar: true,
       backgroundColor: '#1a1a2e',
       title: '快捷登录',
+      // GPU/渲染优化
+      backgroundThrottling: false,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: false,
         preload: path.join(__dirname, 'quick-login-preload.js'),
-        session: quickSession
+        session: quickSession,
+        // 渲染加速
+        backgroundThrottling: false,
+        enablePreferredSizeMode: true
       }
     });
+
+    // 快捷登录窗口不需要高帧率，限制 30fps 节省资源
+    childWindow.webContents.setFrameRate(30);
 
     // 拦截子窗口中所有发往 s-api.37.com.cn 的 JSONP 请求，
     // redirect 到本地 Express 代理。Express 端点 /api/h5sdk-proxy/:action 会：
@@ -238,12 +266,20 @@ if (!gotTheLock) {
       autoHideMenuBar: true,
       backgroundColor: '#1a1a2e',
       title: 'DLDL-Proxy',
+      // GPU/渲染优化
+      backgroundThrottling: false,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
+        // 渲染加速
+        backgroundThrottling: false,
+        enablePreferredSizeMode: true
       }
     });
+
+    // 主窗口管理界面，60fps 保证流畅
+    mainWindow.webContents.setFrameRate(60);
 
     // 扫码页等通过 window.open 打开的窗口：统一选项，共享 session
     mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -257,12 +293,17 @@ if (!gotTheLock) {
           show: false,
           autoHideMenuBar: true,
           backgroundColor: '#000000',
+          // GPU/渲染优化：子窗口（扫码页）也不降频
+          backgroundThrottling: false,
           webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             sandbox: true,
             spellcheck: false,
-            session: mainWindow.webContents.session
+            session: mainWindow.webContents.session,
+            // 渲染加速
+            backgroundThrottling: false,
+            enablePreferredSizeMode: true
           }
         }
       };
@@ -271,6 +312,8 @@ if (!gotTheLock) {
     // 子窗口（扫码页）延迟显示，避免白屏
     mainWindow.webContents.on('did-create-window', (childWindow) => {
       if (!childWindow || childWindow.isDestroyed()) return;
+      // 游戏扫码页需要流畅帧率，60fps
+      childWindow.webContents.setFrameRate(60);
       let shown = false;
       const showOnce = () => {
         if (shown || childWindow.isDestroyed()) return;
