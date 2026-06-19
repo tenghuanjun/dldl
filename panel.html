@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DLDL-Proxy 控制面板</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      width: 520px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+    }
+    h1 { font-size: 28px; margin-bottom: 10px; }
+    .subtitle { color: rgba(255,255,255,0.7); font-size: 14px; }
+
+    .status-card {
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-label { color: rgba(255,255,255,0.7); font-size: 14px; }
+    .status-value { font-weight: 600; font-size: 14px; }
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    .status-dot.running { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+    .status-dot.stopped { background: #f87171; box-shadow: 0 0 10px #f87171; }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 15px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      text-align: center;
+      display: inline-block;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+    .btn-success { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); color: #fff; }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(74,222,128,0.4); }
+    .btn-warning { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; }
+    .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(251,191,36,0.4); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .hint {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.8);
+    }
+    .hint code {
+      background: rgba(255,255,255,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .info-text { text-align: center; color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 20px; }
+    .version { text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🎮</div>
+      <h1>DLDL-Proxy</h1>
+      <p class="subtitle">本地代理与账号管理工具</p>
+    </div>
+
+    <div class="status-card">
+      <div class="status-row">
+        <span class="status-label">服务状态</span>
+        <span class="status-value">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">检测中...</span>
+        </span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">代理地址</span>
+        <span class="status-value" id="proxyAddr">http://localhost:8080</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">目标地址</span>
+        <span class="status-value">https://dldl.50pk.com</span>
+      </div>
+    </div>
+
+    <!-- 服务运行中 -->
+    <div id="panelRunning" style="display:none;">
+      <div class="btn-group">
+        <a href="http://localhost:8080/account.html" class="btn btn-primary full-width" target="_blank">
+          📊 打开账号管理面板
+        </a>
+      </div>
+      <div class="btn-group">
+        <a href="http://localhost:8080/panel.html" class="btn btn-warning" target="_blank">
+          🖥️ 独立控制面板
+        </a>
+        <button class="btn btn-primary" onclick="refreshStatus()">
+          🔄 刷新状态
+        </button>
+      </div>
+    </div>
+
+    <!-- 服务未运行 -->
+    <div id="panelStopped" style="display:none;">
+      <div class="hint">
+        <strong>代理服务未运行，请先启动：</strong><br>
+        方式一：在项目目录运行 <code>node proxy.js</code><br>
+        方式二：运行 <code>npm run proxy</code><br>
+        方式三：运行 <code>npm start</code> 启动完整应用
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-success full-width" onclick="refreshStatus()">
+          🔄 检测服务状态
+        </button>
+      </div>
+    </div>
+
+    <p class="info-text">DLDL-Proxy · 本地代理与多账号管理</p>
+    <p class="version">v1.0.0</p>
+  </div>
+
+  <script>
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const panelRunning = document.getElementById('panelRunning');
+    const panelStopped = document.getElementById('panelStopped');
+
+    async function checkStatus() {
+      statusText.textContent = '检测中...';
+      try {
+        const r = await fetch('http://localhost:8080/__dldl_ready', { cache: 'no-cache' });
+        if (r.ok) {
+          setStatus(true);
+        } else {
+          setStatus(false);
+        }
+      } catch (e) {
+        setStatus(false);
+      }
+    }
+
+    function setStatus(running) {
+      if (running) {
+        statusDot.className = 'status-dot running';
+        statusText.textContent = '运行中';
+        panelRunning.style.display = '';
+        panelStopped.style.display = 'none';
+      } else {
+        statusDot.className = 'status-dot stopped';
+        statusText.textContent = '未运行';
+        panelRunning.style.display = 'none';
+        panelStopped.style.display = '';
+      }
+    }
+
+    function refreshStatus() { checkStatus(); }
+
+    checkStatus();
+    setInterval(checkStatus, 5000);
+  </script>
+</body>
+</html>
