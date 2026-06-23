@@ -113,7 +113,7 @@ function h5sdkSign(params, apiKey) {
  * @param {string} upwd
  * @returns {Promise<{ token: string, time: string, sign: string }>}
  */
-async function fetchH5sdkLoginData(uname, upwd) {
+async function fetchH5sdkLoginData(uname, upwd, timeoutMs = 0) {
   const time = String(4129596000);
   const signParams = {
     uname,
@@ -130,7 +130,7 @@ async function fetchH5sdkLoginData(uname, upwd) {
   };
   const sign = h5sdkSign(signParams, appConfig.h5sdk.apiKey);
   const url = `${appConfig.h5sdk.loginUrl}?${new URLSearchParams({ ...signParams, sign }).toString()}`;
-  const text = await fetchText(url, false);
+  const text = await fetchText(url, true, timeoutMs); // 走代理池，切换IP时生效
   const match = text.match(/^callback\(([\s\S]+)\);?$/);
   const jsonText = match ? match[1] : text;
   const payload = JSON.parse(jsonText);
@@ -144,46 +144,38 @@ async function fetchH5sdkLoginData(uname, upwd) {
   };
 }
 
-function fetchText(url, useProxy = false) {
+function fetchText(url, useProxy = false, timeoutMs = 0) {
   return new Promise(async (resolve, reject) => {
-    let proxyConfig = null;
+    const urlObj = new URL(url);
+    const isTargetHttps = urlObj.protocol === 'https:';
+    let proxyUrl = null;
+    const pool = getProxyPool();
+
     if (useProxy) {
-      const pool = getProxyPool();
-      const proxyUrl = await pool.getProxy(); // 使用当前代理
-      if (proxyUrl) {
-        proxyConfig = pool.createProxyAgent(proxyUrl);
-        console.log(`[Proxy] 使用代理: ${proxyUrl}`);
-      }
+      proxyUrl = await pool.getProxy();
     }
 
-    const urlObj = new URL(url);
-    const isHttps = urlObj.protocol === 'https:';
-    
+    // 如果走代理，通过代理发出请求
+    if (proxyUrl) {
+      console.log(`[Proxy] 使用代理: ${proxyUrl} -> ${urlObj.hostname}`);
+      return fetchViaProxy(urlObj, proxyUrl, timeoutMs, resolve, reject);
+    }
+
+    // 直连（无代理或代理不可用）
+    const effectiveTimeout = timeoutMs > 0 ? timeoutMs : 15000;
+    const protocol = isTargetHttps ? https : http;
     const options = {
       hostname: urlObj.hostname,
-      port: urlObj.port || (isHttps ? 443 : 80),
+      port: urlObj.port || (isTargetHttps ? 443 : 80),
       path: urlObj.pathname + urlObj.search,
       method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0'
-      }
+      timeout: effectiveTimeout,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     };
 
-    // 如果有代理配置，通过代理连接
-    if (proxyConfig) {
-      options.hostname = proxyConfig.host;
-      options.port = proxyConfig.port;
-      options.path = url; // 代理模式下 path 是完整 URL
-      options.headers['Host'] = urlObj.hostname;
-    }
-
-    const protocol = (proxyConfig ? http : (isHttps ? https : http));
-    
     const req = protocol.request(options, (resp) => {
       let data = '';
-      resp.on('data', (chunk) => {
-        data += chunk.toString();
-      });
+      resp.on('data', (chunk) => { data += chunk.toString(); });
       resp.on('end', () => resolve(data));
     });
 
@@ -192,9 +184,123 @@ function fetchText(url, useProxy = false) {
       req.destroy();
       reject(new Error('Request timeout'));
     });
-
     req.end();
   });
+}
+
+/**
+ * 通过 HTTP 代理发出请求。
+ * - HTTPS 目标：先 CONNECT 建立隧道，再在隧道上发 HTTPS 请求
+ * - HTTP 目标：直接向代理发 GET 请求，path 为完整 URL
+ */
+function fetchViaProxy(urlObj, proxyUrl, timeoutMs, resolve, reject) {
+  const pool = getProxyPool();
+  const proxyParsed = new URL(proxyUrl);
+  const isTargetHttps = urlObj.protocol === 'https:';
+  // CONNECT 超时取 timeoutMs 或默认 10s，实际请求超时取 timeoutMs 或默认 15s
+  const connectTimeout = timeoutMs > 0 ? Math.min(timeoutMs, 10000) : 10000;
+  const reqTimeout = timeoutMs > 0 ? timeoutMs : 15000;
+
+  const doRequestOnSocket = (socket) => {
+    const protocol = isTargetHttps ? https : http;
+    const reqOptions = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || (isTargetHttps ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      timeout: reqTimeout,
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Host': urlObj.hostname
+      },
+      socket,
+      agent: false,
+      rejectUnauthorized: false,
+    };
+
+    const req = protocol.request(reqOptions, (resp) => {
+      let data = '';
+      resp.on('data', (chunk) => { data += chunk.toString(); });
+      resp.on('end', () => resolve(data));
+    });
+    req.on('error', (err) => {
+      console.error(`[Proxy] 代理请求失败: ${proxyUrl}, 错误: ${err.message}`);
+      pool.removeProxy(proxyUrl); // 移除失效代理
+      reject(err);
+    });
+    req.on('timeout', () => {
+      console.error(`[Proxy] 代理请求超时: ${proxyUrl}`);
+      pool.removeProxy(proxyUrl);
+      req.destroy();
+      reject(new Error('Proxy request timeout'));
+    });
+    req.end();
+  };
+
+  if (isTargetHttps) {
+    // HTTPS 目标 → CONNECT 隧道
+    const connectReq = http.request({
+      hostname: proxyParsed.hostname,
+      port: proxyParsed.port,
+      method: 'CONNECT',
+      path: `${urlObj.hostname}:${urlObj.port || 443}`,
+      timeout: connectTimeout,
+      headers: { 'Host': `${urlObj.hostname}:${urlObj.port || 443}` },
+    });
+
+    connectReq.on('connect', (res, socket) => {
+      if (res.statusCode !== 200) {
+        console.error(`[Proxy] CONNECT 隧道建立失败, 状态码: ${res.statusCode}, 代理: ${proxyUrl}`);
+        pool.removeProxy(proxyUrl);
+        reject(new Error(`CONNECT tunnel failed with ${res.statusCode}`));
+        return;
+      }
+      doRequestOnSocket(socket);
+    });
+
+    connectReq.on('error', (err) => {
+      console.error(`[Proxy] CONNECT 连接失败: ${proxyUrl}, 错误: ${err.message}`);
+      pool.removeProxy(proxyUrl);
+      reject(err);
+    });
+    connectReq.on('timeout', () => {
+      console.error(`[Proxy] CONNECT 超时: ${proxyUrl}`);
+      pool.removeProxy(proxyUrl);
+      connectReq.destroy();
+      reject(new Error('CONNECT timeout'));
+    });
+    connectReq.end();
+  } else {
+    // HTTP 目标 → 直接转发（完整 URL 作为 path）
+    const req = http.request({
+      hostname: proxyParsed.hostname,
+      port: proxyParsed.port,
+      path: urlObj.href,
+      method: 'GET',
+      timeout: reqTimeout,
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Host': urlObj.hostname
+      },
+    }, (resp) => {
+      let data = '';
+      resp.on('data', (chunk) => { data += chunk.toString(); });
+      resp.on('end', () => resolve(data));
+    });
+
+    req.on('error', (err) => {
+      console.error(`[Proxy] HTTP 代理请求失败: ${proxyUrl}, 错误: ${err.message}`);
+      pool.removeProxy(proxyUrl);
+      reject(err);
+    });
+    req.on('timeout', () => {
+      console.error(`[Proxy] HTTP 代理请求超时: ${proxyUrl}`);
+      pool.removeProxy(proxyUrl);
+      req.destroy();
+      reject(new Error('Proxy request timeout'));
+    });
+    req.end();
+  }
 }
 
 function parseCookies(req) {
@@ -295,7 +401,7 @@ app.use('/pc/getId', (req, res) => {
   res.json({ state: 1, msg: "success", data: id });
 });
 
-/** login.php / 账号页「刷新 token」：无状态请求 h5sdk/login（持久化由账号页写 Supabase） */
+/** login.php / 账号页「刷新 token」：无状态请求 h5sdk/login（持久化由账号页写 Supabase），3 秒超时 */
 app.post('/api/token/refresh', async (req, res) => {
   try {
     const uname = String(req.body.uname || '').trim();
@@ -304,11 +410,12 @@ app.post('/api/token/refresh', async (req, res) => {
       res.status(400).json({ ok: false, message: '缺少 uname 或 upwd' });
       return;
     }
-    const loginData = await fetchH5sdkLoginData(uname, upwd);
+    const loginData = await fetchH5sdkLoginData(uname, upwd, 3000);
     res.json({ ok: true, ...loginData });
   } catch (error) {
     console.error('[token/refresh]', error.message);
-    res.status(500).json({ ok: false, message: error.message });
+    const code = error.message.includes('timeout') || error.message.includes('超时') ? 408 : 500;
+    res.status(code).json({ ok: false, message: error.message });
   }
 });
 

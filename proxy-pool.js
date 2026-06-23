@@ -89,39 +89,73 @@ class ProxyPool {
     });
   }
 
-  // 验证代理是否可用
+  // 验证代理是否可用（支持 HTTP 和 HTTPS 目标）
   async validateProxy(proxy) {
     return new Promise((resolve) => {
-      const url = new URL(this.validateUrl);
+      const targetUrl = new URL(this.validateUrl);
       const proxyUrl = new URL(proxy);
-      
-      const options = {
-        hostname: proxyUrl.hostname,
-        port: proxyUrl.port,
-        path: this.validateUrl,
-        method: 'GET',
-        timeout: this.validateTimeout,
-        headers: {
-          'User-Agent': 'Mozilla/5.0'
-        }
-      };
+      const isTargetHttps = targetUrl.protocol === 'https:';
 
-      const protocol = proxyUrl.protocol === 'https:' ? https : http;
-      const req = protocol.request(options, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          resolve(res.statusCode >= 200 && res.statusCode < 400);
+      if (isTargetHttps) {
+        // HTTPS 目标：通过 CONNECT 隧道验证代理
+        const connectReq = http.request({
+          hostname: proxyUrl.hostname,
+          port: proxyUrl.port,
+          method: 'CONNECT',
+          path: `${targetUrl.hostname}:${targetUrl.port || 443}`,
+          timeout: this.validateTimeout,
+          headers: { 'Host': `${targetUrl.hostname}:${targetUrl.port || 443}` }
         });
-      });
 
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
-        req.destroy();
-        resolve(false);
-      });
+        connectReq.on('connect', (res, socket) => {
+          const req = https.request({
+            hostname: targetUrl.hostname,
+            port: targetUrl.port || 443,
+            path: targetUrl.pathname + targetUrl.search,
+            method: 'GET',
+            timeout: this.validateTimeout,
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            socket,
+            agent: false,
+            rejectUnauthorized: false,
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(res.statusCode >= 200 && res.statusCode < 400));
+          });
+          req.on('error', () => resolve(false));
+          req.on('timeout', () => { req.destroy(); resolve(false); });
+          req.end();
+        });
 
-      req.end();
+        connectReq.on('error', () => resolve(false));
+        connectReq.on('timeout', () => { connectReq.destroy(); resolve(false); });
+        connectReq.end();
+      } else {
+        // HTTP 目标：通过代理转发（完整 URL 作为 path）
+        const req = http.request({
+          hostname: proxyUrl.hostname,
+          port: proxyUrl.port,
+          path: this.validateUrl,
+          method: 'GET',
+          timeout: this.validateTimeout,
+          headers: {
+            'User-Agent': 'Mozilla/5.0',
+            'Host': targetUrl.hostname
+          }
+        }, (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => resolve(res.statusCode >= 200 && res.statusCode < 400));
+        });
+
+        req.on('error', () => resolve(false));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve(false);
+        });
+        req.end();
+      }
     });
   }
 
@@ -238,18 +272,56 @@ class ProxyPool {
     return this.lastUsedProxy;
   }
 
-  // 创建代理 Agent (用于 http/https 请求)
-  createProxyAgent(proxyUrl) {
+  // 创建用于 HTTP 代理转发的配置（HTTP 目标走完整 URL 转发）
+  getProxyConfig(proxyUrl) {
     if (!proxyUrl) return null;
-    
     const proxy = new URL(proxyUrl);
-    const isHttps = proxy.protocol === 'https:';
-    
     return {
       host: proxy.hostname,
       port: parseInt(proxy.port, 10),
-      protocol: proxy.protocol
     };
+  }
+
+  // 创建 HTTPS Agent（通过 CONNECT 隧道支持 HTTPS 目标走 HTTP 代理）
+  createHttpsAgent(proxyUrl) {
+    if (!proxyUrl) return null;
+    const proxy = new URL(proxyUrl);
+    const self = this;
+
+    return new http.Agent({
+      keepAlive: true,
+      createConnection: (opts, cb) => {
+        const targetHost = opts.hostname || opts.host;
+        const targetPort = opts.port || 443;
+        const connectReq = http.request({
+          host: proxy.hostname,
+          port: proxy.port,
+          method: 'CONNECT',
+          path: `${targetHost}:${targetPort}`,
+          timeout: self.validateTimeout,
+          headers: { 'Host': `${targetHost}:${targetPort}` },
+        });
+
+        connectReq.on('connect', (res, socket) => {
+          cb(null, socket);
+        });
+        connectReq.on('error', (err) => cb(err));
+        connectReq.end();
+      }
+    });
+  }
+
+  // 标记代理失效并从池中移除
+  removeProxy(proxyUrl) {
+    const idx = this.proxies.indexOf(proxyUrl);
+    if (idx !== -1) {
+      this.proxies.splice(idx, 1);
+      console.log(`[ProxyPool] 移除失效代理: ${proxyUrl}，剩余: ${this.proxies.length}`);
+    }
+    if (this.currentProxy === proxyUrl) {
+      this.currentProxy = this.proxies.length > 0 ? this.proxies[0] : null;
+      this.currentIndex = 0;
+    }
   }
 
   // 获取代理池状态
