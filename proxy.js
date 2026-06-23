@@ -145,7 +145,7 @@ async function fetchH5sdkLoginData(uname, upwd, timeoutMs = 0) {
 }
 
 function fetchText(url, useProxy = false, timeoutMs = 0) {
-  return new Promise(async (resolve, reject) => {
+  const doFetch = new Promise(async (resolve, reject) => {
     const urlObj = new URL(url);
     const isTargetHttps = urlObj.protocol === 'https:';
     let proxyUrl = null;
@@ -186,6 +186,17 @@ function fetchText(url, useProxy = false, timeoutMs = 0) {
     });
     req.end();
   });
+
+  // 用 Promise.race 兜底：无论 socket 超时是否生效，总时限必定触发
+  if (timeoutMs > 0) {
+    return Promise.race([
+      doFetch,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+      )
+    ]);
+  }
+  return doFetch;
 }
 
 /**

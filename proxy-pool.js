@@ -197,19 +197,25 @@ class ProxyPool {
     console.log(`[ProxyPool] 验证完成，可用代理: ${this.proxies.length} 个`);
   }
 
-  // 获取当前使用的代理（如果没有则初始化）
+  // 获取当前使用的代理（不阻塞：池未就绪则后台初始化，本次直连）
   async getProxy() {
-    if (!this.initialized || this.proxies.length === 0) {
-      await this.init();
+    // 未初始化：触发后台初始化，本次不等待直接走直连
+    if (!this.initialized) {
+      this.init().catch(err => console.error('[ProxyPool] 初始化失败:', err.message));
+      return null;
     }
 
-    // 检查是否需要刷新
+    // 池为空：触发后台刷新
+    if (this.proxies.length === 0) {
+      if (Date.now() - this.lastRefresh > 30000) {
+        this.init().catch(err => console.error('[ProxyPool] 刷新失败:', err.message));
+      }
+      return null;
+    }
+
+    // 检查是否需要定期刷新（后台进行）
     if (Date.now() - this.lastRefresh > this.refreshInterval) {
       this.init().catch(err => console.error('[ProxyPool] 刷新失败:', err.message));
-    }
-
-    if (this.proxies.length === 0) {
-      return null; // 没有可用代理，返回null使用直连
     }
 
     // 如果没有当前代理，设置一个
