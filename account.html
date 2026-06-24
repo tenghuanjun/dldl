@@ -66,7 +66,7 @@
                         :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
                         type="button"
                         @click="toggleProxyAndRefreshIP"
-                    >{{ useProxy ? (proxyIP === '代理中' ? '代理IP: 已启用（切换IP）' : proxyIP) : '代理IP: 未启用（点击启用并切换IP）' }}</button>
+                    >{{ proxyIP === '切换中...' ? '代理IP: 切换中...' : (useProxy ? proxyIP : '代理IP: 未启用（点击启用并切换IP）') }}</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAreaSortModal">区服排序</button>
                 </div>
             </div>
@@ -1526,12 +1526,7 @@
                     }
                 },
                 async toggleProxyAndRefreshIP() {
-                    if (!this.proxyWorkerUrl) {
-                        this.showError('请先配置 Worker URL');
-                        return;
-                    }
-                    
-                    this.proxyIP = '请求中...';
+                    this.proxyIP = '切换中...';
                     
                     if (!this.useProxy) {
                         // 首次点击，启用代理
@@ -1539,19 +1534,41 @@
                     }
                     
                     try {
-                        // 获取当前IP
-                        const currentIP = await this.getProxyIP();
-                        if (!currentIP) {
-                            throw new Error('无法获取当前IP');
+                        // 调用后端真正切换代理池中的代理
+                        const switchResp = await fetch('/proxy-pool/switch', { method: 'POST' });
+                        const switchData = await switchResp.json();
+                        
+                        if (!switchData.ok) {
+                            throw new Error(switchData.message || '切换代理失败');
                         }
                         
-                        this.proxyIP = `IP: ${currentIP}`;
-                        this.saveProxyConfig();
-                        this.showSuccess(`当前出口IP: ${currentIP}`);
+                        // 显示切换后的代理信息
+                        const newProxy = switchData.currentProxy;
+                        if (newProxy) {
+                            this.proxyIP = `代理: ${newProxy}`;
+                            this.saveProxyConfig();
+                            this.showSuccess(`已切换代理: ${newProxy}`);
+                        } else {
+                            // 代理池无可用代理，走直连
+                            this.proxyIP = '代理: 无可用（走直连）';
+                            this.saveProxyConfig();
+                            this.showSuccess('无可用代理，当前走直连');
+                        }
                     } catch (e) {
                         console.error('toggleProxyAndRefreshIP failed', e);
-                        this.proxyIP = '获取失败';
-                        this.showError(`获取IP失败：${e?.message || e}`);
+                        // 切换失败时尝试展示状态
+                        try {
+                            const statusResp = await fetch('/proxy-pool/status');
+                            const status = await statusResp.json();
+                            if (status.currentProxy) {
+                                this.proxyIP = `代理: ${status.currentProxy}`;
+                            } else {
+                                this.proxyIP = '切换失败（走直连）';
+                            }
+                        } catch (_) {
+                            this.proxyIP = '切换失败';
+                        }
+                        this.showError(`切换IP失败：${e?.message || e}`);
                     }
                 },
                 
