@@ -169,6 +169,7 @@
                                 </div>
                                 <span v-if="isPassCodeSending(group.area, account)" class="pass-code-status sending">发送中…</span>
                                 <span v-else-if="getPassCodeStatus(group.area, account) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'expired'" class="pass-code-status expired">已失效</span>
                                 <span v-else-if="getPassCodeStatus(group.area, account) === 'fail'" class="pass-code-status fail">失败</span>
                             </div>
                         </div>
@@ -1517,8 +1518,9 @@
                     const code = String(ev.target.value || '').trim();
                     // 值为空，不发请求
                     if (!code) return;
-                    // 已发送状态下不重复发请求
-                    if (this.getPassCodeStatus(area, account) === 'ok') return;
+                    // 已发送 / 已失效状态下不重复发请求
+                    const curStatus = this.getPassCodeStatus(area, account);
+                    if (curStatus === 'ok' || curStatus === 'expired') return;
                     this.sendPassCode(code, area, account);
                 },
                 clearPassCode(area, account) {
@@ -1555,8 +1557,30 @@
                             body: body
                         });
                         if (resp.ok) {
-                            this._setPassCodeState(area, account, { status: 'ok' });
-                            this.showSuccess('通行证已发送');
+                            let tokenValid = true;
+                            try {
+                                const bodyText = await resp.text();
+                                if (bodyText) {
+                                    const json = JSON.parse(bodyText);
+                                    // 服务端返回的 token 为空，说明账号 token 已失效
+                                    if (json && (json.token === '' || json.token === null || json.token === undefined)) {
+                                        tokenValid = false;
+                                    }
+                                    // 有些接口可能用 code/msg 表示失败
+                                    if (json && (json.code === 0 || json.state === 0)) {
+                                        tokenValid = false;
+                                    }
+                                }
+                            } catch (_) {
+                                // 响应不是 JSON 或为空，忽略
+                            }
+                            if (tokenValid) {
+                                this._setPassCodeState(area, account, { status: 'ok' });
+                                this.showSuccess('通行证已发送');
+                            } else {
+                                this._setPassCodeState(area, account, { status: 'expired' });
+                                this.showError('通行证已发送，但 token 已失效，请刷新 token');
+                            }
                         } else {
                             throw new Error('HTTP ' + resp.status);
                         }
@@ -2262,6 +2286,10 @@
 
         .pass-code-status.ok {
             color: #10b981;
+        }
+
+        .pass-code-status.expired {
+            color: #d14343;
         }
 
         .pass-code-status.fail {
