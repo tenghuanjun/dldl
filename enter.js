@@ -979,6 +979,7 @@ var X5WebApp = function() {
         }))
     }
     ,
+    // 通行证登录
     p.sendPostCodeInfo = function(e) {
         var t, i, n, s, o;
         window.hex_md5 ? (t = window.XMLHttpRequest ? new XMLHttpRequest : new ActionXObject("Microsoft.XMLHTTP"),

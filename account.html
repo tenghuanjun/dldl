@@ -146,6 +146,31 @@
                                 <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
                                 <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button>
                             </div>
+                            <div class="card-pass-row">
+                                <div class="pass-code-input-wrap">
+                                    <input
+                                        ref="passCodeInputs"
+                                        class="pass-code-input"
+                                        type="text"
+                                        placeholder="通行证码"
+                                        :value="getPassCodeValue(group.area, account)"
+                                        @input="onPassCodeInput($event, group.area, account)"
+                                        @blur="onPassCodeBlur($event, group.area, account)"
+                                        @keyup.enter="($event) => { $event.target.blur(); }"
+                                    >
+                                    <button
+                                        v-if="getPassCodeValue(group.area, account)"
+                                        class="pass-code-clear"
+                                        type="button"
+                                        tabindex="-1"
+                                        title="清除"
+                                        @mousedown.prevent="clearPassCode(group.area, account)"
+                                    >✕</button>
+                                </div>
+                                <span v-if="isPassCodeSending(group.area, account)" class="pass-code-status sending">发送中…</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'fail'" class="pass-code-status fail">失败</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -394,6 +419,8 @@
                     batchPanelArea: '',
                     batchPanelSize: 5,
                     batchPanelBatchNo: 1,
+                    /** 通行证登录 */
+                    passCodeMap: {},
                     /** 代理IP配置 */
                     useProxy: false,
                     proxyWorkerUrl: 'https://red-moon-ff95.tenghuanjun.workers.dev',
@@ -1450,6 +1477,96 @@
                     }
                     await this.batchLaunchAccounts(slice);
                 },
+                // --- 通行证登录 ---
+                /** 通行证状态 key，用于 passCodeMap */
+                _passCodeKey(area, account) {
+                    return this.accountSelectKey(area, account);
+                },
+                _setPassCodeState(area, account, updates) {
+                    const key = this._passCodeKey(area, account);
+                    this.passCodeMap = {
+                        ...this.passCodeMap,
+                        [key]: {
+                            ...(this.passCodeMap[key] || {}),
+                            ...updates
+                        }
+                    };
+                },
+                getPassCodeValue(area, account) {
+                    const key = this._passCodeKey(area, account);
+                    return (this.passCodeMap[key] && this.passCodeMap[key].value) || '';
+                },
+                getPassCodeStatus(area, account) {
+                    const key = this._passCodeKey(area, account);
+                    return (this.passCodeMap[key] && this.passCodeMap[key].status) || '';
+                },
+                isPassCodeSending(area, account) {
+                    return this.getPassCodeStatus(area, account) === 'sending';
+                },
+                onPassCodeInput(ev, area, account) {
+                    const val = ev.target.value;
+                    if (val === '' || val == null) {
+                        // 清空值时，同时清除已发送状态，允许下次重新发送
+                        this._setPassCodeState(area, account, { value: '', status: '' });
+                    } else {
+                        // 有值时只更新 value，不改变 status（保持 ok/fail 等状态）
+                        this._setPassCodeState(area, account, { value: val });
+                    }
+                },
+                onPassCodeBlur(ev, area, account) {
+                    const code = String(ev.target.value || '').trim();
+                    // 值为空，不发请求
+                    if (!code) return;
+                    // 已发送状态下不重复发请求
+                    if (this.getPassCodeStatus(area, account) === 'ok') return;
+                    this.sendPassCode(code, area, account);
+                },
+                clearPassCode(area, account) {
+                    this._setPassCodeState(area, account, { value: '', status: '' });
+                },
+                async sendPassCode(code, area, account) {
+                    if (!window.hex_md5) {
+                        this.showError('md5.js 未加载，无法发送通行证');
+                        return;
+                    }
+                    this._setPassCodeState(area, account, { status: 'sending' });
+                    try {
+                        const dataObj = {
+                            gid: '1003279',
+                            pid: '46',
+                            token: encodeURIComponent(String(account.token || '')),
+                            time: Date.now(),
+                            sign: String(account.sign || ''),
+                            appVer: '',
+                            platCode: '37wan',
+                            IMEI: ''
+                        };
+                        const dataStr = JSON.stringify(dataObj);
+                        const timestamp = Date.now();
+                        const sign = window.hex_md5(code + String(timestamp) + 'pcjgv587!?');
+                        const body = 'id=' + encodeURIComponent(code) +
+                            '&data=' + encodeURIComponent(dataStr) +
+                            '&time=' + timestamp +
+                            '&sign=' + sign;
+                        const url = 'http://app.xxh5.z7xz.com/pc/postCodeInfo';
+                        const resp = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: body
+                        });
+                        if (resp.ok) {
+                            this._setPassCodeState(area, account, { status: 'ok' });
+                            this.showSuccess('通行证已发送');
+                        } else {
+                            throw new Error('HTTP ' + resp.status);
+                        }
+                    } catch (e) {
+                        console.error('sendPassCode failed', e);
+                        this._setPassCodeState(area, account, { status: 'fail' });
+                        this.showError('通行证发送失败：' + (e?.message || e));
+                    }
+                },
+                // --- 通行证登录 end ---
                 async refreshToken(account) {
                     const uname = String(account && account.uname || '').trim();
                     const upwd = String(account && account.upwd || '').trim();
@@ -2070,6 +2187,85 @@
             font-size: 12px;
             color: #94a0b8;
             word-break: break-all;
+        }
+
+        .card-pass-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .pass-code-input-wrap {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+
+        .pass-code-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0f1115;
+            border: 1px solid #242936;
+            border-radius: 6px;
+            color: #e6e8eb;
+            padding: 6px 24px 6px 8px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .pass-code-input:focus {
+            border-color: #2f81f7;
+        }
+
+        .pass-code-input::placeholder {
+            color: #4a5568;
+            font-size: 11px;
+        }
+
+        .pass-code-clear {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: #242936;
+            color: #94a0b8;
+            font-size: 10px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .pass-code-clear:hover {
+            background: #3d4a63;
+            color: #e6e8eb;
+        }
+
+        .pass-code-status {
+            flex-shrink: 0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .pass-code-status.sending {
+            color: #2f81f7;
+        }
+
+        .pass-code-status.ok {
+            color: #10b981;
+        }
+
+        .pass-code-status.fail {
+            color: #d14343;
         }
 
         .card-row {
