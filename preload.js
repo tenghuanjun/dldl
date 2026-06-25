@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('__ELECTRON__', {
    */
   emitQuickLogin: (payload) => {
     ipcRenderer.send('dldl-open-quick-login', payload);
-  }
+  },
+
 });

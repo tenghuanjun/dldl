@@ -8,6 +8,7 @@
 const path = require('path');
 const { app, BrowserWindow, ipcMain, session, dialog } = require('electron');
 
+
 // ========== GPU 加速 & 渲染优化 ==========
 // 禁用 GPU 沙箱（在某些 Windows 系统上可提升渲染性能）
 app.commandLine.appendSwitch('disable-gpu-sandbox');
@@ -253,6 +254,7 @@ if (!gotTheLock) {
       console.error('快捷登录窗口打开失败:', err);
     });
   });
+
 
   // ========== 主窗口创建 ==========
 

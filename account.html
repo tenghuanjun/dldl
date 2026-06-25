@@ -1562,12 +1562,12 @@
                                 const bodyText = await resp.text();
                                 if (bodyText) {
                                     const json = JSON.parse(bodyText);
-                                    // 服务端返回的 token 为空，说明账号 token 已失效
-                                    if (json && (json.token === '' || json.token === null || json.token === undefined)) {
+                                    // code !== 0 表示失败（37 系 API 中 code: 0 = 成功）
+                                    if (json && json.code !== undefined && json.code !== 0) {
                                         tokenValid = false;
                                     }
-                                    // 有些接口可能用 code/msg 表示失败
-                                    if (json && (json.code === 0 || json.state === 0)) {
+                                    // 服务端明确返回 token 为空字符串，说明 token 已失效
+                                    if (json && json.hasOwnProperty('token') && json.token === '') {
                                         tokenValid = false;
                                     }
                                 }
