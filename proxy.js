@@ -5,6 +5,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const { getInstance: getProxyPool } = require('./proxy-pool');
+const { GHActionsRelay } = require('./gh-relay');
 const CryptoJS = require('crypto-js');
 const appConfig = require('./config');
 const { build37CookieValues } = require('./dldl-uinfo');
@@ -12,6 +13,9 @@ const app = express();
 const PORT = Number(process.env.DLDL_PORT || process.env.PORT || 8080);
 const TARGET = 'https://dldl.50pk.com';
 const fixedQrTimeMs = String(process.env.DLDL_FIXED_TIME_MS || '1828368000000');
+
+/** Token 获取优先级: "relay"（GitHub Actions 中继, 默认）, "proxy-pool"（代理池）, "direct"（直连） */
+const TOKEN_MODE = process.env.DLDL_TOKEN_MODE || 'relay';
 /** 静态资源目录（打包后只读，位于 asar 内） */
 const staticRoot = process.env.DLDL_STATIC_ROOT || __dirname;
 /** 用户可写目录：Electron 下为 app.getPath('userData')；直接 node proxy.js 时默认与脚本同目录 */
@@ -39,12 +43,20 @@ const accountConfig = {
   upwd: process.env.DLDL_UPWD
 };
 
-// 初始化代理池
+// 初始化代理池（作为备选方案）
 const proxyPool = getProxyPool({
   validateUrl: 'https://dldl.50pk.com',
   validateTimeout: 5000,
   maxProxies: 30,
   refreshInterval: 300000
+});
+
+// 初始化 GitHub Actions 中继（利用 Runner 的 Azure IP 轮换）
+const ghRelay = new GHActionsRelay({
+  gistId: process.env.DLDL_GIST_ID,
+  gistToken: process.env.DLDL_GIST_TOKEN,
+  rawUrl: process.env.DLDL_RAW_CACHE_URL,
+  timeout: 5000
 });
 
 // 代理池状态 API
@@ -62,19 +74,114 @@ app.post('/proxy-pool/refresh', async (req, res) => {
   }
 });
 
-// 切换IP（获取一个与当前不同的IP）
-app.post('/proxy-pool/switch', async (req, res) => {
+// GH-Relay 状态 API
+app.get('/gh-relay/status', (req, res) => {
+  res.json({ ok: true, tokenMode: TOKEN_MODE, ...ghRelay.getStatus() });
+});
+
+// 手动刷新 GH-Relay（读取最新 Gist 数据）
+app.post('/gh-relay/refresh', async (req, res) => {
   try {
-    const newProxy = await proxyPool.switchProxy();
-    const lastUsed = proxyPool.getLastUsedProxy();
-    res.json({ 
-      ok: true, 
-      currentProxy: newProxy,
-      lastUsedProxy: lastUsed,
-      ...proxyPool.getStatus() 
+    const data = await ghRelay.getLatest();
+    res.json({
+      ok: true,
+      runnerIP: data.runnerIP,
+      updatedAt: data.updatedAt,
+      accountCount: Object.keys(data.tokens || {}).length
     });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+// 获取当前 IP 状态（供按钮展示）
+app.post('/proxy-pool/switch', async (req, res) => {
+  const useRelay = TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct';
+
+  if (useRelay && (ghRelay.gistId || ghRelay.rawUrl)) {
+    try {
+      const result = await ghRelay.switchIP();
+      res.json({
+        ok: true,
+        source: 'gh-relay',
+        switched: result.switched,
+        ip: result.runnerIP,
+        updatedAt: result.updatedAt,
+        tokenCount: result.tokenCount
+      });
+      return;
+    } catch (e) {
+      console.warn('[SwitchIP] GH-Relay 失败:', e.message, '→ 回退代理池');
+    }
+  }
+
+  try {
+    const newProxy = await proxyPool.switchProxy();
+    if (newProxy) {
+      res.json({ ok: true, source: 'proxy-pool', currentProxy: newProxy, ...proxyPool.getStatus() });
+    } else {
+      res.json({ ok: true, source: 'direct', message: '无可用代理，当前走直连' });
+    }
+  } catch (error) {
+    res.json({ ok: true, source: 'direct', message: '代理池切换失败，走直连' });
+  }
+});
+
+// ==================== 按需 Token 请求（核心） ====================
+
+/**
+ * POST /gh-relay/request-token
+ * Body: { uname, upwd }
+ * 流程：写入 Gist pending 队列 → 等待 GitHub Actions 从新 IP 获取 → 返回 token
+ * 超时：最多等 130 秒（两次 workflow 间隔 + 执行时间）
+ */
+app.post('/gh-relay/request-token', async (req, res) => {
+  const uname = String(req.body.uname || '').trim();
+  const upwd = String(req.body.upwd || '').trim();
+
+  if (!uname || !upwd) {
+    return res.status(400).json({ ok: false, message: '缺少 uname 或 upwd' });
+  }
+
+  if (!ghRelay.gistToken) {
+    return res.status(400).json({ ok: false, message: 'GH-Relay 未配置（需要 DLDL_GIST_TOKEN 环境变量）' });
+  }
+
+  // 先检查是否已有新鲜缓存（5 分钟内）
+  try {
+    const cached = await ghRelay.getToken(uname);
+    if (cached) {
+      console.log('[GH-Relay] 缓存命中:', uname, 'IP:', cached.runnerIP);
+      return res.json({ ok: true, source: 'cache', ...cached });
+    }
+  } catch (_) {}
+
+  // 写入 pending 并等待
+  console.log('[GH-Relay] 按需请求 token:', uname);
+  try {
+    const result = await ghRelay.requestToken(uname, upwd);
+    res.json({ ok: true, source: 'fresh', ...result });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
+
+/**
+ * GET /gh-relay/cached-token?uname=xxx
+ * 仅读取缓存，不触发新请求（快速路径）
+ */
+app.get('/gh-relay/cached-token', async (req, res) => {
+  const uname = String(req.query.uname || '').trim();
+  if (!uname) return res.status(400).json({ ok: false, message: '缺少 uname' });
+
+  try {
+    const cached = await ghRelay.getToken(uname);
+    if (cached) {
+      return res.json({ ok: true, ...cached });
+    }
+    res.json({ ok: true, cached: false });
+  } catch (e) {
+    res.json({ ok: true, cached: false, error: e.message });
   }
 });
 
@@ -109,39 +216,62 @@ function h5sdkSign(params, apiKey) {
 
 /**
  * 请求 h5sdk/login，首次生成 UINFO 前校验账号。
+ * 优先使用 GitHub Actions relay（Azure IP 轮换），失败回退到代理池。
  * @param {string} uname
  * @param {string} upwd
  * @returns {Promise<{ token: string, time: string, sign: string }>}
  */
 async function fetchH5sdkLoginData(uname, upwd, timeoutMs = 0) {
-  const time = String(4129596000);
-  const signParams = {
-    uname,
-    upwd,
-    autoLogin: 'true',
-    pid: appConfig.scanLogin.pid,
-    gid: appConfig.scanLogin.gid,
-    sversion: 'undefined',
-    version: '1.0.4',
-    time,
-    dev: '9c71cbfa62ecfd4f5a1125d9c6c51367',
-    os: 'iOS',
-    over: '18.5'
-  };
-  const sign = h5sdkSign(signParams, appConfig.h5sdk.apiKey);
-  const url = `${appConfig.h5sdk.loginUrl}?${new URLSearchParams({ ...signParams, sign }).toString()}`;
-  const text = await fetchText(url, true, timeoutMs); // 走代理池，切换IP时生效
-  const match = text.match(/^callback\(([\s\S]+)\);?$/);
-  const jsonText = match ? match[1] : text;
-  const payload = JSON.parse(jsonText);
-  if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
-    throw new Error((payload && payload.msg) || 'h5sdk/login failed');
+  // 优先级1: GitHub Actions Relay（利用 Azure IP 轮换）
+  if (TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct') {
+    try {
+      const relayToken = await ghRelay.getToken(uname);
+      if (relayToken) {
+        console.log(`[Token] GH-Relay 命中(h5sdk): ${uname}`);
+        return {
+          token: String(relayToken.token),
+          time: String(relayToken.time || '4129596000'),
+          sign: String(relayToken.sign || '')
+        };
+      }
+    } catch (e) {
+      console.warn(`[Token] GH-Relay 失败: ${e.message}，回退到代理池直连`);
+    }
   }
-  return {
-    token: String(payload.data.token),
-    time: String(payload.data.time || time),
-    sign: String(payload.data.sign || sign)
-  };
+
+  // 优先级2: 代理池直连（原逻辑）
+  if (TOKEN_MODE !== 'direct') {
+    const time = String(4129596000);
+    const signParams = {
+      uname,
+      upwd,
+      autoLogin: 'true',
+      pid: appConfig.scanLogin.pid,
+      gid: appConfig.scanLogin.gid,
+      sversion: 'undefined',
+      version: '1.0.4',
+      time,
+      dev: '9c71cbfa62ecfd4f5a1125d9c6c51367',
+      os: 'iOS',
+      over: '18.5'
+    };
+    const sign = h5sdkSign(signParams, appConfig.h5sdk.apiKey);
+    const url = `${appConfig.h5sdk.loginUrl}?${new URLSearchParams({ ...signParams, sign }).toString()}`;
+    const text = await fetchText(url, true, timeoutMs); // 走代理池，切换IP时生效
+    const match = text.match(/^callback\(([\s\S]+)\);?$/);
+    const jsonText = match ? match[1] : text;
+    const payload = JSON.parse(jsonText);
+    if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
+      throw new Error((payload && payload.msg) || 'h5sdk/login failed');
+    }
+    return {
+      token: String(payload.data.token),
+      time: String(payload.data.time || time),
+      sign: String(payload.data.sign || sign)
+    };
+  }
+
+  throw new Error('所有 token 获取渠道均失败');
 }
 
 function fetchText(url, useProxy = false, timeoutMs = 0) {
@@ -357,28 +487,50 @@ function getAccountFromRequest(req) {
 }
 
 async function getDynamicTokenInfo(account) {
-  const callback = `jsonp_callback_${Date.now()}`;
-  const params = new URLSearchParams({
-    ...tokenApiBaseParams,
-    uname: account.uname,
-    upwd: account.upwd,
-    callback
-  });
-  const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
-  const responseText = await fetchText(url, true); // 使用当前代理
-  const jsonpPrefix = `${callback}(`;
-  if (!responseText.startsWith(jsonpPrefix) || !responseText.endsWith(');')) {
-    throw new Error(`unexpected jsonp response: ${responseText.slice(0, 80)}`);
+  // 优先级1: GitHub Actions Relay（利用 Azure IP 轮换）
+  if (TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct') {
+    try {
+      const relayToken = await ghRelay.getToken(account.uname);
+      if (relayToken) {
+        console.log(`[Token] GH-Relay 命中: ${account.uname}`);
+        return {
+          token: relayToken.token,
+          time: String(relayToken.time || fakeLoginData.time),
+          sign: String(relayToken.sign || fakeLoginData.sign)
+        };
+      }
+    } catch (e) {
+      console.warn(`[Token] GH-Relay 失败: ${e.message}，回退到代理池`);
+    }
   }
-  const payload = JSON.parse(responseText.slice(jsonpPrefix.length, -2));
-  if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
-    throw new Error(`login api failed: ${responseText.slice(0, 120)}`);
+
+  // 优先级2: 代理池直连（原来的逻辑）
+  if (TOKEN_MODE !== 'direct') {
+    const callback = `jsonp_callback_${Date.now()}`;
+    const params = new URLSearchParams({
+      ...tokenApiBaseParams,
+      uname: account.uname,
+      upwd: account.upwd,
+      callback
+    });
+    const url = `https://s-api.37.com.cn/h5sdk/login?${params.toString()}`;
+    const responseText = await fetchText(url, true); // 使用当前代理
+    const jsonpPrefix = `${callback}(`;
+    if (!responseText.startsWith(jsonpPrefix) || !responseText.endsWith(');')) {
+      throw new Error(`unexpected jsonp response: ${responseText.slice(0, 80)}`);
+    }
+    const payload = JSON.parse(responseText.slice(jsonpPrefix.length, -2));
+    if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
+      throw new Error(`login api failed: ${responseText.slice(0, 120)}`);
+    }
+    return {
+      token: payload.data.token,
+      time: String(payload.data.time || fakeLoginData.time),
+      sign: String(payload.data.sign || fakeLoginData.sign)
+    };
   }
-  return {
-    token: payload.data.token,
-    time: String(payload.data.time || fakeLoginData.time),
-    sign: String(payload.data.sign || fakeLoginData.sign)
-  };
+
+  throw new Error('所有 token 获取渠道均失败');
 }
 
 const fakeLoginData = {
@@ -667,6 +819,10 @@ async function startProxyServer() {
   ensureUserDataLayout();
   proxyReady = true;
   console.log(`✅ Proxy running at http://localhost:${PORT}`);
+  console.log(`✅ Token mode: ${TOKEN_MODE} (relay=GitHub Actions Azure IP轮换 | proxy-pool=免费代理池 | direct=直连)`);
+  if (TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct') {
+    console.log(`✅ GH-Relay: Gist=${ghRelay.gistId ? '已配置' : '未配置'} | RawURL=${ghRelay.rawUrl ? '已配置' : '未配置'}`);
+  }
   console.log(`✅ Mock interceptors active`);
   console.log(`✅ Account uname: ${accountConfig.uname}`);
   console.log(`✅ Fixed QR time(ms): ${fixedQrTimeMs}`);

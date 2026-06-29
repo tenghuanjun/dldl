@@ -180,7 +180,7 @@
         <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动」会按所选方式（快捷登录/扫码页）依次打开窗口（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」或「快捷登录」。</div>
         <div class="tip tip-secondary">点击「打开扫码页」会经本地代理打开 login.php：若当前账号已缓存 token，则直接使用；仅在没有 token 时会请求 h5sdk/login 并写入 Supabase。账号页或扫码页内「刷新 token」成功后，会将新 token/time/sign 更新到 Supabase 对应账号行（按 id 匹配）。</div>
         <div class="tip tip-secondary">「快捷登录」携带该账号的 uname、upwd、uinfo 打开新窗口，在 <code>37.com.cn/h5game/public/?pid=46&amp;gid=1005176</code> 注入 UINFO/HISTORY cookie 完成登录。无 uinfo 时按 uname/upwd 自动生成。需使用 DLDL-Proxy 桌面客户端。</div>
-        <div class="tip tip-secondary">「代理IP」功能使用 Cloudflare Workers 代理请求登录接口，可绕过IP请求次数限制。点击「切换IP」会切换 Cloudflare 出口IP。使用前请先部署 <code>cloudflare-worker.js</code> 到 Cloudflare Workers，并将 Worker URL 填入配置。</div>
+        <div class="tip tip-secondary">「代理IP」使用 GitHub Actions Runner 的 Azure IP 轮换：点击按钮查看当前可用 IP。每个账号的「刷新 token」优先使用 Actions 缓存的 token（5 分钟内有效），缓存未命中时走代理池直连。如需强制从全新 IP 获取 token，请在项目目录启动 proxy 后调用 <code>POST /gh-relay/request-token</code>（最多等待 2 分钟，Actions 定时任务每 5 分钟执行一次）。</div>
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -1675,42 +1675,53 @@
                     }
                     
                     try {
-                        // 调用后端真正切换代理池中的代理
+                        // 统一切换入口：后端优先 GH-Relay，兜底代理池
                         const switchResp = await fetch('/proxy-pool/switch', { method: 'POST' });
                         const switchData = await switchResp.json();
                         
                         if (!switchData.ok) {
-                            throw new Error(switchData.message || '切换代理失败');
+                            throw new Error(switchData.message || '切换失败');
                         }
                         
-                        // 显示切换后的代理信息
-                        const newProxy = switchData.currentProxy;
-                        if (newProxy) {
-                            this.proxyIP = `代理: ${newProxy}`;
+                        // 根据来源显示不同信息
+                        if (switchData.source === 'gh-relay') {
+                            // GitHub Actions relay：显示 Azure runner 的真实出口 IP
+                            const switchedText = switchData.switched ? '已切换' : '最新';
+                            const timeAgo = this._formatTimeAgo(switchData.updatedAt);
+                            this.proxyIP = `Azure IP: ${switchData.ip} (${switchedText}, ${timeAgo})`;
                             this.saveProxyConfig();
-                            this.showSuccess(`已切换代理: ${newProxy}`);
+                            this.showSuccess(`${switchedText} IP: ${switchData.ip}`);
+                        } else if (switchData.source === 'proxy-pool') {
+                            // 免费代理池
+                            const newProxy = switchData.currentProxy;
+                            if (newProxy) {
+                                this.proxyIP = `代理: ${newProxy}`;
+                                this.showSuccess(`已切换代理: ${newProxy}`);
+                            } else {
+                                this.proxyIP = '代理: 无可用（走直连）';
+                                this.showSuccess('无可用代理，当前走直连');
+                            }
+                            this.saveProxyConfig();
                         } else {
-                            // 代理池无可用代理，走直连
-                            this.proxyIP = '代理: 无可用（走直连）';
+                            // 直连
+                            this.proxyIP = '直连 (无可用代理)';
                             this.saveProxyConfig();
-                            this.showSuccess('无可用代理，当前走直连');
+                            this.showSuccess(switchData.message || '当前走直连');
                         }
                     } catch (e) {
                         console.error('toggleProxyAndRefreshIP failed', e);
-                        // 切换失败时尝试展示状态
-                        try {
-                            const statusResp = await fetch('/proxy-pool/status');
-                            const status = await statusResp.json();
-                            if (status.currentProxy) {
-                                this.proxyIP = `代理: ${status.currentProxy}`;
-                            } else {
-                                this.proxyIP = '切换失败（走直连）';
-                            }
-                        } catch (_) {
-                            this.proxyIP = '切换失败';
-                        }
+                        this.proxyIP = '切换失败（走直连）';
                         this.showError(`切换IP失败：${e?.message || e}`);
                     }
+                },
+
+                /** 格式化时间差为 "x秒前/x分钟前" */
+                _formatTimeAgo(isoString) {
+                    if (!isoString) return '';
+                    const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+                    if (diff < 60) return diff + '秒前';
+                    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+                    return Math.floor(diff / 3600) + '小时前';
                 },
                 
                 // 获取当前代理IP
