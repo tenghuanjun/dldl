@@ -8,6 +8,14 @@
 const path = require('path');
 const { app, BrowserWindow, ipcMain, session, dialog } = require('electron');
 
+// 终端 UTF-8 编码（解决 Windows 下中文乱码）
+if (process.platform === 'win32') {
+  try {
+    const { execSync } = require('child_process');
+    execSync('chcp 65001', { stdio: 'ignore' });
+  } catch (_) {}
+}
+
 
 // ========== GPU 加速 & 渲染优化 ==========
 // 禁用 GPU 沙箱（在某些 Windows 系统上可提升渲染性能）

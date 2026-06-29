@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title DLDL-Proxy Panel
 cd /d "%~dp0"
 
