@@ -71,7 +71,15 @@ async function readGist() {
 }
 
 async function updateGist(data) {
-  const json = JSON.stringify(data);
+  // Gist PATCH API 需要 files 结构：{ files: { "文件名": { content: "字符串内容" } } }
+  const fileContent = JSON.stringify(data, null, 2);
+  const payload = JSON.stringify({
+    files: {
+      'dldl-tokens.json': { content: fileContent }
+    }
+  });
+  console.log('[DEBUG] updateGist: payload length =', Buffer.byteLength(payload), 'bytes');
+
   return new Promise((resolve, reject) => {
     const req = https.request({
       hostname: 'api.github.com',
@@ -82,7 +90,7 @@ async function updateGist(data) {
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
         'User-Agent': 'DLDL-TokenFetcher',
-        'Content-Length': Buffer.byteLength(json)
+        'Content-Length': Buffer.byteLength(payload)
       }
     }, (res) => {
       let body = '';
@@ -92,13 +100,13 @@ async function updateGist(data) {
           console.log('✅ Gist 更新成功');
           resolve(true);
         } else {
-          console.error('❌ Gist 更新失败 HTTP', res.statusCode, body.substring(0, 200));
+          console.error('❌ Gist 更新失败 HTTP', res.statusCode, body.substring(0, 300));
           reject(new Error('Gist update failed: ' + res.statusCode));
         }
       });
     });
     req.on('error', reject);
-    req.write(json);
+    req.write(payload);
     req.end();
   });
 }
