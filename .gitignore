@@ -4,3 +4,4 @@ dist-electron/
 .npm-cache/
 src-tauri/target/
 src-tauri/_embed/
+*.apk

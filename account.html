@@ -145,6 +145,7 @@
                                 <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
                                 <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button>
+                                <button class="btn btn-secondary" type="button" @click="appLogin(account)">APP登录</button>
                             </div>
                             <div class="card-pass-row">
                                 <div class="pass-code-input-wrap">
@@ -1359,6 +1360,52 @@
                         console.error("copyLoginUrl failed", e);
                         this.showError(`复制失败：${e?.message || e}`);
                     }
+                },
+                async appLogin(account) {
+                    const uname = String(account && account.uname || '').trim();
+                    const upwd = String(account && account.upwd || '').trim();
+                    if (!uname || !upwd) {
+                        this.showError('APP 登录需要账号与密码');
+                        return;
+                    }
+                    this.loadingText = `正在进行 ${uname} 的 APP 登录...`;
+                    this.loadingVisible = true;
+                    try {
+                        const resp = await fetch('/api/app-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uname, upwd })
+                        });
+                        const result = await resp.json();
+                        if (!result.ok || result.state !== 1) {
+                            throw new Error(result.msg || result.message || 'APP 登录失败');
+                        }
+                        const url = this.buildAppLoginUrl(result, account);
+                        await navigator.clipboard.writeText(url);
+                        this.showSuccess(`${uname} APP 登录成功！网址已复制到剪贴板`);
+                    } catch (e) {
+                        console.error('appLogin failed', e);
+                        this.showError(`APP 登录失败：${e?.message || e}`);
+                    } finally {
+                        this.loadingVisible = false;
+                    }
+                },
+                buildAppLoginUrl(loginResult, account) {
+                    const params = new URLSearchParams({
+                        gid: "1002997",
+                        pid: "1",
+                        token: loginResult.token || "",
+                        time: String(Math.floor(Date.now() / 1000)),
+                        sign: "",
+                        appVer: "",
+                        platCode: "37wan",
+                        IMEI: "",
+                        isPcLauncher: "true",
+                        uname: account.uname || "",
+                        upwd: account.upwd || ""
+                    });
+                    if (account.id != null) params.set('dldl_account_id', String(account.id));
+                    return `https://dldl.50pk.com/login.php?${params.toString()}`;
                 },
                 accountSelectKey(area, account) {
                     return `${String(area || '')}\t${String(account && account.uname || '')}\t${String(account && account.upwd || '')}`;

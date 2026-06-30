@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const { getInstance: getProxyPool } = require('./proxy-pool');
 const { GHActionsRelay } = require('./gh-relay');
+const crypto = require('crypto');
 const CryptoJS = require('crypto-js');
 const appConfig = require('./config');
 const { build37CookieValues } = require('./dldl-uinfo');
@@ -579,6 +580,125 @@ app.post('/api/token/refresh', async (req, res) => {
     console.error('[token/refresh]', error.message);
     const code = error.message.includes('timeout') || error.message.includes('超时') ? 408 : 500;
     res.status(code).json({ ok: false, message: error.message });
+  }
+});
+
+// ==================== APP 端登录（反编译 APK SDK 实现） ====================
+
+const APP_LOGIN_CONFIG = {
+  APP_KEY: 'CR.wdPyFoanb6Thv8sJ5rjNDMEeI3@X1',
+  LOGIN_URL: 'http://s-api.37.com.cn/sdk/login/',
+  PID: '1',
+  GID: '1002997',
+  REFER: '1_1002997_11327_1001',
+  SCUT: '1',
+  GWVERSION: '4.6.7',
+  SVERSION: '3.7.9.6.1',
+  FROM: 'android',
+  HOST_SDK_VERSION: '3.7.9.6.1',
+  DEV: '9552cfd00bfed7dbd9f8133a0fc9b03e',
+};
+APP_LOGIN_CONFIG.AES_KEY = APP_LOGIN_CONFIG.APP_KEY.substring(0, 16);
+
+function appAesEncrypt(plainText, key) {
+  const cipher = crypto.createCipheriv('aes-128-ecb', Buffer.from(key, 'utf8'), null);
+  cipher.setAutoPadding(true);
+  let encrypted = cipher.update(plainText, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encrypted;
+}
+
+function appSignV3(params, appKey) {
+  const sortedKeys = Object.keys(params).filter(k => k !== 'sign').sort();
+  let signStr = '';
+  for (const key of sortedKeys) {
+    signStr += key + '=' + params[key];
+  }
+  signStr += appKey;
+  return crypto.createHash('md5').update(signStr).digest('hex').toLowerCase();
+}
+
+app.post('/api/app-login', async (req, res) => {
+  try {
+    const uname = String(req.body.uname || '').trim();
+    const upwd = String(req.body.upwd || '').trim();
+    if (!uname || !upwd) {
+      return res.status(400).json({ ok: false, message: '缺少 uname 或 upwd' });
+    }
+
+    const encryptedPwd = appAesEncrypt(upwd, APP_LOGIN_CONFIG.AES_KEY);
+    const timestamp = String(Math.floor(Date.now() / 1000));
+
+    const params = {
+      uname,
+      upwd: encryptedPwd,
+      signType: 'all',
+      display_name: '斗罗大陆',
+      trans_info: '',
+      pid: APP_LOGIN_CONFIG.PID,
+      gid: APP_LOGIN_CONFIG.GID,
+      refer: APP_LOGIN_CONFIG.REFER,
+      dev: APP_LOGIN_CONFIG.DEV,
+      sversion: APP_LOGIN_CONFIG.SVERSION,
+      version: '1.0.0',
+      gwversion: APP_LOGIN_CONFIG.GWVERSION,
+      time: timestamp,
+      scut: APP_LOGIN_CONFIG.SCUT,
+      oaid: '',
+      from: APP_LOGIN_CONFIG.FROM,
+      host_sdk_version: APP_LOGIN_CONFIG.HOST_SDK_VERSION,
+      is_root: '0',
+      is_simulator: '0',
+    };
+    params.sign = appSignV3(params, APP_LOGIN_CONFIG.APP_KEY);
+
+    const formBody = Object.keys(params)
+      .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+      .join('&');
+
+    console.log('[app-login] 请求登录:', uname);
+
+    const body = await new Promise((resolve, reject) => {
+      const urlObj = new URL(APP_LOGIN_CONFIG.LOGIN_URL);
+      const reqOpts = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || 80,
+        path: urlObj.pathname,
+        method: 'POST',
+        timeout: 15000,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'Content-Length': Buffer.byteLength(formBody),
+          'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QT)',
+        },
+      };
+      const httpReq = http.request(reqOpts, (resp) => {
+        let data = '';
+        resp.on('data', (chunk) => { data += chunk.toString(); });
+        resp.on('end', () => resolve(data));
+      });
+      httpReq.on('error', reject);
+      httpReq.on('timeout', () => { httpReq.destroy(); reject(new Error('Request timeout')); });
+      httpReq.write(formBody);
+      httpReq.end();
+    });
+
+    console.log('[app-login] 响应:', body.substring(0, 200));
+    const json = JSON.parse(body);
+    const data = json.data || json;
+
+    res.json({
+      ok: json.state === 1,
+      state: json.state,
+      msg: json.msg,
+      uid: data.uid,
+      uname: data.uname,
+      token: data.token,
+      refresh_token: data.refresh_token,
+    });
+  } catch (error) {
+    console.error('[app-login] 失败:', error.message);
+    res.status(500).json({ ok: false, message: error.message });
   }
 });
 
