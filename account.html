@@ -1391,28 +1391,20 @@
                     }
                 },
                 buildAppLoginUrl(loginResult, account) {
-                    // APP 端用 APP_KEY（与 SDK /sdk/login/ 相同），不是 H5 的 API_KEY
-                    const APP_KEY = "CR.wdPyFoanb6Thv8sJ5rjNDMEeI3@X1";
-                    const time = String(Math.floor(Date.now() / 1000));
+                    // APP 登录流程：SDK token + 服务端 sign（仿 getCodeInfo mock，从 h5sdk 获取）
+                    // 不再客户端计算 sign，因为 importServer 验签需要服务端密钥
                     const token = loginResult.token || "";
-                    const gid = "1002997";
-                    const pid = "1";
-                    const platCode = "37wan";
-                    const appVer = "";
+                    const gid = loginResult.entryGid || "1003279";
+                    const pid = loginResult.entryPid || "46";
+                    const platCode = loginResult.platCode || "37wan";
+                    const appVer = loginResult.appVer || "134";
+                    const sign = loginResult.sign || "";
+                    const time = loginResult.entryTime || String(Math.floor(Date.now() / 1000));
+                    const imei = loginResult.IMEI ||
+                        (crypto.randomUUID ? crypto.randomUUID() :
+                        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c =>
+                            (c === 'x' ? Math.random() * 16 | 0 : (Math.random() * 4 | 8)).toString(16)));
 
-                    // enter.js 的 importServer 只认识这些参数，sign 必须用它们计算
-                    const importParams = {
-                        platCode: platCode,
-                        pid: pid,
-                        version: appVer,
-                        token: token,
-                        gid: gid,
-                        time: time,
-                        os: "ANDROID"
-                    };
-                    const sign = this.getSign(importParams, APP_KEY);
-
-                    // 构建完整 URL（sign 已单独算好）
                     const rawParams = {
                         gid: gid,
                         pid: pid,
@@ -1421,7 +1413,7 @@
                         sign: sign,
                         appVer: appVer,
                         platCode: platCode,
-                        IMEI: "",
+                        IMEI: imei,
                         isPcLauncher: "true",
                         uname: account.uname || "",
                         upwd: account.upwd || ""

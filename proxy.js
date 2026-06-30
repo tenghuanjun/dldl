@@ -683,23 +683,45 @@ app.post('/api/app-login', async (req, res) => {
       httpReq.end();
     });
 
-    console.log('[app-login] 响应:', body.substring(0, 200));
+    console.log('[app-login] SDK响应:\n', JSON.stringify(JSON.parse(body), null, 2));
     const json = JSON.parse(body);
     const data = json.data || json;
+
+    // 仿照 getCodeInfo mock 的流程：从 h5sdk/login 获取服务端生成的 sign/time
+    // 因为 importServer 验签需要服务端密钥，客户端算不出来
+    let h5sdkInfo = {};
+    try {
+      h5sdkInfo = await fetchH5sdkLoginData(uname, upwd, 5000);
+      console.log('[app-login] h5sdk sign 获取成功');
+    } catch (e) {
+      console.warn('[app-login] h5sdk sign 获取失败，使用 fallback:', e.message);
+      // fallback: 直接用 fakeLoginData 的固定值
+      h5sdkInfo = {
+        time: fakeLoginData.time,
+        sign: fakeLoginData.sign
+      };
+    }
 
     res.json({
       ok: json.state === 1,
       state: json.state,
       msg: json.msg,
-      // 透传 API 返回的所有字段
+      // SDK 登录透传字段（APP token 仅作认证用，游戏入口用 H5 token+sign 配对）
       uid: data.uid,
       uname: data.uname,
-      token: data.token,
+      appToken: data.token,
       refresh_token: data.refresh_token,
       login_account: data.login_account,
       is_open: data.is_open,
-      // sign 由客户端计算（APP SDK 返回中无此字段）
-      sign: data.sign || null,
+      // 游戏入口参数：使用配套的 H5 token + H5 sign（从 h5sdk 获取，与 getCodeInfo mock 一致）
+      token: h5sdkInfo.token || data.token,
+      sign: h5sdkInfo.sign,
+      entryTime: h5sdkInfo.time || fakeLoginData.time,
+      appVer: fakeLoginData.appVer,
+      platCode: fakeLoginData.platCode,
+      IMEI: fakeLoginData.IMEI,
+      entryGid: fakeLoginData.gid,
+      entryPid: fakeLoginData.pid,
     });
   } catch (error) {
     console.error('[app-login] 失败:', error.message);
@@ -828,6 +850,45 @@ app.use('/api/h5sdk/login', async (req, res) => {
 
 // 静态文件服务（只读资源；用户可写目录 userDataDir 供日志等）
 app.use(express.static(staticRoot));
+
+// app.xxh5.z7xz.com 上的接口代理：enter.js 原版会直连外部，
+// 页面从本地 localhost 加载后跨域请求可能因 CORS / 混合内容策略异常返回，
+// 这里单独代理到正确上游，确保与扫码页流程行为一致
+const appXxh5Proxy = createProxyMiddleware({
+  target: 'http://app.xxh5.z7xz.com',
+  changeOrigin: true,
+  secure: false,
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      proxyReq.setHeader('accept-encoding', 'identity');
+      console.log('[proxy] -> app.xxh5', req.originalUrl);
+    },
+    proxyRes: (proxyRes, req, res) => {
+      let body = [];
+      proxyRes.on('data', (chunk) => body.push(chunk));
+      proxyRes.on('end', () => {
+        body = Buffer.concat(body).toString();
+        try {
+          console.log('[proxy] <- app.xxh5\n', JSON.stringify(JSON.parse(body), null, 2));
+        } catch (_) {
+          console.log('[proxy] <- app.xxh5', body);
+        }
+        res.statusCode = proxyRes.statusCode;
+        Object.entries(proxyRes.headers || {}).forEach(([key, value]) => {
+          if (key.toLowerCase() !== 'content-length' && value !== undefined) {
+            res.setHeader(key, value);
+          }
+        });
+        res.end(body);
+      });
+    },
+  },
+  selfHandleResponse: true,
+});
+app.use('/importServer', appXxh5Proxy);
+app.use('/serverselect', appXxh5Proxy);
+app.use('/query', appXxh5Proxy);
+
 // 代理所有其他请求
 app.use('/', createProxyMiddleware({
   target: TARGET,
@@ -890,10 +951,14 @@ app.use('/', createProxyMiddleware({
         proxyRes.on('end', () => {
           body = Buffer.concat(body).toString();
 
-          // 在“线上原版 enter.js”上仅替换扫码与回跳地址，保证行为在本地闭环
+          // 在"线上原版 enter.js"上仅替换扫码与回跳地址，保证行为在本地闭环
           body = body.replace(/https:\/\/app\.xxh5\.z7xz\.com\/pc\/getId/g, '/pc/getId');
           body = body.replace(/https:\/\/app\.xxh5\.z7xz\.com\/pc\/getCodeInfo/g, '/pc/getCodeInfo');
           body = body.replace(/https:\/\/dldl\.50pk\.com\/login\.php\?/g, '/login.php?');
+          // importServer / loginserverdata / serverByUid 都在 app.xxh5.z7xz.com，走本地代理避免跨域
+          body = body.replace(/http:\/\/app\.xxh5\.z7xz\.com\/importServer/g, '/importServer');
+          body = body.replace(/http:\/\/app\.xxh5\.z7xz\.com\/serverselect\/loginserverdata/g, '/serverselect/loginserverdata');
+          body = body.replace(/https:\/\/app\.xxh5\.z7xz\.com\/query\/serverByUid/g, '/query/serverByUid');
           const accQsMin =
             '+(window.__DLDL_PROXY_UNAME?"&uname="+encodeURIComponent(window.__DLDL_PROXY_UNAME):"")+(window.__DLDL_PROXY_UPWD?"&upwd="+encodeURIComponent(window.__DLDL_PROXY_UPWD):"")';
           body = body.replace(
