@@ -691,10 +691,15 @@ app.post('/api/app-login', async (req, res) => {
       ok: json.state === 1,
       state: json.state,
       msg: json.msg,
+      // 透传 API 返回的所有字段
       uid: data.uid,
       uname: data.uname,
       token: data.token,
       refresh_token: data.refresh_token,
+      login_account: data.login_account,
+      is_open: data.is_open,
+      // sign 由客户端计算（APP SDK 返回中无此字段）
+      sign: data.sign || null,
     });
   } catch (error) {
     console.error('[app-login] 失败:', error.message);

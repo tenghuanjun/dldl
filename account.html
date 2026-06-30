@@ -1391,20 +1391,43 @@
                     }
                 },
                 buildAppLoginUrl(loginResult, account) {
-                    const params = new URLSearchParams({
-                        gid: "1002997",
-                        pid: "1",
-                        token: loginResult.token || "",
-                        time: String(Math.floor(Date.now() / 1000)),
-                        sign: "",
-                        appVer: "",
-                        platCode: "37wan",
+                    // APP 端用 APP_KEY（与 SDK /sdk/login/ 相同），不是 H5 的 API_KEY
+                    const APP_KEY = "CR.wdPyFoanb6Thv8sJ5rjNDMEeI3@X1";
+                    const time = String(Math.floor(Date.now() / 1000));
+                    const token = loginResult.token || "";
+                    const gid = "1002997";
+                    const pid = "1";
+                    const platCode = "37wan";
+                    const appVer = "";
+
+                    // enter.js 的 importServer 只认识这些参数，sign 必须用它们计算
+                    const importParams = {
+                        platCode: platCode,
+                        pid: pid,
+                        version: appVer,
+                        token: token,
+                        gid: gid,
+                        time: time,
+                        os: "ANDROID"
+                    };
+                    const sign = this.getSign(importParams, APP_KEY);
+
+                    // 构建完整 URL（sign 已单独算好）
+                    const rawParams = {
+                        gid: gid,
+                        pid: pid,
+                        token: token,
+                        time: time,
+                        sign: sign,
+                        appVer: appVer,
+                        platCode: platCode,
                         IMEI: "",
                         isPcLauncher: "true",
                         uname: account.uname || "",
                         upwd: account.upwd || ""
-                    });
-                    if (account.id != null) params.set('dldl_account_id', String(account.id));
+                    };
+                    if (account.id != null) rawParams['dldl_account_id'] = String(account.id);
+                    const params = new URLSearchParams(rawParams);
                     return `https://dldl.50pk.com/login.php?${params.toString()}`;
                 },
                 accountSelectKey(area, account) {
