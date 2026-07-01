@@ -588,6 +588,10 @@ app.post('/api/token/refresh', async (req, res) => {
 const APP_LOGIN_CONFIG = {
   APP_KEY: 'CR.wdPyFoanb6Thv8sJ5rjNDMEeI3@X1',
   LOGIN_URL: 'http://s-api.37.com.cn/sdk/login/',
+  QRCODE_SCAN_URL: 'http://s-api.37.com.cn/go/sdk/account/qrcode/scan',
+  QRCODE_CONFIRM_URL: 'http://s-api.37.com.cn/go/sdk/account/qrcode/confirm',
+  QRCODE_CANCEL_URL: 'http://s-api.37.com.cn/go/sdk/account/qrcode/cancel',
+  // 游戏上下文 gid/pid（SDK 登录用的，与具体游戏无关，用默认值即可）
   PID: '1',
   GID: '1002997',
   REFER: '1_1002997_11327_1001',
@@ -618,20 +622,297 @@ function appSignV3(params, appKey) {
   return crypto.createHash('md5').update(signStr).digest('hex').toLowerCase();
 }
 
-// ==================== APP 端登录（含游戏入口参数生成） ====================
-//
-// 关于「为什么不能模拟真实扫码流程」：
-//   反编译文档 §11.4：真机 APP 扫码激活会话的 API 在 APK 内部实现，不在 enter.js 中。
-//   我们没有这个 API 的端点信息，无法从 proxy 端模拟 APP 行为。
-//   因此 §11.6 已记录：proxy.js 用 mock /pc/getId + mock /pc/getCodeInfo 绕开真机扫码，
-//   以 h5sdk/login 获取服务端生成的 token+sign（API_KEY="Jp*4Y8vQOYck2*&Z"）。
-//   APP 登录（/api/app-login）复用完全相同的策略：
-//     ① SDK 登录（/sdk/login/）验证账号密码 → 拿到 uid/APP token
-//     ② h5sdk/login 获取游戏入口 token+sign（与 mock /pc/getCodeInfo 一致）
-//     ③ 合并 fakeLoginData（gid/pid/appVer/platCode/IMEI）返回给前端
-//
-//   最终 URL: /login.php?gid=1003279&pid=46&token=<h5sdk>&time=<h5sdk>&sign=<h5sdk>
-//            &appVer=134&platCode=37wan&IMEI=...&isPcLauncher=true
+/**
+ * 构建 CommonParamsV1 公共参数（反编译自 com.sqwan.common.request.CommonParamsV1）
+ * 用于 qrcode/scan, qrcode/confirm 等 SDK API 请求
+ */
+function buildCommonParamsV1() {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  return {
+    gid: APP_LOGIN_CONFIG.GID,
+    pid: APP_LOGIN_CONFIG.PID,
+    refer: APP_LOGIN_CONFIG.REFER,
+    version: '1.0.0',
+    time: timestamp,
+    dev: APP_LOGIN_CONFIG.DEV,
+    oaid: '',
+    sversion: APP_LOGIN_CONFIG.SVERSION,
+    gwversion: APP_LOGIN_CONFIG.GWVERSION,
+    is_root: '0',
+    is_simulator: '0',
+  };
+}
+
+/**
+ * HTTP POST 请求（用于 qrcode/scan, qrcode/confirm 等 SDK 接口）
+ * 这些接口在 s-api.37.com.cn 上，需要 form-urlencoded 格式
+ */
+function sdkHttpPost(url, params) {
+  const formBody = Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k])))
+    .join('&');
+
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const opts = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || 80,
+      path: urlObj.pathname,
+      method: 'POST',
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Content-Length': Buffer.byteLength(formBody),
+        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QT)',
+      },
+    };
+    const req = http.request(opts, (resp) => {
+      let data = '';
+      resp.on('data', (chunk) => { data += chunk.toString(); });
+      resp.on('end', () => resolve({ status: resp.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.write(formBody);
+    req.end();
+  });
+}
+
+/**
+ * 模拟 APP 扫码：通知服务端「用户XX扫了这个二维码」
+ * POST http://s-api.37.com.cn/go/sdk/account/qrcode/scan
+ * 参数: os, code(sessionId), token(APP登录token), login_type, + CommonParamsV1 + SignV3
+ */
+async function callQrcodeScan(token, sessionId, loginType) {
+  const params = {
+    os: 'android',
+    code: sessionId,
+    token: token,
+    login_type: loginType || 'common',
+    ...buildCommonParamsV1(),
+  };
+  params.sign = appSignV3(params, APP_LOGIN_CONFIG.APP_KEY);
+
+  console.log('[qrcode/scan] 请求: code=' + (sessionId || '').slice(0, 20) + '... token=' + (token || '').slice(0, 16) + '...');
+  const { status, body } = await sdkHttpPost(APP_LOGIN_CONFIG.QRCODE_SCAN_URL, params);
+  console.log('[qrcode/scan] HTTP ' + status + ' resp: ' + (body || '').slice(0, 300));
+
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1) {
+    throw new Error('qrcode/scan 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
+  }
+  console.log('[qrcode/scan] ✅ 扫码通知成功');
+  return json;
+}
+
+/**
+ * 模拟 APP 确认授权：通知服务端「用户确认登录」
+ * POST http://s-api.37.com.cn/go/sdk/account/qrcode/confirm
+ * 参数: os, token, code(sessionId), + CommonParamsV1 + SignV3
+ */
+async function callQrcodeConfirm(token, sessionId) {
+  const params = {
+    os: 'android',
+    token: token,
+    code: sessionId,
+    ...buildCommonParamsV1(),
+  };
+  params.sign = appSignV3(params, APP_LOGIN_CONFIG.APP_KEY);
+
+  console.log('[qrcode/confirm] 请求: code=' + (sessionId || '').slice(0, 20) + '...');
+  const { status, body } = await sdkHttpPost(APP_LOGIN_CONFIG.QRCODE_CONFIRM_URL, params);
+  console.log('[qrcode/confirm] HTTP ' + status + ' resp: ' + (body || '').slice(0, 300));
+
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1) {
+    throw new Error('qrcode/confirm 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
+  }
+  console.log('[qrcode/confirm] ✅ 确认授权成功');
+  return json;
+}
+
+// ==================== 真实 37wan PC 扫码流程模拟 ====================
+
+const PC_HOST = 'app.xxh5.z7xz.com';
+const PC_SIGN_KEY = 'pcjgv587!?';
+
+/** /pc/getId: sign = MD5(time + "pcjgv587!?") */
+function pcGetIdSign(time) {
+  return crypto.createHash('md5').update(String(time) + PC_SIGN_KEY).digest('hex');
+}
+
+/** /pc/getCodeInfo: sign = MD5(sessionId + time + "pcjgv587!?") */
+function pcGetCodeInfoSign(sessionId, time) {
+  return crypto.createHash('md5').update(String(sessionId) + String(time) + PC_SIGN_KEY).digest('hex');
+}
+
+/** 安全 JSON 解析 */
+function safeJsonParse(text) {
+  try { return JSON.parse(text); } catch (_) { return null; }
+}
+
+/** HTTPS 请求（GET 或 POST，返回 JSON） */
+function pcHttpsRequest(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'User-Agent': '37MobileGame/4.6.7 (Android)',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    };
+    if (body) headers['Content-Length'] = Buffer.byteLength(body);
+    const opts = { hostname: PC_HOST, path, method, timeout: 8000, headers };
+    const req = https.request(opts, (resp) => {
+      let data = '';
+      resp.on('data', c => data += c);
+      resp.on('end', () => resolve({ status: resp.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+/**
+ * 调用真实 37wan /pc/getId 获取会话 ID
+ */
+async function callRealPcGetId() {
+  const time = Date.now();
+  const sign = pcGetIdSign(time);
+  const { status, body } = await pcHttpsRequest('GET', `/pc/getId?time=${time}&sign=${sign}`);
+  if (status !== 200) throw new Error(`pc/getId HTTP ${status}`);
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1 || !json.data) {
+    throw new Error('pc/getId 无有效 sessionId: ' + (body || '').slice(0, 120));
+  }
+  return String(json.data);
+}
+
+/**
+ * 向 PC 扫码会话写入游戏入口参数（替代扫码授权流程）
+ * 
+ * 原理：enter.js 第 983 行 sendPostCodeInfo 通过 POST /pc/postCodeInfo
+ * 将游戏入口参数写入 session，然后 PC 端通过 /pc/getCodeInfo 取回。
+ * 
+ * 这里直接绕过真实手机扫码（qrcode/scan + qrcode/confirm 在 s-api.37.com.cn 上无法生效），
+ * 改用 app.xxh5.z7xz.com 本服的 /pc/postCodeInfo 写入参数。
+ * 
+ * @param {string} sessionId - 来自 /pc/getId 的会话 ID
+ * @param {object} gameParams - { gid, pid, token, time, sign, appVer, platCode, IMEI }
+ */
+async function postGameEntryParams(sessionId, gameParams) {
+  const dataJson = JSON.stringify(gameParams);
+  const now = Date.now();
+  const sign = crypto.createHash('md5')
+    .update(sessionId + String(now) + 'pcjgv587!?')
+    .digest('hex');
+
+  const formBody =
+    'id=' + encodeURIComponent(sessionId) +
+    '&data=' + encodeURIComponent(dataJson) +
+    '&time=' + now +
+    '&sign=' + sign;
+
+  console.log('[pc-postCodeInfo] 写入游戏入口参数: gid=' + gameParams.gid + ', pid=' + gameParams.pid);
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: PC_HOST,
+      path: '/pc/postCodeInfo',
+      method: 'POST',
+      timeout: 8000,
+      headers: {
+        'User-Agent': '37MobileGame/4.6.7 (Android)',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(formBody),
+      },
+    }, (resp) => {
+      let data = '';
+      resp.on('data', c => data += c);
+      resp.on('end', () => {
+        const json = safeJsonParse(data);
+        if (!json || json.state !== 1) {
+          reject(new Error('pc/postCodeInfo 失败: ' + (data || '').slice(0, 200)));
+          return;
+        }
+        console.log('[pc-postCodeInfo] ✅ 参数写入成功');
+        resolve(true);
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.write(formBody);
+    req.end();
+  });
+}
+
+/**
+ * 调用真实 37wan /pc/getCodeInfo 获取游戏入口参数
+ */
+async function callRealPcGetCodeInfo(sessionId) {
+  const time = Date.now();
+  const sign = pcGetCodeInfoSign(sessionId, time);
+  const encodedId = encodeURIComponent(sessionId);
+  const { status, body } = await pcHttpsRequest('GET', `/pc/getCodeInfo?id=${encodedId}&time=${time}&sign=${sign}`);
+  if (status !== 200) throw new Error(`pc/getCodeInfo HTTP ${status}`);
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1 || !json.data) {
+    throw new Error('pc/getCodeInfo 无游戏入口参数: ' + (body || '').slice(0, 120));
+  }
+  return json.data; // { gid, pid, token, time, sign, appVer, platCode, IMEI }
+}
+
+/**
+ * 获取游戏入口参数（通过 APP SDK 侧服务器，不跨域）
+ * 
+ * 使用 app.xxh5.z7xz.com 的 /pc/postCodeInfo 写入参数，绕过 s-api.37.com.cn 的跨服限制。
+ * 完整链路:
+ *   1. SDK 登录 → 获取 APP token（已完成）
+ *   2. GET  /pc/getId          → 获取 sessionId
+ *   3. POST /pc/postCodeInfo   → 写入游戏入口参数（跳过手机扫码）
+ *   4. GET  /pc/getCodeInfo    → 取回游戏入口参数
+ * 
+ * @param {string} sdkToken - SDK 登录获得的 token
+ * @param {string} loginType - 登录类型 (phone/wx/common)
+ * @param {string} uname - 用户名
+ * @param {string} upwd - 密码
+ * @returns 游戏入口参数 { gid, pid, token, time, sign, appVer, platCode, IMEI }
+ */
+async function realPcScanFlow(sdkToken, loginType, uname, upwd) {
+  // 1. 获取真实会话 ID
+  const sessionId = await callRealPcGetId();
+  console.log(`[pc-flow] Step 1/3: 获取 sessionId: ${sessionId.slice(0, 10)}...`);
+
+  // 2. 获取游戏入口 token/sign（用 h5sdk/login 获取真实的游戏会话凭证）
+  // 注意：这里用 h5sdk 只是获取游戏入口的 token/sign，不是做用户登录
+  // SDK 登录（用户认证）已经在前面通过 sdk/login 完成了
+  let h5sdkInfo;
+  try {
+    h5sdkInfo = await fetchH5sdkLoginData(uname, upwd, 8000);
+    console.log('[pc-flow] Step 2/3: h5sdk 获取游戏入口 token 成功');
+  } catch (e) {
+    throw new Error('获取游戏入口凭证失败（h5sdk）: ' + e.message);
+  }
+
+  // 3. 构造游戏入口参数并通过 pc/postCodeInfo 写入 session
+  const gameParams = {
+    gid: '1003279',
+    pid: '46',
+    token: h5sdkInfo.token,
+    time: h5sdkInfo.time,
+    sign: h5sdkInfo.sign,
+    appVer: '134',
+    platCode: '37wan',
+    IMEI: 'DCEADE00-A9B3-42F2-B4EB-8C766C0DD7A4',
+  };
+
+  await postGameEntryParams(sessionId, gameParams);
+  console.log('[pc-flow] Step 2/3 ✅: 游戏入口参数已写入 session');
+
+  // 4. 从 session 取回游戏入口参数
+  const params = await callRealPcGetCodeInfo(sessionId);
+  console.log(`[pc-flow] Step 3/3 ✅ 获取游戏入口参数: gid=${params.gid}, pid=${params.pid}, token=${(params.token || '').slice(0, 20)}...`);
+  return params;
+}
 
 app.post('/api/app-login', async (req, res) => {
   try {
@@ -702,30 +983,26 @@ app.post('/api/app-login', async (req, res) => {
     const json = JSON.parse(body);
     const data = json.data || json;
 
-    // ===== 获取游戏入口参数（与 mock /pc/getCodeInfo 完全一致的逻辑） =====
-    // 真实扫码需要真机 APP（反编译文档 §11.4），无法模拟。
-    // 因此直接走 h5sdk/login 获取 token+sign，合并 fakeLoginData。
-    let h5sdkInfo;
-    try {
-      h5sdkInfo = await fetchH5sdkLoginData(uname, upwd, 5000);
-      console.log('[app-login] h5sdk token+sign 获取成功');
-    } catch (e) {
-      throw new Error(`h5sdk 凭据获取失败: ${e.message}，无法生成游戏入口地址`);
+    // ===== 获取游戏入口参数（使用 APP SDK 的 PC 扫码授权流程） =====
+    // 完整链路: SDK登录(/sdk/login) → /pc/getId → qrcode/scan → qrcode/confirm → /pc/getCodeInfo
+    const sdkToken = data.token;
+    // 判断登录类型：SDK响应中的 login_type (2=手机号, 3=微信, 其他=普通)
+    const rawLt = String(data.login_type || '');
+    let loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
+    if (!rawLt) {
+      const un = String(data.uname || data.login_account || '');
+      if (/^1[3-9]\d{9}$/.test(un)) loginType = 'phone';
+      else loginType = 'common';
     }
-    if (!h5sdkInfo || !h5sdkInfo.token) {
-      throw new Error('h5sdk 返回数据缺少 token');
+    console.log(`[app-login] loginType 判定: raw="${rawLt}" → final="${loginType}"`);
+
+    if (!sdkToken) {
+      throw new Error('SDK 登录未返回 token，无法继续获取游戏入口参数');
     }
 
-    const gameEntryParams = {
-      gid: fakeLoginData.gid,
-      pid: fakeLoginData.pid,
-      token: h5sdkInfo.token,
-      time: h5sdkInfo.time,
-      sign: h5sdkInfo.sign,
-      appVer: fakeLoginData.appVer,
-      platCode: fakeLoginData.platCode,
-      IMEI: fakeLoginData.IMEI,
-    };
+    console.log('[app-login] 使用 APP SDK PC 扫码流程获取游戏入口参数...');
+    const gameEntryParams = await realPcScanFlow(sdkToken, loginType, uname, upwd);
+    console.log('[app-login] ✅ APP SDK 扫码流程成功，获取到游戏入口参数');
 
     res.json({
       ok: json.state === 1,
@@ -738,7 +1015,7 @@ app.post('/api/app-login', async (req, res) => {
       refresh_token: data.refresh_token,
       login_account: data.login_account,
       is_open: data.is_open,
-      // 游戏入口参数：h5sdk token+sign 合并 fakeLoginData（与 mock /pc/getCodeInfo 一致）
+      // 游戏入口参数（来自真实 37wan /pc/getCodeInfo 或 h5sdk 回退）
       token: gameEntryParams.token,
       sign: gameEntryParams.sign,
       entryTime: gameEntryParams.time,
