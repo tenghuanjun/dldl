@@ -252,6 +252,26 @@
                         <label class="form-label">sign</label>
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
                     </div>
+                    <div class="form-field full form-section-label">APP登录地址</div>
+                    <div class="form-field full">
+                        <label class="form-label">url</label>
+                        <div class="pass-code-input-wrap">
+                            <textarea
+                                class="form-input form-textarea form-mono"
+                                v-model="accountForm.url"
+                                rows="2"
+                                placeholder="点击「APP登录」后自动生成，可手动编辑"
+                            ></textarea>
+                            <button
+                                v-if="accountForm.url"
+                                class="pass-code-clear"
+                                type="button"
+                                tabindex="-1"
+                                title="清除"
+                                @mousedown.prevent="accountForm.url = ''"
+                            >✕</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
                 <div class="modal-actions">
@@ -410,7 +430,7 @@
                     areas: [],
                     accountModalVisible: false,
                     accountModalMode: 'create',
-                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '', uinfo: '', history: '' },
+                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '', uinfo: '', history: '', url: '' },
                     loginUrlPaste: '',
                     editingAccountRef: null,
                     /** 勾选批量启动：key = accountSelectKey(area, account) */
@@ -849,7 +869,8 @@
                         time: account.time != null ? String(account.time) : '',
                         sign: account.sign != null ? String(account.sign) : '',
                         uinfo: account.uinfo != null ? String(account.uinfo) : '',
-                        history: account.history != null ? String(account.history) : ''
+                        history: account.history != null ? String(account.history) : '',
+                        url: account.url != null ? String(account.url) : ''
                     };
                     this.editingAccountRef = account;
                 } else {
@@ -863,7 +884,8 @@
                         time: '',
                         sign: '',
                         uinfo: '',
-                        history: ''
+                        history: '',
+                        url: ''
                     };
                     this.editingAccountRef = null;
                 }
@@ -884,6 +906,7 @@
                 const sign = String(this.accountForm.sign || '').trim();
                 const uinfo = String(this.accountForm.uinfo || '').trim();
                 const history = String(this.accountForm.history || '').trim();
+                const url = String(this.accountForm.url || '').trim();
                 if (!area) return this.failWithMessage('请选择或填写区服');
                 if (!uname) return this.failWithMessage('请输入账号 uname');
                 if (!upwd) return this.failWithMessage('请输入密码 upwd');
@@ -893,13 +916,13 @@
                     if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
                     try {
                         const { data, error } = await db.from('accounts').insert({
-                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history
+                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url
                         }).select().single();
                         if (error) {
                             if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
                             throw error;
                         }
-                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history });
+                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url });
                         this.showSuccess('账号已添加');
                     } catch (e) {
                         return this.failWithMessage(`添加失败：${e.message}`);
@@ -911,7 +934,7 @@
                     const existing = this.findAccountByUname(uname);
                     if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
                     try {
-                        const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history, app_token: target.app_token || '', app_sign: target.app_sign || '' };
+                        const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
                         const { error } = await db.from('accounts').update(updateData)
                             .eq('id', target.id).eq('user_id', this.currentUser.id);
                         if (error) {
@@ -933,6 +956,7 @@
                         target.sign = sign;
                         target.uinfo = uinfo;
                         target.history = history;
+                        target.url = url;
                         this.showSuccess('账号已更新');
                     } catch (e) {
                         return this.failWithMessage(`保存失败：${e.message}`);
