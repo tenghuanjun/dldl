@@ -1391,8 +1391,9 @@
                     }
                 },
                 buildAppLoginUrl(loginResult, account) {
-                    // APP 登录流程：SDK token + 服务端 sign（仿 getCodeInfo mock，从 h5sdk 获取）
-                    // 不再客户端计算 sign，因为 importServer 验签需要服务端密钥
+                    // APP 登录流程（与 mock /pc/getCodeInfo 完全一致）：
+                    // ① SDK 登录验证账号 → ② h5sdk/login 获取 token+sign → ③ 合并 fakeLoginData
+                    // 真实扫码需真机 APP（反编译文档 §11.4），无法从 proxy 端模拟，因此直接用 h5sdk
                     const token = loginResult.token || "";
                     const gid = loginResult.entryGid || "1003279";
                     const pid = loginResult.entryPid || "46";
