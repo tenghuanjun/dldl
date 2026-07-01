@@ -618,6 +618,139 @@ function appSignV3(params, appKey) {
   return crypto.createHash('md5').update(signStr).digest('hex').toLowerCase();
 }
 
+// ==================== 真实 37wan PC 扫码流程模拟 ====================
+
+const PC_HOST = 'app.xxh5.z7xz.com';
+const PC_SIGN_KEY = 'pcjgv587!?';
+
+/** /pc/getId: sign = MD5(time + "pcjgv587!?") */
+function pcGetIdSign(time) {
+  return crypto.createHash('md5').update(String(time) + PC_SIGN_KEY).digest('hex');
+}
+
+/** /pc/getCodeInfo: sign = MD5(sessionId + time + "pcjgv587!?") */
+function pcGetCodeInfoSign(sessionId, time) {
+  return crypto.createHash('md5').update(String(sessionId) + String(time) + PC_SIGN_KEY).digest('hex');
+}
+
+/** 安全 JSON 解析 */
+function safeJsonParse(text) {
+  try { return JSON.parse(text); } catch (_) { return null; }
+}
+
+/** HTTPS 请求（GET 或 POST，返回 JSON） */
+function pcHttpsRequest(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'User-Agent': '37MobileGame/4.6.7 (Android)',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    };
+    if (body) headers['Content-Length'] = Buffer.byteLength(body);
+    const opts = { hostname: PC_HOST, path, method, timeout: 8000, headers };
+    const req = https.request(opts, (resp) => {
+      let data = '';
+      resp.on('data', c => data += c);
+      resp.on('end', () => resolve({ status: resp.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    if (body) req.write(body);
+    req.end();
+  });
+}
+
+/**
+ * 调用真实 37wan /pc/getId 获取会话 ID
+ */
+async function callRealPcGetId() {
+  const time = Date.now();
+  const sign = pcGetIdSign(time);
+  const { status, body } = await pcHttpsRequest('GET', `/pc/getId?time=${time}&sign=${sign}`);
+  if (status !== 200) throw new Error(`pc/getId HTTP ${status}`);
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1 || !json.data) {
+    throw new Error('pc/getId 无有效 sessionId: ' + (body || '').slice(0, 120));
+  }
+  return String(json.data);
+}
+
+/**
+ * 尝试激活 PC 扫码会话（模拟 APP 扫码后的 API 调用）
+ * 尝试多种可能的端点
+ */
+async function activatePcSession(sessionId, sdkToken, uid) {
+  const payload = `id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(sdkToken)}&uid=${encodeURIComponent(String(uid))}`;
+
+  // 尝试的端点（按可能性排序）
+  const attempts = [
+    { method: 'POST', path: '/pc/login' },
+    { method: 'POST', path: '/pc/scan' },
+    { method: 'POST', path: '/pc/confirm' },
+    { method: 'GET',  path: `/pc/login?id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(sdkToken)}&uid=${encodeURIComponent(String(uid))}` },
+    { method: 'GET',  path: `/pc/scan?id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(sdkToken)}&uid=${encodeURIComponent(String(uid))}` },
+    { method: 'POST', path: '/pc/bind' },
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const body = attempt.method === 'POST' ? payload : null;
+      const { status, body: respText } = await pcHttpsRequest(attempt.method, attempt.path, body);
+      const json = safeJsonParse(respText);
+      if (status === 200 && json && json.state === 1) {
+        console.log(`[pc-activate] ✅ 成功: ${attempt.method} ${attempt.path}`);
+        return true;
+      }
+      // 即使 state !== 1 也可能是成功（某些接口返回格式不同）
+      if (status === 200 && (respText || '').length < 200) {
+        console.log(`[pc-activate] 尝试 ${attempt.method} ${attempt.path}: HTTP 200, resp=${(respText || '').slice(0, 80)}`);
+      }
+    } catch (e) {
+      // 继续尝试下一个
+    }
+  }
+  return false;
+}
+
+/**
+ * 调用真实 37wan /pc/getCodeInfo 获取游戏入口参数
+ */
+async function callRealPcGetCodeInfo(sessionId) {
+  const time = Date.now();
+  const sign = pcGetCodeInfoSign(sessionId, time);
+  const encodedId = encodeURIComponent(sessionId);
+  const { status, body } = await pcHttpsRequest('GET', `/pc/getCodeInfo?id=${encodedId}&time=${time}&sign=${sign}`);
+  if (status !== 200) throw new Error(`pc/getCodeInfo HTTP ${status}`);
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1 || !json.data) {
+    throw new Error('pc/getCodeInfo 无游戏入口参数: ' + (body || '').slice(0, 120));
+  }
+  return json.data; // { gid, pid, token, time, sign, appVer, platCode, IMEI }
+}
+
+/**
+ * 完整真实 37wan PC 扫码流程（模拟 APP 端行为）
+ * @returns 游戏入口参数 { gid, pid, token, time, sign, appVer, platCode, IMEI }
+ */
+async function realPcScanFlow(sdkToken, uid) {
+  // 1. 获取真实会话 ID
+  const sessionId = await callRealPcGetId();
+  console.log(`[pc-flow] 获取 sessionId: ${sessionId.slice(0, 20)}...`);
+
+  // 2. 模拟 APP 扫码激活会话
+  const activated = await activatePcSession(sessionId, sdkToken, uid);
+  if (!activated) {
+    console.warn('[pc-flow] 未能激活会话（所有端点均失败），无法继续真实流程');
+    throw new Error('无法激活 PC 扫码会话');
+  }
+
+  // 3. 获取真实游戏入口参数（短暂延迟确保服务端处理完毕）
+  await new Promise(r => setTimeout(r, 500));
+
+  const params = await callRealPcGetCodeInfo(sessionId);
+  console.log(`[pc-flow] ✅ 获取真实游戏入口参数: gid=${params.gid}, pid=${params.pid}`);
+  return params;
+}
+
 app.post('/api/app-login', async (req, res) => {
   try {
     const uname = String(req.body.uname || '').trim();
@@ -687,18 +820,44 @@ app.post('/api/app-login', async (req, res) => {
     const json = JSON.parse(body);
     const data = json.data || json;
 
-    // 仿照 getCodeInfo mock 的流程：从 h5sdk/login 获取服务端生成的 sign/time
-    // 因为 importServer 验签需要服务端密钥，客户端算不出来
-    let h5sdkInfo = {};
-    try {
-      h5sdkInfo = await fetchH5sdkLoginData(uname, upwd, 5000);
-      console.log('[app-login] h5sdk sign 获取成功');
-    } catch (e) {
-      console.warn('[app-login] h5sdk sign 获取失败，使用 fallback:', e.message);
-      // fallback: 直接用 fakeLoginData 的固定值
-      h5sdkInfo = {
-        time: fakeLoginData.time,
-        sign: fakeLoginData.sign
+    // ===== 尝试真实 37wan PC 扫码流程获取游戏入口参数 =====
+    // importServer 的 sign 由 37wan 服务端生成，客户端不可计算
+    // 模拟 APP 扫码流程：获取真实 sessionId → 激活会话 → 获取游戏入口参数
+    let gameEntryParams = null;
+    const sdkToken = data.token;
+    const uid = data.uid;
+
+    if (sdkToken && uid) {
+      try {
+        console.log('[app-login] 尝试真实 37wan PC 扫码流程...');
+        gameEntryParams = await realPcScanFlow(sdkToken, uid);
+        console.log('[app-login] ✅ 真实流程成功，使用 37wan 服务端返回的游戏入口参数');
+      } catch (e) {
+        console.warn('[app-login] 真实流程失败:', e.message, '→ 回退到 h5sdk');
+      }
+    }
+
+    // ===== 回退方案：h5sdk/login =====
+    if (!gameEntryParams) {
+      let h5sdkInfo;
+      try {
+        h5sdkInfo = await fetchH5sdkLoginData(uname, upwd, 5000);
+        console.log('[app-login] h5sdk sign 获取成功（回退方案）');
+      } catch (e) {
+        throw new Error(`h5sdk 凭据获取失败: ${e.message}，无法生成有效的游戏入口地址`);
+      }
+      if (!h5sdkInfo || !h5sdkInfo.token) {
+        throw new Error('h5sdk 返回数据缺少 token');
+      }
+      gameEntryParams = {
+        gid: fakeLoginData.gid,
+        pid: fakeLoginData.pid,
+        token: h5sdkInfo.token,
+        time: h5sdkInfo.time,
+        sign: h5sdkInfo.sign,
+        appVer: fakeLoginData.appVer,
+        platCode: fakeLoginData.platCode,
+        IMEI: fakeLoginData.IMEI,
       };
     }
 
@@ -706,22 +865,22 @@ app.post('/api/app-login', async (req, res) => {
       ok: json.state === 1,
       state: json.state,
       msg: json.msg,
-      // SDK 登录透传字段（APP token 仅作认证用，游戏入口用 H5 token+sign 配对）
+      // SDK 登录透传字段（仅作身份认证用）
       uid: data.uid,
       uname: data.uname,
       appToken: data.token,
       refresh_token: data.refresh_token,
       login_account: data.login_account,
       is_open: data.is_open,
-      // 游戏入口参数：使用配套的 H5 token + H5 sign（从 h5sdk 获取，与 getCodeInfo mock 一致）
-      token: h5sdkInfo.token || data.token,
-      sign: h5sdkInfo.sign,
-      entryTime: h5sdkInfo.time || fakeLoginData.time,
-      appVer: fakeLoginData.appVer,
-      platCode: fakeLoginData.platCode,
-      IMEI: fakeLoginData.IMEI,
-      entryGid: fakeLoginData.gid,
-      entryPid: fakeLoginData.pid,
+      // 游戏入口参数（来自真实 37wan /pc/getCodeInfo 或 h5sdk 回退）
+      token: gameEntryParams.token,
+      sign: gameEntryParams.sign,
+      entryTime: gameEntryParams.time,
+      appVer: gameEntryParams.appVer,
+      platCode: gameEntryParams.platCode,
+      IMEI: gameEntryParams.IMEI,
+      entryGid: gameEntryParams.gid,
+      entryPid: gameEntryParams.pid,
     });
   } catch (error) {
     console.error('[app-login] 失败:', error.message);
