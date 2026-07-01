@@ -565,6 +565,65 @@ app.use('/pc/getId', (req, res) => {
   res.json({ state: 1, msg: "success", data: id });
 });
 
+/** Supabase REST 配置（与 account.html 共用同一数据库） */
+const SUPABASE_URL = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+
+/**
+ * 通过 dldl_account_id 从 Supabase 解析 uname/upwd
+ */
+async function resolveAccountById(accountId) {
+  const url = `${SUPABASE_URL}/rest/v1/accounts?id=eq.${encodeURIComponent(accountId)}&select=uname,upwd`;
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, {
+      method: 'GET',
+      timeout: 5000,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+    }, (resp) => {
+      let data = '';
+      resp.on('data', c => data += c);
+      resp.on('end', () => {
+        try {
+          const rows = JSON.parse(data);
+          if (Array.isArray(rows) && rows.length > 0) {
+            resolve({ uname: String(rows[0].uname || ''), upwd: String(rows[0].upwd || '') });
+          } else {
+            resolve(null);
+          }
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.end();
+  });
+}
+
+/** 根据 dldl_account_id 查询账号凭据（login.php 注入脚本调用） */
+app.post('/api/account/resolve', async (req, res) => {
+  try {
+    const accountId = String(req.body.dldl_account_id || '').trim();
+    if (!accountId) {
+      res.status(400).json({ ok: false, message: '缺少 dldl_account_id' });
+      return;
+    }
+    const info = await resolveAccountById(accountId);
+    if (!info) {
+      res.status(404).json({ ok: false, message: '账号未找到' });
+      return;
+    }
+    res.json({ ok: true, ...info });
+  } catch (e) {
+    console.error('[api/account/resolve] 失败:', e.message);
+    res.status(500).json({ ok: false, message: e.message });
+  }
+});
+
 /** login.php / 账号页「刷新 token」：无状态请求 h5sdk/login（持久化由账号页写 Supabase），3 秒超时 */
 app.post('/api/token/refresh', async (req, res) => {
   try {
@@ -1205,7 +1264,7 @@ app.use('/', createProxyMiddleware({
       if (req.path.includes('login.php')) {
         let body = [];
         proxyRes.on('data', (chunk) => body.push(chunk));
-        proxyRes.on('end', () => {
+        proxyRes.on('end', async () => {
           body = Buffer.concat(body).toString();
 
           // 只把 enter.js 指向本地代理，其他静态资源保持线上原始地址，最大化像素一致性
@@ -1232,9 +1291,14 @@ app.use('/', createProxyMiddleware({
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           res.setHeader('Referrer-Policy', 'unsafe-url');
           // 让后续 /pc/* 请求不依赖 query/referrer，也能稳定拿到账号
+          // 兼容 dldl_account_id：从 Supabase 解析凭据，避免 URL 明文携带 uname/upwd
           try {
-            const qUname = String(req.query.uname || '').trim();
-            const qUpwd = String(req.query.upwd || '').trim();
+            let qUname = String(req.query.uname || '').trim();
+            let qUpwd = String(req.query.upwd || '').trim();
+            if ((!qUname || !qUpwd) && req.query.dldl_account_id) {
+              const info = await resolveAccountById(String(req.query.dldl_account_id).trim());
+              if (info) { qUname = info.uname; qUpwd = info.upwd; }
+            }
             if (qUname && qUpwd) {
               const cookieAttrs = 'Path=/; SameSite=Lax';
               res.append('Set-Cookie', `dldl_uname=${encodeURIComponent(qUname)}; ${cookieAttrs}`);

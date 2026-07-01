@@ -1,13 +1,35 @@
 /* 由 login.php 经代理插入；需在上一行内联脚本中先设置 window.__PC_QR_FIXED_TIME_MS */
 (function () {
+  var _DLDL_ACCOUNT_ID = '';
   try {
     var p = new URLSearchParams(location.search || '');
-    window.__DLDL_PROXY_UNAME = p.get('uname') || '';
-    window.__DLDL_PROXY_UPWD = p.get('upwd') || '';
+    _DLDL_ACCOUNT_ID = p.get('dldl_account_id') || '';
+    window.__DLDL_PROXY_UNAME = '';
+    window.__DLDL_PROXY_UPWD = '';
   } catch (_) {
     window.__DLDL_PROXY_UNAME = '';
     window.__DLDL_PROXY_UPWD = '';
   }
+
+  // 通过后端 Supabase 查询解析账号凭据（不再从 URL 明文传 uname/upwd）
+  (async function resolveAccount() {
+    if (!_DLDL_ACCOUNT_ID) return;
+    try {
+      var resp = await fetch('/api/account/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dldl_account_id: _DLDL_ACCOUNT_ID })
+      });
+      if (!resp.ok) throw new Error('resolve 请求失败: ' + resp.status);
+      var data = await resp.json();
+      if (data && data.ok) {
+        window.__DLDL_PROXY_UNAME = data.uname || '';
+        window.__DLDL_PROXY_UPWD = data.upwd || '';
+      }
+    } catch (err) {
+      console.warn('[dldl-inject] 账号解析失败:', err && err.message ? err.message : err);
+    }
+  })();
 
   function injectRefreshButton() {
     try {
@@ -22,6 +44,12 @@
         try {
           btn.disabled = true;
           btn.textContent = '刷新中...';
+          // 等待账号异步解析完成（最多等 2 秒）
+          var waited = 0;
+          while ((!window.__DLDL_PROXY_UNAME || !window.__DLDL_PROXY_UPWD) && waited < 2000) {
+            await new Promise(function (r) { setTimeout(r, 100); });
+            waited += 100;
+          }
           var uname = window.__DLDL_PROXY_UNAME || '';
           var upwd = window.__DLDL_PROXY_UPWD || '';
           if (!uname || !upwd) throw new Error('缺少账号信息');
@@ -36,13 +64,11 @@
           }
           if (window.opener && !window.opener.closed) {
             try {
-              var pageUrl = new URL(location.href);
               window.opener.postMessage(
                 {
                   type: 'dldl_token_refreshed',
-                  accountId: pageUrl.searchParams.get('dldl_account_id'),
+                  accountId: _DLDL_ACCOUNT_ID,
                   uname: uname,
-                  upwd: upwd,
                   token: String(data.token),
                   time: String(data.time || ''),
                   sign: String(data.sign || '')
