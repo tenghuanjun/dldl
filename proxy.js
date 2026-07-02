@@ -97,34 +97,52 @@ app.post('/gh-relay/refresh', async (req, res) => {
 
 // 获取当前 IP 状态（供按钮展示）
 app.post('/proxy-pool/switch', async (req, res) => {
-  const useRelay = TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct';
-
-  if (useRelay && (ghRelay.gistId || ghRelay.rawUrl)) {
-    try {
-      const result = await ghRelay.switchIP();
-      res.json({
-        ok: true,
-        source: 'gh-relay',
-        switched: result.switched,
-        ip: result.runnerIP,
-        updatedAt: result.updatedAt,
-        tokenCount: result.tokenCount
-      });
-      return;
-    } catch (e) {
-      console.warn('[SwitchIP] GH-Relay 失败:', e.message, '→ 回退代理池');
+  // 设置整体超时（防止初始化太久导致前端挂起）
+  const switchTimeout = setTimeout(() => {
+    if (!res.headersSent) {
+      console.warn('[SwitchIP] 切换超时（45s），返回直连');
+      res.json({ ok: true, source: 'direct', message: '切换超时，当前走直连' });
     }
-  }
+  }, 45000);
 
   try {
-    const newProxy = await proxyPool.switchProxy();
-    if (newProxy) {
-      res.json({ ok: true, source: 'proxy-pool', currentProxy: newProxy, ...proxyPool.getStatus() });
-    } else {
-      res.json({ ok: true, source: 'direct', message: '无可用代理，当前走直连' });
+    const useRelay = TOKEN_MODE !== 'proxy-pool' && TOKEN_MODE !== 'direct';
+
+    if (useRelay && (ghRelay.gistId || ghRelay.rawUrl)) {
+      try {
+        const result = await ghRelay.switchIP();
+        clearTimeout(switchTimeout);
+        res.json({
+          ok: true,
+          source: 'gh-relay',
+          switched: result.switched,
+          ip: result.runnerIP,
+          updatedAt: result.updatedAt,
+          tokenCount: result.tokenCount
+        });
+        return;
+      } catch (e) {
+        console.warn('[SwitchIP] GH-Relay 失败:', e.message, '→ 回退代理池');
+      }
     }
-  } catch (error) {
-    res.json({ ok: true, source: 'direct', message: '代理池切换失败，走直连' });
+
+    try {
+      const newProxy = await proxyPool.switchProxy();
+      clearTimeout(switchTimeout);
+      if (newProxy) {
+        res.json({ ok: true, source: 'proxy-pool', currentProxy: newProxy, ...proxyPool.getStatus() });
+      } else {
+        res.json({ ok: true, source: 'direct', message: '无可用代理，当前走直连' });
+      }
+    } catch (error) {
+      clearTimeout(switchTimeout);
+      res.json({ ok: true, source: 'direct', message: '代理池切换失败，走直连' });
+    }
+  } catch (e) {
+    clearTimeout(switchTimeout);
+    if (!res.headersSent) {
+      res.json({ ok: true, source: 'direct', message: '切换异常，走直连' });
+    }
   }
 });
 

@@ -1807,7 +1807,14 @@
                     
                     try {
                         // 统一切换入口：后端优先 GH-Relay，兜底代理池
-                        const switchResp = await fetch('/proxy-pool/switch', { method: 'POST' });
+                        // 客户端 50 秒超时（后端 45 秒，留余量）
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 50000);
+                        const switchResp = await fetch('/proxy-pool/switch', {
+                            method: 'POST',
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
                         const switchData = await switchResp.json();
                         
                         if (!switchData.ok) {
@@ -1842,7 +1849,8 @@
                     } catch (e) {
                         console.error('toggleProxyAndRefreshIP failed', e);
                         this.proxyIP = '切换失败（走直连）';
-                        this.showError(`切换IP失败：${e?.message || e}`);
+                        const errMsg = e.name === 'AbortError' ? '切换IP超时' : (e?.message || e);
+                        this.showError(`切换IP失败：${errMsg}`);
                     }
                 },
 
