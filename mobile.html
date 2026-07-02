@@ -1,0 +1,362 @@
+<html class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>账号管理</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f1115;
+            color: #e6e8eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== 登录页 ===== */
+        .login-wrap {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .login-box {
+            width: 100%; max-width: 360px;
+            background: linear-gradient(180deg, #171a21 0%, #141821 100%);
+            border: 1px solid #242936;
+            border-radius: 16px;
+            padding: 28px 24px;
+        }
+        .login-title {
+            font-size: 20px; font-weight: 700;
+            text-align: center; margin-bottom: 24px;
+        }
+        .field { margin-bottom: 16px; }
+        .field label {
+            display: block; font-size: 13px; color: #94a0b8;
+            margin-bottom: 6px;
+        }
+        .field input {
+            width: 100%; height: 44px;
+            background: #0f1115; border: 1px solid #242936;
+            border-radius: 8px; color: #e6e8eb;
+            padding: 0 12px; font-size: 15px;
+            outline: none; transition: border 0.2s;
+        }
+        .field input:focus { border-color: #2f81f7; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+        .btn {
+            flex: 1; height: 44px; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-primary { background: #2f81f7; color: #fff; }
+        .btn-secondary { background: #2a3345; color: #e6e8eb; }
+        .btn-outline { background: transparent; border: 1px solid #2f81f7; color: #2f81f7; }
+        .login-error { color: #d14343; font-size: 13px; margin-top: 12px; text-align: center; }
+        .login-hint { color: #7d8aa0; font-size: 12px; margin-top: 16px; text-align: center; }
+
+        /* ===== 顶栏 ===== */
+        .header {
+            position: sticky; top: 0; z-index: 10;
+            background: rgba(15,17,21,0.94);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #242936;
+            padding: 10px 14px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-user { font-size: 14px; color: #94a0b8; }
+        .header-user strong { color: #e6e8eb; }
+        .btn-sm {
+            height: 32px; padding: 0 14px; font-size: 13px;
+            border: none; border-radius: 6px; cursor: pointer;
+            background: #2a3345; color: #e6e8eb; font-weight: 500;
+        }
+        .btn-sm:active { opacity: 0.8; }
+
+        /* ===== 账号列表 ===== */
+        .list-wrap { padding: 10px 12px 24px; }
+        .area-group { margin-bottom: 16px; }
+        .area-head {
+            font-size: 13px; color: #94a0b8; font-weight: 600;
+            padding: 6px 4px; display: flex; align-items: center; gap: 8px;
+        }
+        .area-head .count { font-weight: 400; font-size: 12px; color: #7d8aa0; }
+        .account-item {
+            display: flex; align-items: center;
+            background: linear-gradient(180deg, #171a21 0%, #141821 100%);
+            border: 1px solid #242936;
+            border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+            gap: 10px;
+        }
+        .account-info { flex: 1; min-width: 0; }
+        .account-name {
+            font-size: 15px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .account-meta {
+            font-size: 11px; color: #7d8aa0; margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .url-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            flex-shrink: 0; margin-right: 2px;
+        }
+        .url-dot.has { background: #10b981; box-shadow: 0 0 4px rgba(16,185,129,0.5); }
+        .url-dot.no  { background: #555; }
+        .btn-app {
+            flex-shrink: 0; height: 36px; padding: 0 16px;
+            border: none; border-radius: 7px; cursor: pointer;
+            font-size: 13px; font-weight: 600;
+            background: #2f81f7; color: #fff;
+            transition: opacity 0.15s;
+        }
+        .btn-app:active { opacity: 0.8; }
+        .btn-app.no-url { background: #2a3345; color: #7d8aa0; }
+        .launched-tag {
+            flex-shrink: 0; font-size: 11px; color: #10b981;
+        }
+
+        /* ===== 空态 ===== */
+        .empty { text-align: center; color: #7d8aa0; padding: 40px 0; font-size: 14px; }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 登录页 -->
+        <div v-if="!isLoggedIn" class="login-wrap">
+            <div class="login-box">
+                <div class="login-title">账号管理</div>
+                <div class="field">
+                    <label>用户名</label>
+                    <input v-model="loginForm.username" placeholder="请输入用户名" @keyup.enter="handleLogin" autocomplete="username">
+                </div>
+                <div class="field">
+                    <label>密码</label>
+                    <input type="password" v-model="loginForm.password" placeholder="请输入密码" @keyup.enter="handleLogin" autocomplete="current-password">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" @click="handleLogin" :disabled="loginLoading">{{ loginLoading ? '登录中…' : '登录' }}</button>
+                    <button class="btn btn-outline" @click="handleRegister" :disabled="loginLoading">注册</button>
+                </div>
+                <div v-if="loginError" class="login-error">{{ loginError }}</div>
+                <div class="login-hint">使用与桌面端相同的账号登录</div>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <template v-else>
+            <div class="header">
+                <div class="header-user"><strong>{{ currentUser?.username }}</strong></div>
+                <button class="btn-sm" @click="handleLogout">退出</button>
+            </div>
+            <div class="list-wrap">
+                <template v-if="areas.length">
+                    <div v-for="group in areas" :key="group.area" class="area-group">
+                        <div class="area-head">
+                            {{ group.area }}
+                            <span class="count">{{ group.accounts.length }} 个</span>
+                        </div>
+                        <div v-for="account in group.accounts" :key="group.area + '-' + account.uname" class="account-item">
+                            <span class="url-dot" :class="hasUrl(account) ? 'has' : 'no'" :title="hasUrl(account) ? '有URL' : '无URL'"></span>
+                            <div class="account-info">
+                                <div class="account-name">{{ account.name || '-' }}</div>
+                                <div class="account-meta" v-if="showMeta">{{ account.uname }}</div>
+                            </div>
+                            <button
+                                class="btn-app"
+                                :class="{ 'no-url': !hasUrl(account) }"
+                                @click="doAppLogin(group.area, account)"
+                            >APP登录</button>
+                            <span v-if="getStatus(group.area, account) === 'launched'" class="launched-tag">已启动</span>
+                        </div>
+                    </div>
+                </template>
+                <div v-else class="empty">{{ loadError || '暂无账号数据，请在桌面端添加' }}</div>
+            </div>
+        </template>
+    </div>
+
+    <script>
+    const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            // ============ Supabase ============
+            const supabaseUrl = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+            const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+            // ============ 状态 ============
+            const isLoggedIn = ref(false);
+            const currentUser = ref(null);
+            const loginForm = reactive({ username: '', password: '' });
+            const loginLoading = ref(false);
+            const loginError = ref('');
+            const areas = ref([]);
+            const loadError = ref('');
+            const showMeta = ref(false);
+            const launchedMap = reactive({});
+
+            // ============ 密码哈希 ============
+            function hashPassword(password) {
+                const hash = CryptoJS.PBKDF2(password, 'salt', {
+                    keySize: 64 / 4,
+                    iterations: 100000,
+                    hasher: CryptoJS.algo.SHA512
+                });
+                return hash.toString(CryptoJS.enc.Hex);
+            }
+
+            // ============ 会话恢复 ============
+            function checkLoginState() {
+                const saved = localStorage.getItem('dldl_user');
+                if (saved) {
+                    try {
+                        currentUser.value = JSON.parse(saved);
+                        isLoggedIn.value = true;
+                        loadAccounts();
+                    } catch (e) {
+                        localStorage.removeItem('dldl_user');
+                    }
+                }
+            }
+
+            // ============ 登录 ============
+            async function handleLogin() {
+                const username = String(loginForm.username || '').trim();
+                const password = String(loginForm.password || '').trim();
+                if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+                loginLoading.value = true; loginError.value = '';
+                try {
+                    const { data, error } = await db.from('users').select('*').eq('username', username).single();
+                    if (error || !data) throw new Error('用户不存在');
+                    const h = hashPassword(password);
+                    if (h !== data.password_hash) throw new Error('密码错误');
+                    if (data.enabled === false) throw new Error('账号已被禁用');
+                    const { password_hash, ...userInfo } = data;
+                    currentUser.value = userInfo; isLoggedIn.value = true;
+                    localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                    loginForm.username = ''; loginForm.password = '';
+                    loadAccounts();
+                } catch (e) { loginError.value = e.message || '登录失败'; }
+                finally { loginLoading.value = false; }
+            }
+
+            // ============ 注册 ============
+            async function handleRegister() {
+                const username = String(loginForm.username || '').trim();
+                const password = String(loginForm.password || '').trim();
+                if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+                if (password.length < 6) { loginError.value = '密码至少6位'; return; }
+                loginLoading.value = true; loginError.value = '';
+                try {
+                    const password_hash = hashPassword(password);
+                    const { data, error } = await db.from('users').insert({ username, password_hash }).select().single();
+                    if (error) {
+                        if (error.code === '23505') throw new Error('用户名已存在');
+                        throw error;
+                    }
+                    const { password_hash: _, ...userInfo } = data;
+                    currentUser.value = userInfo; isLoggedIn.value = true;
+                    localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                    loginForm.username = ''; loginForm.password = '';
+                    loadAccounts();
+                } catch (e) { loginError.value = e.message || '注册失败'; }
+                finally { loginLoading.value = false; }
+            }
+
+            // ============ 退出 ============
+            function handleLogout() {
+                isLoggedIn.value = false;
+                currentUser.value = null;
+                areas.value = [];
+                localStorage.removeItem('dldl_user');
+                // 清除 launched 状态
+                for (const k in launchedMap) delete launchedMap[k];
+            }
+
+            // ============ 加载账号 ============
+            async function loadAccounts() {
+                if (!currentUser.value) return;
+                try {
+                    const { data: areasData, error: areasError } = await db
+                        .from('areas').select('*').eq('user_id', currentUser.value.id).order('sort_order');
+                    if (areasError) throw areasError;
+
+                    const { data: accountsData, error: accountsError } = await db
+                        .from('accounts').select('*').eq('user_id', currentUser.value.id).order('id');
+                    if (accountsError) throw accountsError;
+
+                    const byArea = {};
+                    for (const a of (accountsData || [])) {
+                        if (!byArea[a.area_name]) byArea[a.area_name] = [];
+                        byArea[a.area_name].push({
+                            id: a.id,
+                            uname: a.uname,
+                            upwd: a.upwd,
+                            name: a.name,
+                            url: a.url || '',
+                            app_token: a.app_token || '',
+                            app_sign: a.app_sign || ''
+                        });
+                    }
+
+                    areas.value = (areasData || []).map(area => ({
+                        area: area.name,
+                        accounts: byArea[area.name] || []
+                    }));
+                } catch (e) {
+                    console.error('loadAccounts failed', e);
+                    loadError.value = e.message || '加载数据失败';
+                }
+            }
+
+            // ============ 辅助 ============
+            function hasUrl(account) {
+                return !!(account.url && String(account.url).trim());
+            }
+
+            function accountKey(area, account) {
+                return `${String(area || '')}\t${String(account?.uname || '')}\t${String(account?.upwd || '')}`;
+            }
+
+            function getStatus(area, account) {
+                return launchedMap[accountKey(area, account)] || '';
+            }
+
+            // ============ APP 登录 ============
+            function doAppLogin(area, account) {
+                const key = accountKey(area, account);
+                launchedMap[key] = 'launched';
+                const url = String(account.url || '').trim();
+                if (!url) return;
+                window.open(url, '_blank');
+            }
+
+            // ============ 挂载 ============
+            onMounted(() => {
+                checkLoginState();
+            });
+
+            // 点击顶栏用户名切换 meta 显示
+            function toggleMeta() {
+                showMeta.value = !showMeta.value;
+            }
+
+            return {
+                isLoggedIn, currentUser, loginForm, loginLoading, loginError,
+                areas, loadError, showMeta,
+                hashPassword, handleLogin, handleRegister, handleLogout,
+                loadAccounts, hasUrl, getStatus, doAppLogin, toggleMeta
+            };
+        }
+    }).mount('#app');
+    </script>
+</body>
+
+</html>
