@@ -181,9 +181,9 @@ createApp({
             return null;
         }
 
-        // ===== 密码哈希 =====
+        // ===== 密码哈希（与桌面端一致） =====
         function hashPassword(pwd) {
-            var hash = CryptoJS.PBKDF2(pwd, 'dldl_salt_2024', { keySize: 256/32, iterations: 1000 });
+            var hash = CryptoJS.PBKDF2(pwd, 'salt', { keySize: 64/4, iterations: 100000, hasher: CryptoJS.algo.SHA512 });
             return hash.toString(CryptoJS.enc.Hex);
         }
 
