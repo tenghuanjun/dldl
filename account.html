@@ -143,9 +143,10 @@
                                 <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
                                 <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
                                 <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
-                                <button class="btn" type="button" @click="openLogin(account)">打开扫码页</button>
-                                <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button>
-                                <button class="btn btn-secondary" type="button" @click="appLogin(account)">APP登录</button>
+                                <button class="btn" type="button" @click="appLogin(group.area, account)">APP登录</button>
+                                <span v-if="getAppLoginStatus(group.area, account) === 'launched'" class="pass-code-status ok">已启动</span>
+                                <!-- <button class="btn" type="button" @click="openLogin(account)">网页登录</button> -->
+                                <!-- <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button> -->
                             </div>
                             <div class="card-pass-row">
                                 <div class="pass-code-input-wrap">
@@ -175,6 +176,11 @@
                             </div>
                         </div>
                     </div>
+                    <span
+                        class="card-url-dot"
+                        :class="(account.url && String(account.url).trim()) ? 'has-url' : 'no-url'"
+                        :title="(account.url && String(account.url).trim()) ? '有URL' : '无URL'"
+                    ></span>
                 </div>
             </div>
         </section>
@@ -443,6 +449,8 @@
                     batchPanelBatchNo: 1,
                     /** 通行证登录 */
                     passCodeMap: {},
+                    /** APP登录状态：已启动等 */
+                    appLoginStatusMap: {},
                     /** 代理IP配置 */
                     useProxy: false,
                     proxyWorkerUrl: 'https://red-moon-ff95.tenghuanjun.workers.dev',
@@ -1388,15 +1396,19 @@
                         this.showError(`复制失败：${e?.message || e}`);
                     }
                 },
-                async appLogin(account) {
+                async appLogin(area, account) {
                     const uname = String(account && account.uname || '').trim();
                     const upwd = String(account && account.upwd || '').trim();
+                    // 标记已启动状态
+                    this._setAppLoginStatus(area, account, 'launched');
                     if (!uname || !upwd) {
                         this.showError('APP 登录需要账号与密码');
                         return;
                     }
                     const windowName = `dldl_app_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                    const winOpts = "width=360,height=660";
+                    const left = Math.round((screen.width - 360) / 2);
+                    const top = Math.round((screen.height - 660) / 2);
+                    const winOpts = `width=360,height=660,left=${left},top=${top}`;
                     // 已有缓存 url：直接打开
                     const cachedUrl = String(account.url || '').trim();
                     if (cachedUrl) {
@@ -1612,6 +1624,19 @@
                             ...updates
                         }
                     };
+                },
+                _appLoginStatusKey(area, account) {
+                    return this.accountSelectKey(area, account);
+                },
+                _setAppLoginStatus(area, account, status) {
+                    const key = this._appLoginStatusKey(area, account);
+                    this.appLoginStatusMap = {
+                        ...this.appLoginStatusMap,
+                        [key]: status
+                    };
+                },
+                getAppLoginStatus(area, account) {
+                    return this.appLoginStatusMap[this._appLoginStatusKey(area, account)] || '';
                 },
                 getPassCodeValue(area, account) {
                     const key = this._passCodeKey(area, account);
@@ -2259,6 +2284,25 @@
             gap: 8px;
             padding: 10px 10px;
             min-height: 0;
+            position: relative;
+        }
+
+        /* 右上角 URL 状态指示点 */
+        .card-url-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .card-url-dot.has-url {
+            background: #10b981;
+            box-shadow: 0 0 4px rgba(16,185,129,0.5);
+        }
+        .card-url-dot.no-url {
+            background: #555;
         }
 
         .card-check-wrap {
