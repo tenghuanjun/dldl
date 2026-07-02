@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>DLDL 手机版</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            background: #1a1a2e; color: #e0e0e0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container { max-width: 480px; margin: 0 auto; padding: 16px; min-height: 100%; }
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #2a2a4a; margin-bottom: 16px;
+        }
+        .header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+        .header .user-info { font-size: 13px; color: #7c7caa; display: flex; align-items: center; gap: 8px; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+            border: none; cursor: pointer; transition: all 0.15s;
+            color: #fff; background: #6366f1; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent; user-select: none;
+        }
+        .btn:active { opacity: 0.8; transform: scale(0.97); }
+        .btn-secondary { background: #2a2a4a; color: #a0a0c0; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-block { display: flex; width: 100%; }
+
+        /* 登录表单 */
+        .login-box {
+            background: #1e1e3a; border-radius: 12px; padding: 24px;
+            max-width: 360px; margin: 60px auto 0;
+        }
+        .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #fff; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+        .form-group input {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
+            font-size: 15px; outline: none;
+        }
+        .form-group input:focus { border-color: #6366f1; }
+        .login-error { color: #ef4444; font-size: 13px; margin-top: 10px; text-align: center; }
+
+        /* 区服分组 */
+        .area-group { margin-bottom: 16px; }
+        .area-group-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; background: #1e1e3a; border-radius: 8px 8px 0 0;
+            font-size: 14px; font-weight: 600; color: #c0c0e0;
+        }
+        .area-group-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; flex-shrink: 0; }
+        .area-group-header .count { margin-left: auto; font-size: 12px; color: #7c7caa; }
+
+        /* 账号卡片 */
+        .account-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; background: #161632; border-bottom: 1px solid #1e1e3a;
+            position: relative;
+        }
+        .account-card:last-child { border-bottom: none; border-radius: 0 0 8px 8px; }
+        .account-nick {
+            flex: 1; font-size: 14px; color: #d0d0e0;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .url-dot {
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+        }
+        .url-dot.has { background: #10b981; box-shadow: 0 0 4px rgba(16,185,129,0.5); }
+        .url-dot.no  { background: #444; }
+        .app-status {
+            font-size: 11px; color: #10b981; flex-shrink: 0;
+            padding: 2px 6px; border-radius: 10px; background: rgba(16,185,129,0.12);
+        }
+        .empty { text-align: center; padding: 40px 16px; color: #6a6a8a; font-size: 14px; }
+        .tip { font-size: 12px; color: #5a5a7a; margin-bottom: 16px; line-height: 1.5; }
+        .loading { text-align: center; padding: 20px; color: #6a6a8a; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 未登录 -->
+    <div v-if="!isLoggedIn" class="container">
+        <div class="login-box">
+            <h2>DLDL 账号管理</h2>
+            <div class="form-group">
+                <label>用户名</label>
+                <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
+            </div>
+            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">登录</button>
+            <div v-if="loginError" class="login-error">{{ loginError }}</div>
+        </div>
+    </div>
+
+    <!-- 已登录 -->
+    <div v-else class="container">
+        <div class="header">
+            <h1>DLDL</h1>
+            <div class="user-info">
+                <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
+            </div>
+        </div>
+        <div class="tip" v-if="lastRefresh">最近刷新：{{ lastRefresh }}<br>点击「刷新」按钮更新数据。绿色圆点是URL标识。</div>
+        <div class="tip" v-else>点击「APP登录」将在新标签页打开对应游戏链接。绿色圆点表示已有URL。</div>
+
+        <div v-if="loading" class="loading">加载中...</div>
+        <template v-else-if="areas.length">
+            <div v-for="g in areas" :key="g.id" class="area-group">
+                <div class="area-group-header">
+                    <span class="dot"></span>
+                    <span>{{ g.name || '未命名区服' }}</span>
+                    <span class="count">{{ g.accounts?.length || 0 }} 个</span>
+                </div>
+                <div v-for="a in g.accounts" :key="a.id" class="account-card">
+                    <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                    <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
+                    <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
+                    <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
+                </div>
+            </div>
+        </template>
+        <div v-else-if="loadError" class="empty">{{ loadError }}</div>
+        <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, onMounted } = Vue;
+
+createApp({
+    setup() {
+        const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+        function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
+
+        // ===== 状态 =====
+        const isLoggedIn = ref(false);
+        const currentUser = ref(null);
+        const loginForm = reactive({ username: '', password: '' });
+        const loginLoading = ref(false);
+        const loginError = ref('');
+        const areas = ref([]);
+        const loading = ref(false);
+        const loadError = ref('');
+        const launchedMap = reactive({});
+        const refreshLoading = ref(false);
+        const lastRefresh = ref('');
+
+        function CACHE_KEY() { return 'dldl_accounts_' + (currentUser.value ? currentUser.value.id : ''); }
+
+        function saveToCache(data) {
+            var now = new Date();
+            var ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+            localStorage.setItem(CACHE_KEY(), JSON.stringify({ data: data, time: ts }));
+            lastRefresh.value = ts;
+        }
+
+        function loadFromCache() {
+            try {
+                var raw = localStorage.getItem(CACHE_KEY());
+                if (!raw) return null;
+                var parsed = JSON.parse(raw);
+                if (parsed && parsed.data) {
+                    lastRefresh.value = parsed.time || '';
+                    return parsed.data;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        // ===== 密码哈希 =====
+        function hashPassword(pwd) {
+            var hash = CryptoJS.PBKDF2(pwd, 'dldl_salt_2024', { keySize: 256/32, iterations: 1000 });
+            return hash.toString(CryptoJS.enc.Hex);
+        }
+
+        // ===== 登录 =====
+        async function handleLogin() {
+            var username = String(loginForm.username || '').trim();
+            var password = String(loginForm.password || '').trim();
+            if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+            loginLoading.value = true; loginError.value = '';
+            try {
+                var url = API + '/users?select=*&username=eq.' + encodeURIComponent(username) + '&limit=1';
+                var resp = await fetch(url, { headers: hdrs() });
+                if (!resp.ok) throw new Error('请求失败 (' + resp.status + ')');
+                var arr = await resp.json();
+                if (!arr || !arr.length) throw new Error('用户不存在');
+                var data = arr[0];
+                if (hashPassword(password) !== data.password_hash) throw new Error('密码错误');
+                if (data.enabled === false) throw new Error('账号已被禁用');
+                delete data.password_hash;
+                currentUser.value = data; isLoggedIn.value = true;
+                localStorage.setItem('dldl_user', JSON.stringify(data));
+                loginForm.username = ''; loginForm.password = '';
+                loadAccounts();
+            } catch (e) { loginError.value = e.message || '登录失败'; }
+            finally { loginLoading.value = false; }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('dldl_user');
+            localStorage.removeItem(CACHE_KEY());
+            isLoggedIn.value = false;
+            currentUser.value = null;
+            areas.value = [];
+            loadError.value = '';
+            lastRefresh.value = '';
+            Object.keys(launchedMap).forEach(function(k) { delete launchedMap[k]; });
+        }
+
+        // ===== 加载账号数据（从服务端） =====
+        async function fetchAccounts() {
+            if (!currentUser.value) return;
+            var uid = currentUser.value.id;
+            var areasPromise = fetch(
+                API + '/areas?select=*&user_id=eq.' + uid + '&order=sort_order.asc',
+                { headers: hdrs() }
+            ).then(function(r) { if (!r.ok) throw new Error('areas: ' + r.status); return r.json(); });
+
+            var accountsPromise = fetch(
+                API + '/accounts?select=*&user_id=eq.' + uid + '&order=id.asc',
+                { headers: hdrs() }
+            ).then(function(r) { if (!r.ok) throw new Error('accounts: ' + r.status); return r.json(); });
+
+            var results = await Promise.all([areasPromise, accountsPromise]);
+            var areasData = results[0] || [];
+            var accountsData = results[1] || [];
+
+            var grouped = areasData.map(function(area) {
+                return {
+                    area: area.name,
+                    name: area.name,
+                    accounts: accountsData.filter(function(a) { return a.area_name === area.name; })
+                        .sort(function(a, b) { return (a.id || 0) - (b.id || 0); })
+                };
+            });
+            saveToCache(grouped);
+            return grouped;
+        }
+
+        // ===== 刷新按钮（强制从服务端拉取） =====
+        async function handleRefresh() {
+            refreshLoading.value = true; loadError.value = '';
+            try {
+                areas.value = await fetchAccounts();
+            } catch (e) {
+                console.error('refresh failed', e);
+                loadError.value = e.message || '刷新失败';
+            } finally { refreshLoading.value = false; }
+        }
+
+        // ===== 初始化加载（优先走缓存） =====
+        async function loadAccounts() {
+            if (!currentUser.value) return;
+            var cached = loadFromCache();
+            if (cached && cached.length) {
+                areas.value = cached;
+                return;
+            }
+            // 首次进入没有缓存，主动拉取
+            loading.value = true; loadError.value = '';
+            try { areas.value = await fetchAccounts(); }
+            catch (e) { console.error('loadAccounts failed', e); loadError.value = e.message || '加载数据失败'; }
+            finally { loading.value = false; }
+        }
+
+        function hasUrl(account) {
+            return !!(account.url && String(account.url).trim());
+        }
+
+        function getStatus(area, account) {
+            return launchedMap[area + '::' + (account.uname || account.id)] || '';
+        }
+
+        function doAppLogin(area, account) {
+            launchedMap[area + '::' + (account.uname || account.id)] = 'launched';
+            var url = account.url && String(account.url).trim();
+            if (url) window.open(url, '_blank');
+        }
+
+        // ===== 初始化 =====
+        onMounted(function() {
+            var saved = localStorage.getItem('dldl_user');
+            if (saved) {
+                try {
+                    var user = JSON.parse(saved);
+                    if (user && user.id) {
+                        currentUser.value = user;
+                        isLoggedIn.value = true;
+                        loadAccounts();
+                    }
+                } catch (e) { localStorage.removeItem('dldl_user'); }
+            }
+        });
+
+        return {
+            isLoggedIn: isLoggedIn, currentUser: currentUser, loginForm: loginForm,
+            loginLoading: loginLoading, loginError: loginError,
+            areas: areas, loading: loading, loadError: loadError,
+            refreshLoading: refreshLoading, lastRefresh: lastRefresh,
+            hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
+            loadAccounts: loadAccounts, handleRefresh: handleRefresh,
+            hasUrl: hasUrl, getStatus: getStatus, doAppLogin: doAppLogin
+        };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
