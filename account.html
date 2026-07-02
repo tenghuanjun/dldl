@@ -47,14 +47,6 @@
                 <div class="sticky-tools">
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
-                    <select
-                        v-model="batchLaunchMode"
-                        class="batch-launch-mode-select"
-                        title="批量启动方式"
-                    >
-                        <option value="quick">快捷登录</option>
-                        <option value="scan">扫码页</option>
-                    </select>
                     <button
                         class="btn btn-compact"
                         type="button"
@@ -184,10 +176,10 @@
                 </div>
             </div>
         </section>
-        <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动」会按所选方式（快捷登录/扫码页）依次打开窗口（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号仍点「打开扫码页」或「快捷登录」。</div>
+        <!-- <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动」会按 APP 登录方式依次打开窗口（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号点击「APP登录」按钮。</div>
         <div class="tip tip-secondary">点击「打开扫码页」会经本地代理打开 login.php：若当前账号已缓存 token，则直接使用；仅在没有 token 时会请求 h5sdk/login 并写入 Supabase。账号页或扫码页内「刷新 token」成功后，会将新 token/time/sign 更新到 Supabase 对应账号行（按 id 匹配）。</div>
         <div class="tip tip-secondary">「快捷登录」携带该账号的 uname、upwd、uinfo 打开新窗口，在 <code>37.com.cn/h5game/public/?pid=46&amp;gid=1005176</code> 注入 UINFO/HISTORY cookie 完成登录。无 uinfo 时按 uname/upwd 自动生成。需使用 DLDL-Proxy 桌面客户端。</div>
-        <div class="tip tip-secondary">「代理IP」使用 GitHub Actions Runner 的 Azure IP 轮换：点击按钮查看当前可用 IP。每个账号的「刷新 token」优先使用 Actions 缓存的 token（5 分钟内有效），缓存未命中时走代理池直连。如需强制从全新 IP 获取 token，请在项目目录启动 proxy 后调用 <code>POST /gh-relay/request-token</code>（最多等待 2 分钟，Actions 定时任务每 5 分钟执行一次）。</div>
+        <div class="tip tip-secondary">「代理IP」使用 GitHub Actions Runner 的 Azure IP 轮换：点击按钮查看当前可用 IP。每个账号的「刷新 token」优先使用 Actions 缓存的 token（5 分钟内有效），缓存未命中时走代理池直连。如需强制从全新 IP 获取 token，请在项目目录启动 proxy 后调用 <code>POST /gh-relay/request-token</code>（最多等待 2 分钟，Actions 定时任务每 5 分钟执行一次）。</div> -->
 
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
@@ -1544,31 +1536,21 @@
                 async batchLaunchAccounts(accounts, opts = {}) {
                     const list = Array.isArray(accounts) ? accounts : [];
                     if (!list.length) return;
-                    const mode = opts.mode || this.batchLaunchMode || 'quick';
-                    const isQuick = mode === 'quick';
-                    const modeLabel = isQuick ? '快捷登录' : '扫码页';
-                    // 快捷登录间隔短一些（只是注入 cookie 打开窗口），扫码页间隔长一些（可能触发 login API）
-                    const defaultGap = isQuick ? 800 : 1500;
-                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : defaultGap;
+                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : 1500;
                     
-                    this.showSuccess(`开始打开 ${list.length} 个${modeLabel}窗口（间隔 ${gapMs/1000} 秒）`);
+                    this.showSuccess(`开始打开 ${list.length} 个 APP 登录窗口（间隔 ${gapMs/1000} 秒）`);
                     
                     for (let i = 0; i < list.length; i++) {
                         if (i > 0) await this.delay(gapMs);
                         try {
-                            if (isQuick) {
-                                // 快捷登录需要知道所属区服，从 areas 中查找
-                                const area = this.findAccountArea(list[i]);
-                                await this.openQuickLogin(area, list[i]);
-                            } else {
-                                await this.openLogin(list[i]);
-                            }
+                            const area = this.findAccountArea(list[i]);
+                            await this.appLogin(area, list[i]);
                         } catch (e) {
                             console.error('batchLaunchAccounts item failed', e);
                         }
                     }
                     if (opts.silentSuccess) return;
-                    this.showSuccess(`已完成打开 ${list.length} 个${modeLabel}窗口`);
+                    this.showSuccess(`已完成打开 ${list.length} 个 APP 登录窗口`);
                 },
                 /** 在 areas 中查找账号所属区服名 */
                 findAccountArea(account) {
