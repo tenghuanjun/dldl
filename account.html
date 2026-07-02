@@ -45,6 +45,7 @@
                     <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
                 </div>
                 <div class="sticky-tools">
+                    <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '强制刷新' }}</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
                     <button
@@ -184,6 +185,11 @@
         <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
             <div class="modal">
                 <div class="modal-title">{{ accountModalMode === 'create' ? '新增账号' : '编辑账号' }}</div>
+                <div class="modal-actions modal-actions-top">
+                    <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
+                    <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
+                    <button class="btn" type="button" @click="submitAccountModal()">保存</button>
+                </div>
                 <div class="form-grid">
                     <div class="form-field full">
                         <label class="form-label">区服</label>
@@ -308,6 +314,7 @@
                         <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
                         <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
                         <button class="btn btn-secondary btn-mini" type="button" @click="openChangePwdModal(user)">改密码</button>
+                        <button class="btn btn-secondary btn-mini" type="button" @click="showUserPassword(user)" :disabled="showPwdLoading">看密码</button>
                         <button class="btn btn-danger btn-mini" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
                     </div>
                 </div>
@@ -327,6 +334,19 @@
                 <div class="modal-actions" style="margin-top: 16px;">
                     <button class="btn btn-secondary" type="button" @click="closeChangePwdModal">取消</button>
                     <button class="btn" type="button" @click="submitChangePwd">确认修改</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showPwdVisible" class="modal-mask" @click.self="closeShowPwd">
+            <div class="modal" style="max-width: 360px;">
+                <div class="modal-title">查看密码 - {{ showPwdUser?.username }}</div>
+                <div style="padding: 16px 0; text-align: center;">
+                    <div style="font-size: 13px; color: #a0a0c0; margin-bottom: 8px;">用户密码为：</div>
+                    <div style="font-size: 22px; font-weight: 700; color: #ef4444; font-family: monospace; letter-spacing: 2px; word-break: break-all;">{{ showPwdText }}</div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeShowPwd">关闭</button>
                 </div>
             </div>
         </div>
@@ -454,8 +474,13 @@
                     changePwdModalVisible: false,
                     changePwdUser: null,
                     newPassword: '',
+                    showPwdVisible: false,
+                    showPwdUser: null,
+                    showPwdText: '',
+                    showPwdLoading: false,
                     loadingVisible: false,
                     loadingText: '',
+                    accountsRefreshing: false,
                 };
             },
             computed: {
@@ -488,12 +513,24 @@
                     const hash = CryptoJS.PBKDF2(password, 'salt', { keySize: 64 / 4, iterations: 100000, hasher: CryptoJS.algo.SHA512 });
                     return hash.toString(CryptoJS.enc.Hex);
                 },
+                encryptPassword(password) {
+                    return CryptoJS.AES.encrypt(password, 'dldl_aes_key_2024').toString();
+                },
+                decryptPassword(encrypted) {
+                    if (!encrypted) return '';
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(encrypted, 'dldl_aes_key_2024');
+                        return bytes.toString(CryptoJS.enc.Utf8);
+                    } catch (e) { return ''; }
+                },
                 checkLoginState() {
                     const savedUser = localStorage.getItem('dldl_user');
                     if (savedUser) {
                         try {
                             this.currentUser = JSON.parse(savedUser);
                             this.isLoggedIn = true;
+                            // 先展示缓存数据，同时后台拉取最新数据
+                            this.loadAccountsFromCache();
                             this.loadAccounts();
                         } catch (e) {
                             localStorage.removeItem('dldl_user');
@@ -515,6 +552,8 @@
                         this.currentUser = userInfo; this.isLoggedIn = true;
                         localStorage.setItem('dldl_user', JSON.stringify(userInfo));
                         this.loginForm = { username: '', password: '' };
+                        // 先展示缓存数据，同时后台拉取最新
+                        this.loadAccountsFromCache();
                         this.loadAccounts();
                     } catch (e) { this.loginError = e.message || '登录失败'; }
                     finally { this.loginLoading = false; }
@@ -527,9 +566,10 @@
                     this.loginLoading = true; this.loginError = '';
                     try {
                         const password_hash = this.hashPassword(password);
-                        const { data, error } = await db.from('users').insert({ username, password_hash }).select().single();
+                        const encrypted_pwd = this.encryptPassword(password);
+                        const { data, error } = await db.from('users').insert({ username, password_hash, encrypted_pwd }).select().single();
                         if (error) { if (error.code === '23505') throw new Error('用户名已存在'); throw error; }
-                        const { password_hash: _, ...userInfo } = data;
+                        const { password_hash: _, encrypted_pwd: __, ...userInfo } = data;
                         this.currentUser = userInfo; this.isLoggedIn = true;
                         localStorage.setItem('dldl_user', JSON.stringify(userInfo));
                         this.loginForm = { username: '', password: '' };
@@ -538,6 +578,10 @@
                     finally { this.loginLoading = false; }
                 },
                 handleLogout() {
+                    // 清除当前用户的缓存再重置状态
+                    if (this.currentUser) {
+                        localStorage.removeItem('dldl_accounts_' + this.currentUser.id);
+                    }
                     this.isLoggedIn = false; this.currentUser = null; this.areas = [];
                     localStorage.removeItem('dldl_user');
                 },
@@ -640,13 +684,32 @@
                     if (pwd.length < 6) { this.showError('密码至少6位'); return; }
                     try {
                         const password_hash = this.hashPassword(pwd);
-                        const { error } = await db.from('users').update({ password_hash }).eq('id', this.changePwdUser.id);
+                        const encrypted_pwd = this.encryptPassword(pwd);
+                        const { error } = await db.from('users').update({ password_hash, encrypted_pwd }).eq('id', this.changePwdUser.id);
                         if (error) throw error;
                         this.showSuccess(`已修改用户 ${this.changePwdUser.username} 的密码`);
                         this.closeChangePwdModal();
                     } catch (e) {
                         this.showError(`修改密码失败：${e.message}`);
                     }
+                },
+                async showUserPassword(user) {
+                    this.showPwdLoading = true;
+                    try {
+                        const { data, error } = await db.from('users').select('encrypted_pwd').eq('id', user.id).single();
+                        if (error) throw error;
+                        const pwd = this.decryptPassword(data?.encrypted_pwd);
+                        this.showPwdText = pwd || '(未设置或无法解密)';
+                        this.showPwdUser = user;
+                        this.showPwdVisible = true;
+                    } catch (e) {
+                        this.showError('获取密码失败：' + (e.message || '未知错误'));
+                    } finally { this.showPwdLoading = false; }
+                },
+                closeShowPwd() {
+                    this.showPwdVisible = false;
+                    this.showPwdUser = null;
+                    this.showPwdText = '';
                 },
                 showMessage(type, message) {
                     if (typeof ElMessage === 'function') {
@@ -687,6 +750,35 @@
                         return false;
                     }
                 },
+                CACHE_KEY_ACCOUNTS() {
+                    return 'dldl_accounts_' + (this.currentUser?.id || '');
+                },
+                saveAccountsToCache() {
+                    if (this.areas.length > 0 && this.currentUser) {
+                        try { localStorage.setItem(this.CACHE_KEY_ACCOUNTS(), JSON.stringify(this.areas)); } catch (e) {}
+                    }
+                },
+                loadAccountsFromCache() {
+                    if (!this.currentUser) return false;
+                    try {
+                        const cached = localStorage.getItem(this.CACHE_KEY_ACCOUNTS());
+                        if (cached) {
+                            this.areas = JSON.parse(cached);
+                            const names = this.areas.map(g => g.area);
+                            if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
+                            return true;
+                        }
+                    } catch (e) {}
+                    return false;
+                },
+                async refreshAccounts() {
+                    this.accountsRefreshing = true;
+                    try {
+                        await this.loadAccounts();
+                    } finally {
+                        this.accountsRefreshing = false;
+                    }
+                },
                 async loadAccounts() {
                     if (!this.currentUser) return;
                     try {
@@ -721,6 +813,7 @@
                         this.pruneStaleSelections();
                         const names = this.areas.map(g => g.area);
                         if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
+                        this.saveAccountsToCache();
                     } catch (e) {
                         console.error('load accounts failed', e);
                         this.showError(`加载数据失败：${e.message}`);
@@ -924,6 +1017,7 @@
                             throw error;
                         }
                         targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url });
+                        this.saveAccountsToCache();
                         this.showSuccess('账号已添加');
                     } catch (e) {
                         return this.failWithMessage(`添加失败：${e.message}`);
@@ -958,6 +1052,7 @@
                         target.uinfo = uinfo;
                         target.history = history;
                         target.url = url;
+                        this.saveAccountsToCache();
                         this.showSuccess('账号已更新');
                     } catch (e) {
                         return this.failWithMessage(`保存失败：${e.message}`);
@@ -989,6 +1084,7 @@
                     if (!location.group.accounts.length) {
                         this.areas = this.areas.filter(item => item.area !== location.group.area);
                     }
+                    this.saveAccountsToCache();
                     this.showSuccess('账号已删除');
                     this.closeAccountModal();
                 } catch (e) {
@@ -1012,6 +1108,7 @@
                     await db.from('accounts').delete().eq('user_id', this.currentUser.id).eq('area_name', areaName);
                     await db.from('areas').delete().eq('user_id', this.currentUser.id).eq('name', areaName);
                     this.areas = this.areas.filter(item => item.area !== areaName);
+                    this.saveAccountsToCache();
                     if (this.accountModalVisible && this.accountModalMode === 'edit') {
                         const editingArea = this.findAccountLocation(this.editingAccountRef || {})?.group?.area;
                         if (editingArea === areaName) {
@@ -2615,6 +2712,13 @@
             align-items: center;
             gap: 10px;
             margin-top: 16px;
+        }
+
+        .modal-actions-top {
+            margin-top: 0;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2b2b4a;
         }
 
         .tip {
