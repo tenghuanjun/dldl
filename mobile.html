@@ -355,18 +355,15 @@ createApp({
             scanResult.value = '';
             scanError.value = '';
 
-            console.log('[scan] onScanSuccess START, decodedText:', decodedText);
-
             // 暂停扫描
             if (html5QrCode) {
                 html5QrCode.pause(true);
             }
 
             var sessionId = String(decodedText || '').trim();
-            console.log('[scan] sessionId:', sessionId || '(empty)');
+            console.log('[scan] QR decoded:', sessionId);
 
             if (!sessionId) {
-                console.warn('[scan] empty sessionId, abort');
                 scanError.value = '二维码内容为空';
                 scanLoading.value = false;
                 if (html5QrCode) html5QrCode.resume();
@@ -374,10 +371,7 @@ createApp({
             }
 
             var account = scanCurrentAccount.value;
-            console.log('[scan] account:', account ? (account.uname || account.id) : '(null)');
-
             if (!account) {
-                console.warn('[scan] no account, abort');
                 scanError.value = '账号信息丢失，请重新打开';
                 scanLoading.value = false;
                 return;
@@ -385,16 +379,12 @@ createApp({
 
             var uname = String(account.uname || '').trim();
             var upwd = String(account.upwd || '').trim();
-            console.log('[scan] uname:', uname ? (uname.slice(0,3) + '***') : '(empty)');
-
             if (!uname || !upwd) {
-                console.warn('[scan] missing uname/upwd, abort');
                 scanError.value = '该账号缺少用户名或密码';
                 scanLoading.value = false;
                 return;
             }
 
-            console.log('[scan] sending /api/pass-code...');
             try {
                 var resp = await fetch(WORKER + '/api/pass-code', {
                     method: 'POST',
