@@ -299,8 +299,8 @@ createApp({
                 html5QrCode = new Html5Qrcode('qr-reader');
 
                 html5QrCode.start(
-                    { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-                    { fps: 5, qrbox: function(vw, vh) { var s = Math.min(vw, vh) * 0.7; return { width: s, height: s }; } },
+                    { facingMode: 'environment', width: { ideal: 4096 }, height: { ideal: 2160 } },
+                    { fps: 5, qrbox: function(vw, vh) { var s = Math.min(vw, vh) * 0.75; return { width: s, height: s }; } },
                     function (decodedText) {
                         if (scanLoading.value) return;
                         console.log('[scan] detected:', decodedText.slice(0, 50));
