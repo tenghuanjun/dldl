@@ -6,6 +6,9 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>new VConsole();</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -40,14 +43,20 @@
             max-width: 360px; margin: 60px auto 0;
         }
         .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #fff; }
-        .form-group { margin-bottom: 14px; }
+        .form-group { margin-bottom: 14px; position: relative; }
         .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
         .form-group input {
-            width: 100%; padding: 10px 12px; border-radius: 8px;
+            width: 100%; padding: 12px 36px 12px 12px; border-radius: 8px;
             border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
-            font-size: 15px; outline: none;
+            font-size: 16px; outline: none;
         }
         .form-group input:focus { border-color: #6366f1; }
+        .input-clear {
+            position: absolute; right: 4px; bottom: 4px; width: 32px; height: 32px;
+            background: none; border: none; color: #6a6a8a; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .input-clear:active { color: #fff; }
         .login-error { color: #ef4444; font-size: 13px; margin-top: 10px; text-align: center; }
 
         /* 区服分组 */
@@ -62,17 +71,25 @@
 
         /* 账号卡片 */
         .account-card {
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: flex-start; gap: 8px;
             padding: 10px 12px; background: #161632; border-bottom: 1px solid #1e1e3a;
-            position: relative;
         }
         .account-card:last-child { border-bottom: none; border-radius: 0 0 8px 8px; }
+        .account-info {
+            flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 6px;
+        }
+        .account-main { flex: 1; min-width: 0; }
         .account-nick {
-            flex: 1; font-size: 14px; color: #d0d0e0;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-size: 14px; color: #d0d0e0; line-height: 1.4;
+            word-break: break-all;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .account-meta {
+            display: flex; align-items: center; gap: 6px; margin-top: 4px;
         }
         .url-dot {
-            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
         }
         .url-dot.has { background: #10b981; box-shadow: 0 0 4px rgba(16,185,129,0.5); }
         .url-dot.no  { background: #444; }
@@ -80,6 +97,14 @@
             font-size: 11px; color: #10b981; flex-shrink: 0;
             padding: 2px 6px; border-radius: 10px; background: rgba(16,185,129,0.12);
         }
+<<<<<<< HEAD
+=======
+        .account-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+            flex-shrink: 0; min-width: fit-content;
+        }
+        .account-actions .btn { padding: 6px 8px; font-size: 11px; }
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
         .btn:disabled { opacity: 0.5; pointer-events: none; }
         .url-age {
             font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
@@ -87,6 +112,72 @@
         .empty { text-align: center; padding: 40px 16px; color: #6a6a8a; font-size: 14px; }
         .tip { font-size: 12px; color: #5a5a7a; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #6a6a8a; }
+
+        /* 扫码器模态框 */
+        .scan-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .scan-box {
+            width: 90vw; max-width: 360px;
+            background: #1e1e3a; border-radius: 12px; overflow: hidden;
+        }
+        .scan-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid #2a2a4a;
+        }
+        .scan-header span { font-size: 15px; font-weight: 600; color: #fff; }
+        .scan-close {
+            background: none; border: none; color: #a0a0c0; font-size: 20px;
+            cursor: pointer; padding: 4px 8px;
+        }
+        .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; }
+        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-tip {
+            padding: 14px 16px; font-size: 13px; color: #a0a0c0; text-align: center;
+            line-height: 1.5;
+        }
+        .scan-error {
+            padding: 12px 16px; font-size: 13px; color: #ef4444; text-align: center;
+        }
+        .scan-loading { color: #6366f1; }
+        .scan-success { color: #10b981; }
+        .btn-scan {
+            background: #10b981;
+        }
+        .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
+        .scan-upload {
+            padding: 10px 16px; display: flex; gap: 8px; justify-content: center; border-top: 1px solid #2a2a4a;
+        }
+        .scan-upload input[type="file"] { display: none; }
+        .scan-upload .btn { font-size: 13px; padding: 8px 14px; }
+        .btn-upload { background: #2a2a4a; color: #a0a0c0; }
+
+        /* 新增账号模态框 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            width: 90vw; max-width: 360px; max-height: 85vh; overflow-y: auto;
+            background: #1e1e3a; border-radius: 12px; padding: 20px;
+        }
+        .modal-box h3 { font-size: 16px; color: #fff; margin-bottom: 16px; }
+        .modal-box .form-group { margin-bottom: 12px; }
+        .modal-box .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+        .modal-box .form-group input, .modal-box .form-group select {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
+            font-size: 15px; outline: none;
+        }
+        .modal-box .form-group input:focus, .modal-box .form-group select:focus { border-color: #6366f1; }
+        .modal-box .form-group select { appearance: none; }
+        .modal-actions {
+            display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+        }
+        .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
     </style>
 </head>
 <body>
@@ -95,15 +186,20 @@
     <div v-if="!isLoggedIn" class="container">
         <div class="login-box">
             <h2>DLDL 账号管理</h2>
-            <div class="form-group">
-                <label>用户名</label>
-                <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
-            </div>
-            <div class="form-group">
-                <label>密码</label>
-                <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
-            </div>
-            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">登录</button>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.username" class="input-clear" @click="loginForm.username=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.password" class="input-clear" @click="loginForm.password=''">&times;</button>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px">
+                    <button class="btn" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                    <button class="btn btn-secondary" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
+                </div>
             <div v-if="loginError" class="login-error">{{ loginError }}</div>
         </div>
     </div>
@@ -114,6 +210,7 @@
             <h1>DLDL</h1>
             <div class="user-info">
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
         </div>
@@ -129,17 +226,87 @@
                     <span class="count">{{ g.accounts?.length || 0 }} 个</span>
                 </div>
                 <div v-for="a in g.accounts" :key="a.id" class="account-card">
+<<<<<<< HEAD
                     <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
                     <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
                     <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
                     <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
                     <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新APPtoken</button>
                     <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
+=======
+                    <div class="account-info">
+                        <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                        <div class="account-main">
+                            <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
+                            <div class="account-meta">
+                                <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
+                                <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
+                        <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
+                        <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                    </div>
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
                 </div>
             </div>
         </template>
         <div v-else-if="loadError" class="empty">{{ loadError }}</div>
         <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
+
+        <!-- 扫码器模态框 -->
+        <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
+            <div class="scan-box">
+                <div class="scan-header">
+                    <span>扫描通行证二维码</span>
+                    <button class="scan-close" @click="closeScanner">&times;</button>
+                </div>
+                <div v-if="scanError" class="scan-error">{{ scanError }}</div>
+                <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
+                <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
+                <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
+                <div class="scan-viewport" id="qr-reader"></div>
+                <div class="scan-upload" v-if="!scanResult && !scanLoading">
+                    <label class="btn btn-upload">
+                        <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
+                        📷 相册上传
+                    </label>
+                    <button class="btn btn-secondary" @click="closeScanner">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新增账号模态框 -->
+        <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
+            <div class="modal-box">
+                <h3>新增账号</h3>
+                <div v-if="addError" class="login-error" style="margin-bottom:10px">{{ addError }}</div>
+                <div class="form-group">
+                    <label>区服</label>
+                    <select v-model="addForm.area">
+                        <option v-for="g in areas" :key="g.id" :value="g.name">{{ g.name || '未命名区服' }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input v-model="addForm.name" placeholder="可选，显示用">
+                </div>
+                <div class="form-group">
+                    <label>账号 *</label>
+                    <input v-model="addForm.uname" placeholder="必填">
+                </div>
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <input v-model="addForm.upwd" type="password" placeholder="必填">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" @click="closeAddModal">取消</button>
+                    <button class="btn" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -150,6 +317,10 @@ createApp({
     setup() {
         const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+<<<<<<< HEAD
+=======
+        const WORKER = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
         function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }; }
         function jsonHdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
 
@@ -166,6 +337,217 @@ createApp({
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
+<<<<<<< HEAD
+=======
+
+        // ===== 扫码器 =====
+        const scanVisible = ref(false);
+        const scanError = ref('');
+        const scanResult = ref('');
+        const scanLoading = ref(false);
+        // ===== 新增账号 =====
+        const addVisible = ref(false);
+        const addLoading = ref(false);
+        const addError = ref('');
+        const addForm = reactive({ area: '', name: '', uname: '', upwd: '' });
+
+        function openAddModal() {
+            addError.value = '';
+            addForm.area = areas.value[0]?.name || '';
+            addForm.name = '';
+            addForm.uname = '';
+            addForm.upwd = '';
+            addVisible.value = true;
+        }
+
+        function closeAddModal() {
+            addVisible.value = false;
+        }
+
+        async function submitAddAccount() {
+            var area = String(addForm.area || '').trim();
+            var uname = String(addForm.uname || '').trim();
+            var upwd = String(addForm.upwd || '').trim();
+            if (!area || !uname || !upwd) {
+                addError.value = '区服、账号、密码为必填项';
+                return;
+            }
+            addLoading.value = true; addError.value = '';
+            try {
+                var insertUrl = API + '/accounts';
+                var body = {
+                    user_id: currentUser.value.id,
+                    area_name: area,
+                    uname: uname,
+                    upwd: upwd,
+                    name: String(addForm.name || '').trim(),
+                    token: '', time: '', sign: '', uinfo: '', history: '', url: ''
+                };
+                var resp = await fetch(insertUrl, {
+                    method: 'POST',
+                    headers: jsonHdrs(),
+                    body: JSON.stringify(body)
+                });
+                if (!resp.ok) throw new Error('保存失败 (' + resp.status + ')');
+                closeAddModal();
+                // 刷新账号列表
+                handleRefresh();
+            } catch (e) {
+                console.error('[add] failed:', e);
+                addError.value = e.message || '添加失败';
+            } finally { addLoading.value = false; }
+        }
+
+        const scanCurrentArea = ref(null);
+        const scanCurrentAccount = ref(null);
+        let html5QrCode = null;
+        let cameraStarted = false; // 标记摄像头是否已启动
+
+        function openScanner(area, account) {
+            scanVisible.value = true;
+            scanError.value = '';
+            scanResult.value = '';
+            scanLoading.value = false;
+            scanCurrentArea.value = area;
+            scanCurrentAccount.value = account;
+
+            // 如果之前已经启动过摄像头，直接 resume
+            if (cameraStarted && html5QrCode) {
+                html5QrCode.resume();
+                console.log('[scan] camera resumed');
+                return;
+            }
+
+            // 延迟初始化，等 DOM 渲染
+            setTimeout(function () {
+                if (!scanVisible.value) return;
+                var el = document.getElementById('qr-reader');
+                if (!el) { console.error('[scan] qr-reader element not found'); return; }
+
+                // 确保旧实例已清理
+                if (html5QrCode) {
+                    cameraStarted = false;
+                    html5QrCode.stop().then(function () {
+                        html5QrCode.clear();
+                    }).catch(function () {});
+                    html5QrCode = null;
+                }
+
+                html5QrCode = new Html5Qrcode('qr-reader');
+
+                html5QrCode.start(
+                    { facingMode: 'environment', width: { ideal: 4096 }, height: { ideal: 2160 } },
+                    { fps: 5, qrbox: function(vw, vh) { var s = Math.min(vw, vh) * 0.75; return { width: s, height: s }; } },
+                    function (decodedText) {
+                        if (scanLoading.value) return;
+                        console.log('[scan] detected:', decodedText.slice(0, 50));
+                        onScanSuccess(decodedText);
+                    },
+                    function (errMsg) {
+                        console.debug('[scan] no detection:', errMsg);
+                    }
+                ).then(function () {
+                    cameraStarted = true;
+                    console.log('[scan] camera started successfully');
+                }).catch(function (err) {
+                    console.error('[scan] camera start failed:', err);
+                    scanError.value = '无法打开摄像头：' + (err.message || '请授予相机权限');
+                });
+            }, 300);
+        }
+
+        function closeScanner() {
+            scanVisible.value = false;
+            if (html5QrCode && cameraStarted) {
+                html5QrCode.pause(true);
+            }
+        }
+
+        async function handleFileUpload(event) {
+            var file = event.target.files && event.target.files[0];
+            if (!file) return;
+            event.target.value = ''; // 清空以便重复选择
+
+            scanLoading.value = true;
+            scanError.value = '';
+            scanResult.value = '';
+
+            try {
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode('qr-reader');
+                }
+                var decodedText = await html5QrCode.scanFile(file, true);
+                console.log('[upload] detected:', decodedText.slice(0, 50));
+                onScanSuccess(decodedText);
+            } catch (e) {
+                console.error('[upload] scan failed:', e);
+                scanError.value = '未识别到二维码，请确保图片清晰';
+            } finally {
+                scanLoading.value = false;
+            }
+        }
+
+        async function onScanSuccess(decodedText) {
+            scanLoading.value = true;
+            scanResult.value = '';
+            scanError.value = '';
+
+            // 暂停扫描
+            if (html5QrCode) {
+                html5QrCode.pause(true);
+            }
+
+            var sessionId = String(decodedText || '').trim();
+            console.log('[scan] QR decoded:', sessionId);
+
+            if (!sessionId) {
+                scanError.value = '二维码内容为空';
+                scanLoading.value = false;
+                if (html5QrCode) html5QrCode.resume();
+                return;
+            }
+
+            var account = scanCurrentAccount.value;
+            if (!account) {
+                scanError.value = '账号信息丢失，请重新打开';
+                scanLoading.value = false;
+                return;
+            }
+
+            var uname = String(account.uname || '').trim();
+            var upwd = String(account.upwd || '').trim();
+            if (!uname || !upwd) {
+                scanError.value = '该账号缺少用户名或密码';
+                scanLoading.value = false;
+                return;
+            }
+
+            try {
+                var resp = await fetch(WORKER + '/api/pass-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd })
+                });
+                var result = await resp.json();
+                if (!result.ok || result.state !== 1) {
+                    throw new Error(result.message || result.msg || '通行证验证失败');
+                }
+                scanResult.value = '通行证验证成功！PC端将自动登录';
+                // 2秒后自动关闭
+                setTimeout(function () {
+                    if (scanVisible.value && scanResult.value) {
+                        closeScanner();
+                    }
+                }, 2000);
+            } catch (e) {
+                console.error('[scan] pass-code failed:', e);
+                scanError.value = '验证失败：' + (e.message || e);
+                if (html5QrCode) html5QrCode.resume();
+            } finally {
+                scanLoading.value = false;
+            }
+        }
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
 
         function CACHE_KEY() { return 'dldl_accounts_' + (currentUser.value ? currentUser.value.id : ''); }
 
@@ -218,6 +600,34 @@ createApp({
                 loginForm.username = ''; loginForm.password = '';
                 loadAccounts();
             } catch (e) { loginError.value = e.message || '登录失败'; }
+            finally { loginLoading.value = false; }
+        }
+
+        async function handleRegister() {
+            var username = String(loginForm.username || '').trim();
+            var password = String(loginForm.password || '').trim();
+            if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+            if (password.length < 6) { loginError.value = '密码至少6位'; return; }
+            loginLoading.value = true; loginError.value = '';
+            try {
+                var hash = hashPassword(password);
+                var resp = await fetch(API + '/users', {
+                    method: 'POST',
+                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true })
+                });
+                if (!resp.ok) {
+                    if (resp.status === 409) throw new Error('用户名已存在');
+                    throw new Error('注册失败 (' + resp.status + ')');
+                }
+                var data = await resp.json();
+                var user = Array.isArray(data) ? data[0] : data;
+                currentUser.value = { id: user.id, username: user.username, enabled: user.enabled };
+                isLoggedIn.value = true;
+                localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
+                loginForm.username = ''; loginForm.password = '';
+                loadAccounts();
+            } catch (e) { loginError.value = e.message || '注册失败'; }
             finally { loginLoading.value = false; }
         }
 
@@ -354,7 +764,11 @@ createApp({
             if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
             actionLoading.value = true;
             try {
+<<<<<<< HEAD
                 var resp = await fetch('/api/app-login', {
+=======
+                var resp = await fetch(WORKER + '/api/app-login', {
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uname: uname, upwd: upwd })
@@ -410,10 +824,23 @@ createApp({
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
             actionLoading: actionLoading,
+<<<<<<< HEAD
             hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken
+=======
+            hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
+            loadAccounts: loadAccounts, handleRefresh: handleRefresh,
+            hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
+            doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
+            // 新增账号
+            addVisible, addLoading, addError, addForm,
+            openAddModal, closeAddModal, submitAddAccount,
+            // 扫码器
+            scanVisible, scanError, scanResult, scanLoading,
+            openScanner, closeScanner, onScanSuccess, handleFileUpload
+>>>>>>> aa738c52619ef42fe463bf6adc23ec11e7049c0b
         };
     }
 }).mount('#app');
