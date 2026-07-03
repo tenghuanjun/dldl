@@ -150,6 +150,7 @@ createApp({
     setup() {
         const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+        const WORKER = 'https://red-moon-ff95.tenghuanjun.workers.dev';
         function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }; }
         function jsonHdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
 
@@ -354,7 +355,7 @@ createApp({
             if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
             actionLoading.value = true;
             try {
-                var resp = await fetch('/api/app-login', {
+                var resp = await fetch(WORKER + '/api/app-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uname: uname, upwd: upwd })
