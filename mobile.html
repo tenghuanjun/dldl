@@ -503,9 +503,21 @@ createApp({
             if (!confirm('确定要删除该账号吗？此操作不可恢复。')) return;
             addLoading.value = true; addError.value = '';
             try {
+                var areaName = addForm.area;
+                // 删除账号
                 var delUrl = API + '/accounts?id=eq.' + editAccountId.value + '&user_id=eq.' + currentUser.value.id;
                 var resp = await fetch(delUrl, { method: 'DELETE', headers: hdrs() });
                 if (!resp.ok) throw new Error('删除失败 (' + resp.status + ')');
+                // 检查该区服下是否还有其他账号，没有则删除区服
+                if (areaName) {
+                    var checkUrl = API + '/accounts?area_name=eq.' + encodeURIComponent(areaName) + '&user_id=eq.' + currentUser.value.id + '&limit=1';
+                    var checkResp = await fetch(checkUrl, { headers: hdrs() });
+                    var remaining = await checkResp.json();
+                    if (!remaining || !remaining.length) {
+                        var delAreaUrl = API + '/areas?name=eq.' + encodeURIComponent(areaName) + '&user_id=eq.' + currentUser.value.id;
+                        await fetch(delAreaUrl, { method: 'DELETE', headers: hdrs() });
+                    }
+                }
                 closeAddModal();
                 handleRefresh();
             } catch (e) {
