@@ -276,8 +276,8 @@ createApp({
                 html5QrCode = new Html5Qrcode('qr-reader');
 
                 html5QrCode.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    { facingMode: 'environment', aspectRatio: 1 },
+                    { fps: 10 },
                     function (decodedText) {
                         // 扫码成功
                         if (scanLoading.value) return;
