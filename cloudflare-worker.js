@@ -229,7 +229,11 @@ async function aes128EcbEncrypt(plaintext, keyStr) {
 function signV3(params, appKey) {
   const sortedKeys = Object.keys(params).filter(k => k !== 'sign').sort();
   let str = '';
-  for (const key of sortedKeys) str += key + '=' + params[key];
+  for (const key of sortedKeys) {
+    const v = params[key];
+    if (v === '' || v === null || v === undefined) continue; // Android SDK 跳过空值
+    str += key + '=' + v;
+  }
   return md5(str + appKey);
 }
 
