@@ -203,14 +203,14 @@
             <div class="form-group">
                 <label>用户名</label>
                 <div class="input-wrapper">
-                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" autocomplete="off" name="dldl-username" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" readonly onfocus="this.removeAttribute('readonly')" />
+                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" autocomplete="off" name="dldl-username" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" />
                     <button v-if="loginForm.username" class="input-clear" @click="loginForm.username = ''">&times;</button>
                 </div>
             </div>
             <div class="form-group">
                 <label>密码</label>
                 <div class="input-wrapper" style="position:relative">
-                    <input v-model="loginForm.password" :type="showPwd ? 'text' : 'password'" placeholder="请输入密码" :autocomplete="isRegistering ? 'new-password' : 'off'" name="dldl-password" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" style="padding-right:60px" readonly onfocus="this.removeAttribute('readonly')" />
+                    <input v-model="loginForm.password" :type="showPwd ? 'text' : 'password'" placeholder="请输入密码" :autocomplete="isRegistering ? 'new-password' : 'off'" name="dldl-password" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" style="padding-right:60px" />
                     <button v-if="loginForm.password" class="input-toggle" @click="showPwd = !showPwd">{{ showPwd ? '🙈' : '👁' }}</button>
                     <button v-if="loginForm.password" class="input-clear" @click="loginForm.password = ''">&times;</button>
                 </div>
@@ -218,7 +218,7 @@
             <div v-if="isRegistering" class="form-group">
                 <label>确认密码</label>
                 <div class="input-wrapper" style="position:relative">
-                    <input v-model="registerConfirmPwd" :type="showConfirmPwd ? 'text' : 'password'" placeholder="请再次输入密码" autocomplete="new-password" name="dldl-confirm-pwd" @keyup.enter="handleRegister" style="padding-right:60px" readonly onfocus="this.removeAttribute('readonly')" />
+                    <input v-model="registerConfirmPwd" :type="showConfirmPwd ? 'text' : 'password'" placeholder="请再次输入密码" autocomplete="new-password" name="dldl-confirm-pwd" @keyup.enter="handleRegister" style="padding-right:60px" />
                     <button v-if="registerConfirmPwd" class="input-toggle" @click="showConfirmPwd = !showConfirmPwd">{{ showConfirmPwd ? '🙈' : '👁' }}</button>
                     <button v-if="registerConfirmPwd" class="input-clear" @click="registerConfirmPwd = ''">&times;</button>
                 </div>
@@ -312,14 +312,14 @@
                 <div class="form-group">
                     <label>游戏账号</label>
                     <div class="input-wrapper">
-                        <input v-model="addForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="game-account" readonly onfocus="this.removeAttribute('readonly')" />
+                        <input v-model="addForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="game-account" />
                         <button v-if="addForm.uname" class="input-clear" @click="addForm.uname = ''">&times;</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>游戏密码</label>
                     <div class="input-wrapper" style="position:relative">
-                        <input v-model="addForm.upwd" :type="showAddPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="game-password" style="padding-right:60px" readonly onfocus="this.removeAttribute('readonly')" />
+                        <input v-model="addForm.upwd" :type="showAddPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="game-password" style="padding-right:60px" />
                         <button v-if="addForm.upwd" class="input-toggle" @click="showAddPwd = !showAddPwd">{{ showAddPwd ? '🙈' : '👁' }}</button>
                         <button v-if="addForm.upwd" class="input-clear" @click="addForm.upwd = ''">&times;</button>
                     </div>
@@ -358,14 +358,14 @@
                 <div class="form-group">
                     <label>游戏账号</label>
                     <div class="input-wrapper">
-                        <input v-model="editForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="edit-game-account" readonly onfocus="this.removeAttribute('readonly')" />
+                        <input v-model="editForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="edit-game-account" />
                         <button v-if="editForm.uname" class="input-clear" @click="editForm.uname = ''">&times;</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>游戏密码</label>
                     <div class="input-wrapper" style="position:relative">
-                        <input v-model="editForm.upwd" :type="showEditPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="edit-game-password" style="padding-right:60px" readonly onfocus="this.removeAttribute('readonly')" />
+                        <input v-model="editForm.upwd" :type="showEditPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="edit-game-password" style="padding-right:60px" />
                         <button v-if="editForm.upwd" class="input-toggle" @click="showEditPwd = !showEditPwd">{{ showEditPwd ? '🙈' : '👁' }}</button>
                         <button v-if="editForm.upwd" class="input-clear" @click="editForm.upwd = ''">&times;</button>
                     </div>
