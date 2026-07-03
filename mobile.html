@@ -138,6 +138,12 @@
             background: #10b981;
         }
         .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
+        .scan-upload {
+            padding: 10px 16px; display: flex; gap: 8px; justify-content: center; border-top: 1px solid #2a2a4a;
+        }
+        .scan-upload input[type="file"] { display: none; }
+        .scan-upload .btn { font-size: 13px; padding: 8px 14px; }
+        .btn-upload { background: #2a2a4a; color: #a0a0c0; }
     </style>
 </head>
 <body>
@@ -211,8 +217,15 @@
                 <div v-if="scanError" class="scan-error">{{ scanError }}</div>
                 <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
                 <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
-                <div v-else class="scan-tip">将二维码对准框内，自动识别</div>
+                <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
                 <div class="scan-viewport" id="qr-reader"></div>
+                <div class="scan-upload" v-if="!scanResult && !scanLoading">
+                    <label class="btn btn-upload">
+                        <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
+                        📷 相册上传
+                    </label>
+                    <button class="btn btn-secondary" @click="closeScanner">取消</button>
+                </div>
             </div>
         </div>
     </div>
@@ -301,6 +314,30 @@ createApp({
             scanVisible.value = false;
             if (html5QrCode) {
                 html5QrCode.stop().catch(function () {});
+            }
+        }
+
+        async function handleFileUpload(event) {
+            var file = event.target.files && event.target.files[0];
+            if (!file) return;
+            event.target.value = ''; // 清空以便重复选择
+
+            scanLoading.value = true;
+            scanError.value = '';
+            scanResult.value = '';
+
+            try {
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode('qr-reader');
+                }
+                var decodedText = await html5QrCode.scanFile(file, true);
+                console.log('[upload] detected:', decodedText.slice(0, 50));
+                onScanSuccess(decodedText);
+            } catch (e) {
+                console.error('[upload] scan failed:', e);
+                scanError.value = '未识别到二维码，请确保图片清晰';
+            } finally {
+                scanLoading.value = false;
             }
         }
 
@@ -614,7 +651,7 @@ createApp({
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
-            openScanner, closeScanner, onScanSuccess
+            openScanner, closeScanner, onScanSuccess, handleFileUpload
         };
     }
 }).mount('#app');
