@@ -150,7 +150,8 @@ createApp({
     setup() {
         const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
-        function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
+        function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }; }
+        function jsonHdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
 
         // ===== 状态 =====
         const isLoggedIn = ref(false);
@@ -207,7 +208,9 @@ createApp({
                 var arr = await resp.json();
                 if (!arr || !arr.length) throw new Error('用户不存在');
                 var data = arr[0];
-                if (hashPassword(password) !== data.password_hash) throw new Error('密码错误');
+                var hash = hashPassword(password);
+                console.log('[mobile login] user:', data.username, 'db_hash:', data.password_hash, 'computed_hash:', hash, 'match:', hash === data.password_hash);
+                if (hash !== data.password_hash) throw new Error('密码错误');
                 if (data.enabled === false) throw new Error('账号已被禁用');
                 delete data.password_hash;
                 currentUser.value = data; isLoggedIn.value = true;
@@ -374,7 +377,7 @@ createApp({
                     var patchUrl = API + '/accounts?id=eq.' + account.id + '&user_id=eq.' + currentUser.value.id;
                     var patchResp = await fetch(patchUrl, {
                         method: 'PATCH',
-                        headers: hdrs(),
+                        headers: jsonHdrs(),
                         body: JSON.stringify({ url: url, app_token: appToken, app_sign: appSign, url_created_at: now })
                     });
                     if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
