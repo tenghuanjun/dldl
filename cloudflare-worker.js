@@ -186,7 +186,7 @@ function md5(string) {
  * @returns {string} base64 密文
  */
 function aes128EcbEncrypt(plaintext, keyStr) {
-  const cipher = createCipheriv('aes-128-ecb', Buffer.from(keyStr, 'utf8'), null);
+  const cipher = createCipheriv('aes-128-ecb', Buffer.from(keyStr, 'utf8'), Buffer.alloc(0));
   cipher.setAutoPadding(true);
   let encrypted = cipher.update(plaintext, 'utf8', 'base64');
   encrypted += cipher.final('base64');
