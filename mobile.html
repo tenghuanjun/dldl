@@ -59,6 +59,15 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
         .input-clear:active { color: #3d3025; }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 64px !important; }
+        .pwd-toggle {
+            position: absolute; right: 36px; bottom: 4px; width: 28px; height: 32px;
+            background: none; border: none; font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #b0a090;
+        }
+        .pwd-toggle:active { transform: scale(0.9); }
         .login-error { color: #d44235; font-size: 13px; margin-top: 10px; text-align: center; }
 
         /* 区服分组 */
@@ -213,8 +222,11 @@
                 </div>
                 <div class="form-group">
                     <label>密码</label>
-                    <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
-                    <button v-if="loginForm.password" class="input-clear" @click="loginForm.password=''">&times;</button>
+                    <div class="pwd-wrap">
+                        <input v-model="loginForm.password" :type="loginShowPwd ? 'text' : 'password'" placeholder="请输入密码" @keyup.enter="handleLogin" />
+                        <button class="pwd-toggle" @click="loginShowPwd = !loginShowPwd">{{ loginShowPwd ? '🙈' : '👁' }}</button>
+                        <button v-if="loginForm.password" class="input-clear" style="right:4px" @click="loginForm.password=''">&times;</button>
+                    </div>
                 </div>
                 <div style="display:flex;gap:10px;margin-top:4px">
                     <button class="btn" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
@@ -302,20 +314,27 @@
                 <div class="form-group">
                     <label>区服</label>
                     <select v-model="addForm.area">
+                        <option value="">请选择区服</option>
                         <option v-for="g in areas" :key="g.id" :value="g.name">{{ g.name || '未命名区服' }}</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>昵称</label>
-                    <input v-model="addForm.name" placeholder="可选，显示用">
+                    <input v-model="addForm.name" placeholder="显示用，选填">
+                    <button v-if="addForm.name" class="input-clear" @click="addForm.name=''">&times;</button>
                 </div>
                 <div class="form-group">
                     <label>账号 *</label>
                     <input v-model="addForm.uname" placeholder="必填">
+                    <button v-if="addForm.uname" class="input-clear" @click="addForm.uname=''">&times;</button>
                 </div>
                 <div class="form-group">
                     <label>密码 *</label>
-                    <input v-model="addForm.upwd" type="password" placeholder="必填">
+                    <div class="pwd-wrap">
+                        <input v-model="addForm.upwd" :type="addShowPwd ? 'text' : 'password'" placeholder="必填">
+                        <button class="input-clear" v-if="addForm.upwd" @click="addForm.upwd=''">&times;</button>
+                        <button class="pwd-toggle" @click="addShowPwd = !addShowPwd">{{ addShowPwd ? '🙈' : '👁' }}</button>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" @click="closeAddModal">取消</button>
@@ -350,6 +369,8 @@ createApp({
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
+        const loginShowPwd = ref(false);
+        const addShowPwd = ref(false);
 
         // ===== 扫码器 =====
         const scanVisible = ref(false);
@@ -365,15 +386,16 @@ createApp({
 
         function openAddModal(account) {
             addError.value = '';
+            addShowPwd.value = false;
             if (account) {
                 editAccountId.value = account.id;
-                addForm.area = account.area_name || areas.value[0]?.name || '';
+                addForm.area = account.area_name || '';
                 addForm.name = account.name || '';
                 addForm.uname = account.uname || '';
                 addForm.upwd = account.upwd || '';
             } else {
                 editAccountId.value = null;
-                addForm.area = areas.value[0]?.name || '';
+                addForm.area = '';
                 addForm.name = '';
                 addForm.uname = '';
                 addForm.upwd = '';
@@ -864,6 +886,7 @@ createApp({
         return {
             isLoggedIn: isLoggedIn, currentUser: currentUser, loginForm: loginForm,
             loginLoading: loginLoading, loginError: loginError,
+            loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
             actionLoading: actionLoading,
