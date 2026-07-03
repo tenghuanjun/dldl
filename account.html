@@ -1592,7 +1592,7 @@
                     // 无缓存 url：先开 about:blank，走 APP SDK 获取后再跳转
                     const win = window.open("about:blank", windowName, winOpts);
                     try {
-                        const resp = await fetch('/api/app-login', {
+                        const resp = await fetch(this.proxyWorkerUrl + '/api/app-login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ uname, upwd })
@@ -1948,7 +1948,7 @@
                     this.loadingText = `正在通过 APP SDK 刷新 ${uname} 的 token...`;
                     this.loadingVisible = true;
                     try {
-                        const resp = await fetch('/api/app-login', {
+                        const resp = await fetch(this.proxyWorkerUrl + '/api/app-login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ uname, upwd })
