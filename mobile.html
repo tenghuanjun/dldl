@@ -261,7 +261,7 @@
         <div v-else-if="loadError" class="empty">{{ loadError }}</div>
         <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
 
-        <button v-if="areas.length" class="back-top" title="回到顶部" @click="window.scrollTo({top:0,behavior:'smooth'})">&#9650;</button>
+        <button v-if="areas.length" class="back-top" title="回到顶部" @click="scrollToTop">&#9650;</button>
 
         <!-- 扫码器模态框 -->
         <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
@@ -420,6 +420,8 @@ createApp({
                 addError.value = e.message || '编辑失败';
             } finally { addLoading.value = false; }
         }
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
@@ -865,7 +867,8 @@ createApp({
             openAddModal, closeAddModal, submitAddAccount,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
-            openScanner, closeScanner, onScanSuccess, handleFileUpload
+            openScanner, closeScanner, onScanSuccess, handleFileUpload,
+            scrollToTop
         };
     }
 }).mount('#app');
