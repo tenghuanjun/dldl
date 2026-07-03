@@ -252,6 +252,7 @@
                         <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
                         <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
                         <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                        <button class="btn btn-sm btn-secondary" @click="openAddModal(a)">编辑</button>
                     </div>
                 </div>
                 </div>
@@ -284,10 +285,10 @@
             </div>
         </div>
 
-        <!-- 新增账号模态框 -->
+        <!-- 新增/编辑账号模态框 -->
         <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
             <div class="modal-box">
-                <h3>新增账号</h3>
+                <h3>{{ editAccountId ? '编辑账号' : '新增账号' }}</h3>
                 <div v-if="addError" class="login-error" style="margin-bottom:10px">{{ addError }}</div>
                 <div class="form-group">
                     <label>区服</label>
@@ -346,23 +347,34 @@ createApp({
         const scanError = ref('');
         const scanResult = ref('');
         const scanLoading = ref(false);
-        // ===== 新增账号 =====
+        // ===== 新增/编辑账号 =====
         const addVisible = ref(false);
         const addLoading = ref(false);
         const addError = ref('');
         const addForm = reactive({ area: '', name: '', uname: '', upwd: '' });
+        const editAccountId = ref(null);
 
-        function openAddModal() {
+        function openAddModal(account) {
             addError.value = '';
-            addForm.area = areas.value[0]?.name || '';
-            addForm.name = '';
-            addForm.uname = '';
-            addForm.upwd = '';
+            if (account) {
+                editAccountId.value = account.id;
+                addForm.area = account.area_name || areas.value[0]?.name || '';
+                addForm.name = account.name || '';
+                addForm.uname = account.uname || '';
+                addForm.upwd = account.upwd || '';
+            } else {
+                editAccountId.value = null;
+                addForm.area = areas.value[0]?.name || '';
+                addForm.name = '';
+                addForm.uname = '';
+                addForm.upwd = '';
+            }
             addVisible.value = true;
         }
 
         function closeAddModal() {
             addVisible.value = false;
+            editAccountId.value = null;
         }
 
         async function submitAddAccount() {
@@ -375,27 +387,37 @@ createApp({
             }
             addLoading.value = true; addError.value = '';
             try {
-                var insertUrl = API + '/accounts';
                 var body = {
-                    user_id: currentUser.value.id,
                     area_name: area,
                     uname: uname,
                     upwd: upwd,
                     name: String(addForm.name || '').trim(),
-                    token: '', time: '', sign: '', uinfo: '', history: '', url: ''
                 };
-                var resp = await fetch(insertUrl, {
-                    method: 'POST',
-                    headers: jsonHdrs(),
-                    body: JSON.stringify(body)
-                });
-                if (!resp.ok) throw new Error('保存失败 (' + resp.status + ')');
+                if (editAccountId.value) {
+                    // 编辑模式：PATCH
+                    var patchUrl = API + '/accounts?id=eq.' + editAccountId.value + '&user_id=eq.' + currentUser.value.id;
+                    var resp = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: jsonHdrs(),
+                        body: JSON.stringify(body)
+                    });
+                    if (!resp.ok) throw new Error('更新失败 (' + resp.status + ')');
+                } else {
+                    // 新增模式：POST
+                    body.user_id = currentUser.value.id;
+                    body.token = ''; body.time = ''; body.sign = ''; body.uinfo = ''; body.history = ''; body.url = '';
+                    var resp = await fetch(API + '/accounts', {
+                        method: 'POST',
+                        headers: jsonHdrs(),
+                        body: JSON.stringify(body)
+                    });
+                    if (!resp.ok) throw new Error('保存失败 (' + resp.status + ')');
+                }
                 closeAddModal();
-                // 刷新账号列表
                 handleRefresh();
             } catch (e) {
                 console.error('[add] failed:', e);
-                addError.value = e.message || '添加失败';
+                addError.value = e.message || '编辑失败';
             } finally { addLoading.value = false; }
         }
 
@@ -839,7 +861,7 @@ createApp({
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
             // 新增账号
-            addVisible, addLoading, addError, addForm,
+            addVisible, addLoading, addError, addForm, editAccountId,
             openAddModal, closeAddModal, submitAddAccount,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
