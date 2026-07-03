@@ -858,6 +858,17 @@ createApp({
                     });
                     if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
                 }
+                // 触发Vue响应式更新 & 同步本地缓存
+                for (var i = 0; i < areas.value.length; i++) {
+                    var ga = areas.value[i];
+                    for (var j = 0; j < ga.accounts.length; j++) {
+                        if (ga.accounts[j].id === account.id || ga.accounts[j].uname === uname) {
+                            ga.accounts[j] = Object.assign({}, ga.accounts[j]);
+                            break;
+                        }
+                    }
+                }
+                saveToCache([...areas.value]);
                 alert('已刷新 ' + uname + ' 的 APP token');
             } catch (e) {
                 console.error('doRefreshToken failed', e);
