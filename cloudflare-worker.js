@@ -446,6 +446,57 @@ async function pcGetCodeInfo(sessionId) {
   return json.data;
 }
 
+// ==================== /api/pass-code（扫码通行证） ====================
+
+async function handlePassCode(request) {
+  let body;
+  try { body = await request.json(); } catch (_) {
+    return jsonResponse({ ok: false, message: '请求体必须是 JSON' }, 400);
+  }
+
+  const sessionId = String(body.sessionId || body.code || '').trim();
+  const uname = String(body.uname || '').trim();
+  const upwd = String(body.upwd || '').trim();
+
+  if (!sessionId) return jsonResponse({ ok: false, message: '缺少通行证码(sessionId)' }, 400);
+  if (!uname || !upwd) return jsonResponse({ ok: false, message: '缺少账号密码' }, 400);
+
+  try {
+    console.log('[pass-code] 开始处理:', uname, 'sessionId:', sessionId.slice(0, 10) + '...');
+
+    // 1. AES 加密密码
+    const encryptedPwd = await aes128EcbEncrypt(upwd, AES_KEY);
+
+    // 2. SDK 登录
+    const sdkResp = await sdkLogin(uname, encryptedPwd);
+    if (sdkResp.state !== 1) {
+      throw new Error(sdkResp.msg || 'SDK 登录失败');
+    }
+
+    // 3. h5sdk/login 获取游戏入口 token
+    const h5sdkInfo = await h5sdkLogin(uname, upwd);
+
+    // 4. postCodeInfo 写入扫码的 sessionId
+    const gameParams = {
+      gid: GAME_GID,
+      pid: GAME_PID,
+      token: h5sdkInfo.token,
+      time: h5sdkInfo.time,
+      sign: h5sdkInfo.sign,
+      appVer: GAME_APPVER,
+      platCode: GAME_PLATCODE,
+      IMEI: GAME_IMEI,
+    };
+    await pcPostCodeInfo(sessionId, gameParams);
+
+    console.log('[pass-code] ✅ 完成:', uname);
+    return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
+  } catch (error) {
+    console.error('[pass-code] 失败:', error.message);
+    return jsonResponse({ ok: false, message: error.message }, 500);
+  }
+}
+
 // ==================== /api/app-login 完整流程 ====================
 
 async function handleAppLogin(request) {
@@ -567,6 +618,11 @@ export default {
       // APP 登录接口
       if (url.pathname === '/api/app-login' && request.method === 'POST') {
         return handleAppLogin(request);
+      }
+
+      // 通行证扫码接口
+      if (url.pathname === '/api/pass-code' && request.method === 'POST') {
+        return handlePassCode(request);
       }
 
       // 其他路径：代理到 s-api.37.com.cn

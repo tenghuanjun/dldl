@@ -6,6 +6,7 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -87,6 +88,41 @@
         .empty { text-align: center; padding: 40px 16px; color: #6a6a8a; font-size: 14px; }
         .tip { font-size: 12px; color: #5a5a7a; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #6a6a8a; }
+
+        /* 扫码器模态框 */
+        .scan-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .scan-box {
+            width: 90vw; max-width: 360px;
+            background: #1e1e3a; border-radius: 12px; overflow: hidden;
+        }
+        .scan-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid #2a2a4a;
+        }
+        .scan-header span { font-size: 15px; font-weight: 600; color: #fff; }
+        .scan-close {
+            background: none; border: none; color: #a0a0c0; font-size: 20px;
+            cursor: pointer; padding: 4px 8px;
+        }
+        .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; }
+        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-tip {
+            padding: 14px 16px; font-size: 13px; color: #a0a0c0; text-align: center;
+            line-height: 1.5;
+        }
+        .scan-error {
+            padding: 12px 16px; font-size: 13px; color: #ef4444; text-align: center;
+        }
+        .scan-loading { color: #6366f1; }
+        .scan-success { color: #10b981; }
+        .btn-scan {
+            background: #10b981; margin-left: 4px;
+        }
+        .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -135,11 +171,27 @@
                     <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
                     <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新APPtoken</button>
                     <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
+                    <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
                 </div>
             </div>
         </template>
         <div v-else-if="loadError" class="empty">{{ loadError }}</div>
         <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
+
+        <!-- 扫码器模态框 -->
+        <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
+            <div class="scan-box">
+                <div class="scan-header">
+                    <span>扫描通行证二维码</span>
+                    <button class="scan-close" @click="closeScanner">&times;</button>
+                </div>
+                <div v-if="scanError" class="scan-error">{{ scanError }}</div>
+                <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
+                <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
+                <div v-else class="scan-tip">将二维码对准框内，自动识别</div>
+                <div class="scan-viewport" id="qr-reader"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -167,6 +219,117 @@ createApp({
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
+
+        // ===== 扫码器 =====
+        const scanVisible = ref(false);
+        const scanError = ref('');
+        const scanResult = ref('');
+        const scanLoading = ref(false);
+        const scanCurrentArea = ref(null);
+        const scanCurrentAccount = ref(null);
+        let html5QrCode = null;
+
+        function openScanner(area, account) {
+            scanVisible.value = true;
+            scanError.value = '';
+            scanResult.value = '';
+            scanLoading.value = false;
+            scanCurrentArea.value = area;
+            scanCurrentAccount.value = account;
+
+            // 延迟初始化，等 DOM 渲染
+            setTimeout(function () {
+                if (!scanVisible.value) return;
+                var el = document.getElementById('qr-reader');
+                if (!el) return;
+
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode('qr-reader');
+                }
+
+                html5QrCode.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 200, height: 200 } },
+                    function (decodedText) {
+                        // 扫码成功
+                        if (scanLoading.value) return; // 已处理中，忽略重复扫描
+                        onScanSuccess(decodedText);
+                    },
+                    function () { /* ignore scan failures */ }
+                ).catch(function (err) {
+                    console.error('Scanner start failed:', err);
+                    scanError.value = '无法打开摄像头：' + (err.message || '请授予相机权限');
+                });
+            }, 300);
+        }
+
+        function closeScanner() {
+            scanVisible.value = false;
+            if (html5QrCode) {
+                html5QrCode.stop().catch(function () {});
+            }
+        }
+
+        async function onScanSuccess(decodedText) {
+            scanLoading.value = true;
+            scanResult.value = '';
+            scanError.value = '';
+
+            // 暂停扫描
+            if (html5QrCode) {
+                html5QrCode.pause(true);
+            }
+
+            var sessionId = String(decodedText || '').trim();
+            console.log('[scan] QR decoded:', sessionId);
+
+            if (!sessionId) {
+                scanError.value = '二维码内容为空';
+                scanLoading.value = false;
+                if (html5QrCode) html5QrCode.resume();
+                return;
+            }
+
+            var account = scanCurrentAccount.value;
+            if (!account) {
+                scanError.value = '账号信息丢失，请重新打开';
+                scanLoading.value = false;
+                return;
+            }
+
+            var uname = String(account.uname || '').trim();
+            var upwd = String(account.upwd || '').trim();
+            if (!uname || !upwd) {
+                scanError.value = '该账号缺少用户名或密码';
+                scanLoading.value = false;
+                return;
+            }
+
+            try {
+                var resp = await fetch(WORKER + '/api/pass-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd })
+                });
+                var result = await resp.json();
+                if (!result.ok || result.state !== 1) {
+                    throw new Error(result.message || result.msg || '通行证验证失败');
+                }
+                scanResult.value = '通行证验证成功！PC端将自动登录';
+                // 2秒后自动关闭
+                setTimeout(function () {
+                    if (scanVisible.value && scanResult.value) {
+                        closeScanner();
+                    }
+                }, 2000);
+            } catch (e) {
+                console.error('[scan] pass-code failed:', e);
+                scanError.value = '验证失败：' + (e.message || e);
+                if (html5QrCode) html5QrCode.resume();
+            } finally {
+                scanLoading.value = false;
+            }
+        }
 
         function CACHE_KEY() { return 'dldl_accounts_' + (currentUser.value ? currentUser.value.id : ''); }
 
@@ -414,7 +577,10 @@ createApp({
             hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
-            doAppLogin: doAppLogin, doRefreshToken: doRefreshToken
+            doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
+            // 扫码器
+            scanVisible, scanError, scanResult, scanLoading,
+            openScanner, closeScanner, onScanSuccess
         };
     }
 }).mount('#app');
