@@ -185,7 +185,8 @@
                 <label>密码</label>
                 <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
             </div>
-            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">登录</button>
+            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+            <button class="btn btn-block btn-secondary" style="margin-top:8px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
             <div v-if="loginError" class="login-error">{{ loginError }}</div>
         </div>
     </div>
@@ -574,6 +575,33 @@ createApp({
             finally { loginLoading.value = false; }
         }
 
+        async function handleRegister() {
+            var username = String(loginForm.username || '').trim();
+            var password = String(loginForm.password || '').trim();
+            if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+            if (password.length < 6) { loginError.value = '密码至少6位'; return; }
+            loginLoading.value = true; loginError.value = '';
+            try {
+                var hash = hashPassword(password);
+                var resp = await fetch(API + '/users', {
+                    method: 'POST',
+                    headers: jsonHdrs(),
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true, role: 'user' })
+                });
+                if (!resp.ok) {
+                    if (resp.status === 409) throw new Error('用户名已存在');
+                    throw new Error('注册失败 (' + resp.status + ')');
+                }
+                var data = await resp.json();
+                currentUser.value = { id: data.id, username: data.username, role: data.role, enabled: data.enabled };
+                isLoggedIn.value = true;
+                localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
+                loginForm.username = ''; loginForm.password = '';
+                loadAccounts();
+            } catch (e) { loginError.value = e.message || '注册失败'; }
+            finally { loginLoading.value = false; }
+        }
+
         function handleLogout() {
             localStorage.removeItem('dldl_user');
             localStorage.removeItem(CACHE_KEY());
@@ -763,7 +791,7 @@ createApp({
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
             actionLoading: actionLoading,
-            hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
+            hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
