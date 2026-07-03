@@ -66,7 +66,9 @@ function md5(string) {
     return addUnsigned(rotateLeft(a, s), b);
   }
   function convertToWordArray(string) {
-    const lMessageLength = string.length;
+    // 使用 UTF-8 编码，确保中文字符等非ASCII字符的MD5与Android/Node.js一致
+    const utf8Bytes = new TextEncoder().encode(string);
+    const lMessageLength = utf8Bytes.length;
     const lNumberOfWordsTemp1 = lMessageLength + 8;
     const lNumberOfWordsTemp2 = (lNumberOfWordsTemp1 - (lNumberOfWordsTemp1 % 64)) / 64;
     const lNumberOfWords = (lNumberOfWordsTemp2 + 1) * 16;
@@ -76,7 +78,7 @@ function md5(string) {
     while (lByteCount < lMessageLength) {
       const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
       lBytePosition = (lByteCount % 4) * 8;
-      lWordArray[lWordCount] = (lWordArray[lWordCount] | (string.charCodeAt(lByteCount) << lBytePosition));
+      lWordArray[lWordCount] = (lWordArray[lWordCount] | (utf8Bytes[lByteCount] << lBytePosition));
       lByteCount++;
     }
     const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
@@ -229,11 +231,7 @@ async function aes128EcbEncrypt(plaintext, keyStr) {
 function signV3(params, appKey) {
   const sortedKeys = Object.keys(params).filter(k => k !== 'sign').sort();
   let str = '';
-  for (const key of sortedKeys) {
-    const v = params[key];
-    if (v === '' || v === null || v === undefined) continue; // Android SDK 跳过空值
-    str += key + '=' + v;
-  }
+  for (const key of sortedKeys) str += key + '=' + params[key];
   return md5(str + appKey);
 }
 
