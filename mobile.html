@@ -80,6 +80,10 @@
             font-size: 11px; color: #10b981; flex-shrink: 0;
             padding: 2px 6px; border-radius: 10px; background: rgba(16,185,129,0.12);
         }
+        .btn:disabled { opacity: 0.5; pointer-events: none; }
+        .url-age {
+            font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
+        }
         .empty { text-align: center; padding: 40px 16px; color: #6a6a8a; font-size: 14px; }
         .tip { font-size: 12px; color: #5a5a7a; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #6a6a8a; }
@@ -113,8 +117,8 @@
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
         </div>
-        <div class="tip" v-if="lastRefresh">最近刷新：{{ lastRefresh }}<br>点击「刷新」按钮更新数据。绿色圆点是URL标识。</div>
-        <div class="tip" v-else>点击「APP登录」将在新标签页打开对应游戏链接。绿色圆点表示已有URL。</div>
+        <div class="tip" v-if="lastRefresh">最近刷新：{{ lastRefresh }}<br>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。</div>
+        <div class="tip" v-else>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。绿色圆点表示已有URL。</div>
 
         <div v-if="loading" class="loading">加载中...</div>
         <template v-else-if="areas.length">
@@ -126,8 +130,10 @@
                 </div>
                 <div v-for="a in g.accounts" :key="a.id" class="account-card">
                     <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                    <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
                     <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
                     <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
+                    <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新APPtoken</button>
                     <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
                 </div>
             </div>
@@ -158,6 +164,7 @@ createApp({
         const launchedMap = reactive({});
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
+        const actionLoading = ref(false);
 
         function CACHE_KEY() { return 'dldl_accounts_' + (currentUser.value ? currentUser.value.id : ''); }
 
@@ -292,6 +299,93 @@ createApp({
             if (url) window.open(url, '_blank');
         }
 
+        function getUrlAge(account) {
+            if (!account) return '';
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return '';
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return '';
+            var diffMs = Date.now() - urlTime.getTime();
+            if (diffMs < 0) return '';
+            var totalHours = Math.floor(diffMs / 3600000);
+            var days = Math.floor(totalHours / 24);
+            var hours = totalHours % 24;
+            if (days > 0 && hours > 0) return days + '天' + hours + '小时';
+            if (days > 0) return days + '天';
+            if (hours > 0) return hours + '小时';
+            var minutes = Math.floor(diffMs / 60000);
+            if (minutes > 0) return minutes + '分钟';
+            return '刚刚';
+        }
+
+        function generateImei() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function buildAppLoginUrl(loginResult, account) {
+            var token = loginResult.token || '';
+            var gid = loginResult.entryGid || '1003279';
+            var pid = loginResult.entryPid || '46';
+            var platCode = loginResult.platCode || '37wan';
+            var appVer = loginResult.appVer || '134';
+            var sign = loginResult.sign || '';
+            var time = loginResult.entryTime || String(Math.floor(Date.now() / 1000));
+            var imei = loginResult.IMEI || generateImei();
+            var rawParams = {
+                gid: gid, pid: pid, token: token, time: time, sign: sign,
+                appVer: appVer, platCode: platCode, IMEI: imei, isPcLauncher: 'true'
+            };
+            if (account.id != null) rawParams['dldl_account_id'] = String(account.id);
+            var params = new URLSearchParams(rawParams);
+            return 'https://dldl.50pk.com/login.php?' + params.toString();
+        }
+
+        async function doRefreshToken(area, account) {
+            if (actionLoading.value) return;
+            var uname = String(account && account.uname || '').trim();
+            var upwd = String(account && account.upwd || '').trim();
+            if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
+            actionLoading.value = true;
+            try {
+                var resp = await fetch('/api/app-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uname: uname, upwd: upwd })
+                });
+                var result = await resp.json();
+                if (!result.ok || result.state !== 1) {
+                    throw new Error(result.msg || result.message || 'APP 登录刷新失败');
+                }
+                var url = buildAppLoginUrl(result, account);
+                var appToken = String(result.token || '');
+                var appSign = String(result.sign || '');
+                var now = new Date().toISOString();
+                // 更新本地 account 对象
+                account.url = url;
+                account.app_token = appToken;
+                account.app_sign = appSign;
+                account.url_created_at = now;
+                // 写回 Supabase
+                if (account.id != null) {
+                    var patchUrl = API + '/accounts?id=eq.' + account.id + '&user_id=eq.' + currentUser.value.id;
+                    var patchResp = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: hdrs(),
+                        body: JSON.stringify({ url: url, app_token: appToken, app_sign: appSign, url_created_at: now })
+                    });
+                    if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
+                }
+                alert('已刷新 ' + uname + ' 的 APP token');
+            } catch (e) {
+                console.error('doRefreshToken failed', e);
+                alert('刷新 APP token 失败：' + (e.message || e));
+            } finally { actionLoading.value = false; }
+        }
+
         // ===== 初始化 =====
         onMounted(function() {
             var saved = localStorage.getItem('dldl_user');
@@ -312,9 +406,11 @@ createApp({
             loginLoading: loginLoading, loginError: loginError,
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
+            actionLoading: actionLoading,
             hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
-            hasUrl: hasUrl, getStatus: getStatus, doAppLogin: doAppLogin
+            hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
+            doAppLogin: doAppLogin, doRefreshToken: doRefreshToken
         };
     }
 }).mount('#app');
