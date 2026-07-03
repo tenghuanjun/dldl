@@ -65,50 +65,59 @@
         .area-group { margin-bottom: 16px; }
         .area-group-header {
             display: flex; align-items: center; gap: 8px;
-            padding: 8px 12px; background: #EDE4D5; border-radius: 8px 8px 0 0;
+            padding: 8px 12px; background: #fff; border-radius: 10px 10px 0 0;
             font-size: 14px; font-weight: 600; color: #5a4030;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
         }
         .area-group-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #C3702A; flex-shrink: 0; }
         .area-group-header .count { margin-left: auto; font-size: 12px; color: #8a7560; }
 
         /* 账号卡片 */
         .account-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-            padding: 8px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            padding: 8px 8px 12px;
         }
         .account-card {
-            display: flex; flex-direction: column; gap: 8px;
-            padding: 10px; background: #D4782B; border-radius: 8px;
-            min-height: 130px; box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
         }
         .account-info {
-            display: flex; align-items: flex-start; gap: 5px; flex: 1;
+            display: flex; align-items: flex-start; gap: 6px;
+            padding: 10px 10px 0;
         }
         .account-main { flex: 1; min-width: 0; }
         .account-nick {
-            font-size: 13px; color: #fff; line-height: 1.4;
+            font-size: 13px; font-weight: 600; color: #3d3025; line-height: 1.35;
             word-break: break-all;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             overflow: hidden;
         }
         .account-meta {
-            display: flex; align-items: center; gap: 4px; margin-top: 3px;
+            display: flex; align-items: center; gap: 5px; margin-top: 4px;
+            min-height: 18px;
         }
         .url-dot {
-            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
         }
-        .url-dot.has { background: #5CE6B0; box-shadow: 0 0 3px rgba(92,230,176,0.5); }
-        .url-dot.no  { background: rgba(255,255,255,0.3); }
+        .url-dot.has { background: #10b981; box-shadow: 0 0 3px rgba(16,185,129,0.4); }
+        .url-dot.no  { background: #d0c8bb; }
         .app-status {
-            font-size: 10px; color: #5CE6B0; flex-shrink: 0;
-            padding: 1px 5px; border-radius: 8px; background: rgba(92,230,176,0.18);
+            font-size: 10px; color: #059669; flex-shrink: 0;
+            padding: 1px 6px; border-radius: 8px; background: #ecfdf5; font-weight: 500;
         }
         .account-actions {
             display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+            padding: 8px 10px 10px;
         }
-        .account-actions .btn { padding: 7px 4px; font-size: 12px; border-radius: 5px; }
-        .account-actions .btn-primary { background: #fff; color: #C3702A; }
-        .account-actions .btn-secondary { background: rgba(255,255,255,0.25); color: #fff; }
+        .account-actions .btn {
+            padding: 7px 4px; font-size: 11px; border-radius: 6px;
+            font-weight: 500; transition: none;
+        }
+        .btn-refresh { background: #f5f0e8 !important; color: #8a7560 !important; }
+        .btn-login  { background: #C3702A !important; color: #fff !important; }
+        .btn-scan   { background: #ecfdf5 !important; color: #059669 !important; }
+        .btn-edit   { background: #f5f0e8 !important; color: #8a7560 !important; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
         .back-top {
             position: fixed; right: 20px; bottom: 30px; z-index: 200;
@@ -249,10 +258,10 @@
                         </div>
                     </div>
                     <div class="account-actions">
-                        <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
-                        <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
-                        <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
-                        <button class="btn btn-sm btn-secondary" @click="openAddModal(a)">编辑</button>
+                        <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
+                        <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
+                        <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                        <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
                     </div>
                 </div>
                 </div>
