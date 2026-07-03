@@ -264,6 +264,7 @@ createApp({
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
         let html5QrCode = null;
+        let cameraStarted = false; // 标记摄像头是否已启动
 
         function openScanner(area, account) {
             scanVisible.value = true;
@@ -273,11 +274,11 @@ createApp({
             scanCurrentArea.value = area;
             scanCurrentAccount.value = account;
 
-            // 先停止旧的扫描器
-            if (html5QrCode) {
-                html5QrCode.stop().then(function () {
-                    html5QrCode.clear();
-                }).catch(function () {});
+            // 如果之前已经启动过摄像头，直接 resume
+            if (cameraStarted && html5QrCode) {
+                html5QrCode.resume();
+                console.log('[scan] camera resumed');
+                return;
             }
 
             // 延迟初始化，等 DOM 渲染
@@ -286,34 +287,42 @@ createApp({
                 var el = document.getElementById('qr-reader');
                 if (!el) { console.error('[scan] qr-reader element not found'); return; }
 
+                // 确保旧实例已清理
+                if (html5QrCode) {
+                    cameraStarted = false;
+                    html5QrCode.stop().then(function () {
+                        html5QrCode.clear();
+                    }).catch(function () {});
+                    html5QrCode = null;
+                }
+
                 html5QrCode = new Html5Qrcode('qr-reader');
 
                 html5QrCode.start(
                     { facingMode: 'environment', aspectRatio: 1 },
                     { fps: 10 },
                     function (decodedText) {
-                        // 扫码成功
                         if (scanLoading.value) return;
                         console.log('[scan] detected:', decodedText.slice(0, 50));
                         onScanSuccess(decodedText);
                     },
                     function (errMsg) {
-                        // 逐帧识别失败（正常），只在 vConsole 可见
                         console.debug('[scan] no detection:', errMsg);
                     }
                 ).then(function () {
+                    cameraStarted = true;
                     console.log('[scan] camera started successfully');
                 }).catch(function (err) {
                     console.error('[scan] camera start failed:', err);
                     scanError.value = '无法打开摄像头：' + (err.message || '请授予相机权限');
                 });
-            }, 500);
+            }, 300);
         }
 
         function closeScanner() {
             scanVisible.value = false;
-            if (html5QrCode) {
-                html5QrCode.stop().catch(function () {});
+            if (html5QrCode && cameraStarted) {
+                html5QrCode.pause(true);
             }
         }
 
