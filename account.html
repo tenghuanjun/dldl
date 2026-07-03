@@ -134,7 +134,7 @@
                             </div>
                             <div class="card-actions">
                                 <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
-                                <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新 token</button>
+                                <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新APPtoken</button>
                                 <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click="appLogin(group.area, account)">APP登录</button>
                                 <span v-if="getAppLoginStatus(group.area, account) === 'launched'" class="pass-code-status ok">已启动</span>
@@ -169,6 +169,7 @@
                             </div>
                         </div>
                     </div>
+                    <span v-if="account.url && getUrlAge(account)" class="card-url-age">{{ getUrlAge(account) }}</span>
                     <span
                         class="card-url-dot"
                         :class="(account.url && String(account.url).trim()) ? 'has-url' : 'no-url'"
@@ -816,7 +817,9 @@
                                 history: account.history || '',
                                 url: account.url || '',
                                 app_token: account.app_token || '',
-                                app_sign: account.app_sign || ''
+                                app_sign: account.app_sign || '',
+                                created_at: account.created_at || '',
+                                url_created_at: account.url_created_at || ''
                             });
                         }
                         this.areas = (areasData || []).map(area => ({
@@ -827,9 +830,50 @@
                         const names = this.areas.map(g => g.area);
                         if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
                         this.saveAccountsToCache();
+                        // 自动回填缺失的 url_created_at（从 URL 的 time 参数解析）
+                        this.backfillUrlCreatedAt(accountsData);
                     } catch (e) {
                         console.error('load accounts failed', e);
                         this.showError(`加载数据失败：${e.message}`);
+                    }
+                },
+                /** 从账号 URL 的 time 参数解析 Unix 秒时间戳，回填缺失的 url_created_at */
+                async backfillUrlCreatedAt(accountsData) {
+                    if (!this.currentUser || !Array.isArray(accountsData) || accountsData.length === 0) return;
+                    const pending = [];
+                    for (const account of accountsData) {
+                        if (account.url_created_at) continue; // 已有，跳过
+                        if (!account.url) continue;           // 无 URL，跳过
+                        try {
+                            const u = new URL(account.url);
+                            const timeParam = u.searchParams.get('time');
+                            if (!timeParam) continue;
+                            const unixSeconds = parseInt(timeParam, 10);
+                            if (isNaN(unixSeconds) || unixSeconds <= 0) continue;
+                            const isoStr = new Date(unixSeconds * 1000).toISOString();
+                            pending.push({ id: account.id, url_created_at: isoStr });
+                        } catch (_) {
+                            // URL 解析失败，静默跳过
+                        }
+                    }
+                    if (pending.length === 0) return;
+                    let done = 0;
+                    for (const item of pending) {
+                        try {
+                            const { error } = await db.from('accounts')
+                                .update({ url_created_at: item.url_created_at })
+                                .eq('id', item.id)
+                                .eq('user_id', this.currentUser.id);
+                            if (!error) done++;
+                            else console.warn('backfill url_created_at update failed:', item.id, error.message);
+                        } catch (e) {
+                            console.warn('backfill url_created_at error:', item.id, e?.message || e);
+                        }
+                    }
+                    if (done > 0) {
+                        console.log(`已回填 ${done} 条账号的 url_created_at`);
+                        // 回填后刷新数据，确保界面展示最新的 url_created_at
+                        await this.loadAccounts();
                     }
                 },
                 async saveAccounts() {
@@ -1032,7 +1076,7 @@
                             if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
                             throw error;
                         }
-                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url });
+                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url, created_at: data.created_at || '', url_created_at: data.url_created_at || '' });
                         this.saveAccountsToCache();
                         this.showSuccess('账号已添加');
                         this.closeAccountModal();
@@ -1560,14 +1604,16 @@
                         const url = this.buildAppLoginUrl(result, account);
                         const appToken = String(result.token || '');
                         const appSign = String(result.sign || '');
+                        const now = new Date().toISOString();
                         // 同步更新本地 account 对象，供后续 sendPassCode 使用
                         account.app_token = appToken;
                         account.app_sign = appSign;
                         account.url = url;
+                        account.url_created_at = now;
                         if (this.currentUser && account.id != null) {
                             try {
                                 const { error: urlErr } = await db.from('accounts')
-                                    .update({ url, app_token: appToken, app_sign: appSign })
+                                    .update({ url, app_token: appToken, app_sign: appSign, url_created_at: now })
                                     .eq('id', account.id)
                                     .eq('user_id', this.currentUser.id);
                                 if (urlErr) console.warn('写入 url/app_token/app_sign 失败:', urlErr.message);
@@ -1695,6 +1741,26 @@
                         }
                     }
                     return '';
+                },
+                /** 计算 URL 生成时间距今的时长，格式：x天x小时；无 URL 或时间返回空 */
+                getUrlAge(account) {
+                    if (!account) return '';
+                    const timeStr = account.url_created_at || account.created_at || '';
+                    if (!timeStr) return '';
+                    const urlTime = new Date(timeStr);
+                    if (isNaN(urlTime.getTime())) return '';
+                    const now = new Date();
+                    const diffMs = now - urlTime;
+                    if (diffMs < 0) return '';
+                    const totalHours = Math.floor(diffMs / 3600000);
+                    const days = Math.floor(totalHours / 24);
+                    const hours = totalHours % 24;
+                    if (days > 0 && hours > 0) return `${days}天${hours}小时`;
+                    if (days > 0) return `${days}天`;
+                    if (hours > 0) return `${hours}小时`;
+                    const minutes = Math.floor(diffMs / 60000);
+                    if (minutes > 0) return `${minutes}分钟`;
+                    return '刚刚';
                 },
                 async batchLaunchSelected() {
                     if (this.loadingVisible) return;
@@ -1894,13 +1960,15 @@
                         const url = this.buildAppLoginUrl(result, account);
                         const appToken = String(result.token || '');
                         const appSign = String(result.sign || '');
+                        const now = new Date().toISOString();
                         // 同步更新本地 account 对象
                         account.app_token = appToken;
                         account.app_sign = appSign;
                         account.url = url;
+                        account.url_created_at = now;
                         if (this.currentUser && account.id != null) {
                             const { error: updateErr } = await db.from('accounts')
-                                .update({ url, app_token: appToken, app_sign: appSign })
+                                .update({ url, app_token: appToken, app_sign: appSign, url_created_at: now })
                                 .eq('id', account.id)
                                 .eq('user_id', this.currentUser.id);
                             if (updateErr) throw updateErr;
@@ -2436,6 +2504,16 @@
         }
         .card-url-dot.no-url {
             background: #555;
+        }
+        /* URL 生成时间标签，小绿点左边 */
+        .card-url-age {
+            position: absolute;
+            top: 4px;
+            right: 20px;
+            font-size: 11px;
+            color: #7d8aa0;
+            white-space: nowrap;
+            pointer-events: none;
         }
 
         .card-check-wrap {
