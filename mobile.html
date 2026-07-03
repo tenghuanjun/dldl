@@ -462,7 +462,6 @@ createApp({
                 } else {
                     // 新增模式：POST
                     body.user_id = currentUser.value.id;
-                    body.token = ''; body.time = ''; body.sign = ''; body.uinfo = ''; body.history = ''; body.url = '';
                     var resp = await fetch(API + '/accounts', {
                         method: 'POST',
                         headers: jsonHdrs(),
