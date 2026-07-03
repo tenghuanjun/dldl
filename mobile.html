@@ -144,6 +144,23 @@
         .tip { font-size: 12px; color: #8a7560; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #8a7560; }
 
+        /* 全局加载遮罩 */
+        .global-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(245,240,232,0.7); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: all;
+        }
+        .global-loading .spinner {
+            width: 40px; height: 40px; border: 3px solid #E0D5C5;
+            border-top-color: #C3702A; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .global-loading .text {
+            margin-top: 12px; font-size: 14px; color: #8a7560;
+        }
+
         /* 扫码器模态框 */
         .scan-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -211,6 +228,12 @@
 </head>
 <body>
 <div id="app">
+    <!-- 全局加载遮罩 -->
+    <div v-if="globalLoading" class="global-loading">
+        <div class="spinner"></div>
+        <div class="text">{{ globalLoadingText }}</div>
+    </div>
+
     <!-- 未登录 -->
     <div v-if="!isLoggedIn" class="container">
         <div class="login-box">
@@ -371,6 +394,8 @@ createApp({
         const actionLoading = ref(false);
         const loginShowPwd = ref(false);
         const addShowPwd = ref(false);
+        const globalLoading = ref(false);
+        const globalLoadingText = ref('处理中…');
 
         // ===== 扫码器 =====
         const scanVisible = ref(false);
@@ -644,7 +669,7 @@ createApp({
             var username = String(loginForm.username || '').trim();
             var password = String(loginForm.password || '').trim();
             if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
-            loginLoading.value = true; loginError.value = '';
+            loginLoading.value = true; loginError.value = ''; globalLoading.value = true; globalLoadingText.value = '登录中…';
             try {
                 var url = API + '/users?select=*&username=eq.' + encodeURIComponent(username) + '&limit=1';
                 var resp = await fetch(url, { headers: hdrs() });
@@ -662,7 +687,7 @@ createApp({
                 loginForm.username = ''; loginForm.password = '';
                 loadAccounts();
             } catch (e) { loginError.value = e.message || '登录失败'; }
-            finally { loginLoading.value = false; }
+            finally { loginLoading.value = false; globalLoading.value = false; }
         }
 
         async function handleRegister() {
@@ -670,7 +695,7 @@ createApp({
             var password = String(loginForm.password || '').trim();
             if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
             if (password.length < 6) { loginError.value = '密码至少6位'; return; }
-            loginLoading.value = true; loginError.value = '';
+            loginLoading.value = true; loginError.value = ''; globalLoading.value = true; globalLoadingText.value = '注册中…';
             try {
                 var hash = hashPassword(password);
                 var resp = await fetch(API + '/users', {
@@ -690,7 +715,7 @@ createApp({
                 loginForm.username = ''; loginForm.password = '';
                 loadAccounts();
             } catch (e) { loginError.value = e.message || '注册失败'; }
-            finally { loginLoading.value = false; }
+            finally { loginLoading.value = false; globalLoading.value = false; }
         }
 
         function handleLogout() {
@@ -736,13 +761,13 @@ createApp({
 
         // ===== 刷新按钮（强制从服务端拉取） =====
         async function handleRefresh() {
-            refreshLoading.value = true; loadError.value = '';
+            refreshLoading.value = true; loadError.value = ''; globalLoading.value = true; globalLoadingText.value = '加载中…';
             try {
                 areas.value = await fetchAccounts();
             } catch (e) {
                 console.error('refresh failed', e);
                 loadError.value = e.message || '刷新失败';
-            } finally { refreshLoading.value = false; }
+            } finally { refreshLoading.value = false; globalLoading.value = false; }
         }
 
         // ===== 初始化加载（优先走缓存） =====
@@ -824,7 +849,7 @@ createApp({
             var uname = String(account && account.uname || '').trim();
             var upwd = String(account && account.upwd || '').trim();
             if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
-            actionLoading.value = true;
+            actionLoading.value = true; globalLoading.value = true; globalLoadingText.value = '刷新 ' + uname + ' 的token…';
             try {
                 var ctrl = new AbortController();
                 var t = setTimeout(function() { ctrl.abort(); }, 15000);
@@ -858,6 +883,17 @@ createApp({
                     });
                     if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
                 }
+                // 触发Vue响应式更新 & 同步本地缓存
+                for (var i = 0; i < areas.value.length; i++) {
+                    var ga = areas.value[i];
+                    for (var j = 0; j < ga.accounts.length; j++) {
+                        if (ga.accounts[j].id === account.id || ga.accounts[j].uname === uname) {
+                            ga.accounts[j] = Object.assign({}, ga.accounts[j]);
+                            break;
+                        }
+                    }
+                }
+                saveToCache([...areas.value]);
                 alert('已刷新 ' + uname + ' 的 APP token');
             } catch (e) {
                 console.error('doRefreshToken failed', e);
@@ -865,7 +901,7 @@ createApp({
                 if (e.name === 'AbortError') msg = '请求超时，请检查网络或稍后重试';
                 else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
                 alert('刷新 APP token 失败：' + msg);
-            } finally { actionLoading.value = false; }
+            } finally { actionLoading.value = false; globalLoading.value = false; }
         }
 
         // ===== 初始化 =====
@@ -885,6 +921,7 @@ createApp({
 
         return {
             isLoggedIn: isLoggedIn, currentUser: currentUser, loginForm: loginForm,
+            globalLoading: globalLoading, globalLoadingText: globalLoadingText,
             loginLoading: loginLoading, loginError: loginError,
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
