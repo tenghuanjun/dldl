@@ -585,7 +585,7 @@ createApp({
                 var hash = hashPassword(password);
                 var resp = await fetch(API + '/users', {
                     method: 'POST',
-                    headers: jsonHdrs(),
+                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
                     body: JSON.stringify({ username: username, password_hash: hash, enabled: true, role: 'user' })
                 });
                 if (!resp.ok) {
@@ -593,7 +593,8 @@ createApp({
                     throw new Error('注册失败 (' + resp.status + ')');
                 }
                 var data = await resp.json();
-                currentUser.value = { id: data.id, username: data.username, role: data.role, enabled: data.enabled };
+                var user = Array.isArray(data) ? data[0] : data;
+                currentUser.value = { id: user.id, username: user.username, role: user.role, enabled: user.enabled };
                 isLoggedIn.value = true;
                 localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
                 loginForm.username = ''; loginForm.password = '';
