@@ -7,6 +7,8 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>new VConsole();</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -63,17 +65,25 @@
 
         /* 账号卡片 */
         .account-card {
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: flex-start; gap: 8px;
             padding: 10px 12px; background: #161632; border-bottom: 1px solid #1e1e3a;
-            position: relative;
         }
         .account-card:last-child { border-bottom: none; border-radius: 0 0 8px 8px; }
+        .account-info {
+            flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 6px;
+        }
+        .account-main { flex: 1; min-width: 0; }
         .account-nick {
-            flex: 1; font-size: 14px; color: #d0d0e0;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-size: 14px; color: #d0d0e0; line-height: 1.4;
+            word-break: break-all;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .account-meta {
+            display: flex; align-items: center; gap: 6px; margin-top: 4px;
         }
         .url-dot {
-            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
         }
         .url-dot.has { background: #10b981; box-shadow: 0 0 4px rgba(16,185,129,0.5); }
         .url-dot.no  { background: #444; }
@@ -81,6 +91,11 @@
             font-size: 11px; color: #10b981; flex-shrink: 0;
             padding: 2px 6px; border-radius: 10px; background: rgba(16,185,129,0.12);
         }
+        .account-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+            flex-shrink: 0; min-width: fit-content;
+        }
+        .account-actions .btn { padding: 6px 8px; font-size: 11px; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
         .url-age {
             font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
@@ -120,7 +135,7 @@
         .scan-loading { color: #6366f1; }
         .scan-success { color: #10b981; }
         .btn-scan {
-            background: #10b981; margin-left: 4px;
+            background: #10b981;
         }
         .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
     </style>
@@ -165,13 +180,21 @@
                     <span class="count">{{ g.accounts?.length || 0 }} 个</span>
                 </div>
                 <div v-for="a in g.accounts" :key="a.id" class="account-card">
-                    <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
-                    <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
-                    <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
-                    <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
-                    <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新APPtoken</button>
-                    <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
-                    <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                    <div class="account-info">
+                        <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                        <div class="account-main">
+                            <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
+                            <div class="account-meta">
+                                <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
+                                <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-sm btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
+                        <button class="btn btn-sm" @click="doAppLogin(g.area, a)">APP登录</button>
+                        <button class="btn btn-sm btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                    </div>
                 </div>
             </div>
         </template>
