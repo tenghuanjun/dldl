@@ -43,14 +43,20 @@
             max-width: 360px; margin: 60px auto 0;
         }
         .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #fff; }
-        .form-group { margin-bottom: 14px; }
+        .form-group { margin-bottom: 14px; position: relative; }
         .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
         .form-group input {
-            width: 100%; padding: 10px 12px; border-radius: 8px;
+            width: 100%; padding: 12px 36px 12px 12px; border-radius: 8px;
             border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
-            font-size: 15px; outline: none;
+            font-size: 16px; outline: none;
         }
         .form-group input:focus { border-color: #6366f1; }
+        .input-clear {
+            position: absolute; right: 4px; bottom: 4px; width: 32px; height: 32px;
+            background: none; border: none; color: #6a6a8a; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .input-clear:active { color: #fff; }
         .login-error { color: #ef4444; font-size: 13px; margin-top: 10px; text-align: center; }
 
         /* 区服分组 */
@@ -177,16 +183,20 @@
     <div v-if="!isLoggedIn" class="container">
         <div class="login-box">
             <h2>DLDL 账号管理</h2>
-            <div class="form-group">
-                <label>用户名</label>
-                <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
-            </div>
-            <div class="form-group">
-                <label>密码</label>
-                <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
-            </div>
-            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
-            <button class="btn btn-block btn-secondary" style="margin-top:8px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.username" class="input-clear" @click="loginForm.username=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.password" class="input-clear" @click="loginForm.password=''">&times;</button>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px">
+                    <button class="btn" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                    <button class="btn btn-secondary" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
+                </div>
             <div v-if="loginError" class="login-error">{{ loginError }}</div>
         </div>
     </div>
@@ -586,7 +596,7 @@ createApp({
                 var resp = await fetch(API + '/users', {
                     method: 'POST',
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true, role: 'user' })
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true })
                 });
                 if (!resp.ok) {
                     if (resp.status === 409) throw new Error('用户名已存在');
@@ -594,7 +604,7 @@ createApp({
                 }
                 var data = await resp.json();
                 var user = Array.isArray(data) ? data[0] : data;
-                currentUser.value = { id: user.id, username: user.username, role: user.role, enabled: user.enabled };
+                currentUser.value = { id: user.id, username: user.username, enabled: user.enabled };
                 isLoggedIn.value = true;
                 localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
                 loginForm.username = ''; loginForm.password = '';
