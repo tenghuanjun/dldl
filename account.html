@@ -481,6 +481,7 @@
                     loadingVisible: false,
                     loadingText: '',
                     accountsRefreshing: false,
+                    submitting: false,
                 };
             },
             computed: {
@@ -612,6 +613,9 @@
                 },
                 async saveAreaSort() {
                     if (!this.currentUser) return;
+                    if (this.loadingVisible) return;
+                    this.loadingText = '正在保存区服排序...';
+                    this.loadingVisible = true;
                     try {
                         for (let i = 0; i < this.areaSortList.length; i++) {
                             const { error } = await db.from('areas').update({ sort_order: i })
@@ -624,6 +628,9 @@
                     } catch (e) {
                         this.showError(`保存排序失败：${e.message}`);
                         await this.loadAccounts();
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
                     }
                 },
                 async openUserManageModal() {
@@ -656,8 +663,11 @@
                 },
                 async deleteUser(user) {
                     if (user.username === 'tenghuanjun') return;
+                    if (this.loadingVisible) return;
                     const confirmed = await this.confirmAction(`确认删除用户 ${user.username} 吗？该用户下的所有区服和账号将一并删除，不可恢复。`, '删除用户');
                     if (!confirmed) return;
+                    this.loadingText = '正在删除用户...';
+                    this.loadingVisible = true;
                     try {
                         await db.from('accounts').delete().eq('user_id', user.id);
                         await db.from('areas').delete().eq('user_id', user.id);
@@ -667,6 +677,9 @@
                         this.showSuccess(`已删除用户 ${user.username}`);
                     } catch (e) {
                         this.showError(`删除失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
                     }
                 },
                 openChangePwdModal(user) {
@@ -1008,32 +1021,42 @@
                 if (!targetGroup) return;
                 if (this.accountModalMode === 'create') {
                     if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
+                    if (this.loadingVisible) return;
+                    this.loadingText = '正在添加账号...';
+                    this.loadingVisible = true;
                     try {
                         const { data, error } = await db.from('accounts').insert({
                             user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url
                         }).select().single();
                         if (error) {
-                            if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
+                            if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
                             throw error;
                         }
                         targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url });
                         this.saveAccountsToCache();
                         this.showSuccess('账号已添加');
+                        this.closeAccountModal();
                     } catch (e) {
-                        return this.failWithMessage(`添加失败：${e.message}`);
+                        this.showError(`添加失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
                     }
                 } else {
+                    if (this.loadingVisible) return;
                     const location = this.findAccountLocation(this.editingAccountRef || {});
                     if (!location) return this.failWithMessage('未找到要编辑的账号');
                     const target = location.group.accounts[location.index];
                     const existing = this.findAccountByUname(uname);
                     if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
+                    this.loadingText = '正在保存账号...';
+                    this.loadingVisible = true;
                     try {
                         const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
                         const { error } = await db.from('accounts').update(updateData)
                             .eq('id', target.id).eq('user_id', this.currentUser.id);
                         if (error) {
-                            if (error.code === '23505') return this.failWithMessage(`区服 ${area} 下账号 ${uname} 已存在`);
+                            if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
                             throw error;
                         }
                         if (location.group.area !== area) {
@@ -1054,16 +1077,20 @@
                         target.url = url;
                         this.saveAccountsToCache();
                         this.showSuccess('账号已更新');
+                        this.closeAccountModal();
                     } catch (e) {
-                        return this.failWithMessage(`保存失败：${e.message}`);
+                        this.showError(`保存失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
                     }
                 }
-                this.closeAccountModal();
             },
             editAccount(account) {
                 this.openAccountModal(account);
             },
             async deleteEditingAccount() {
+                if (this.loadingVisible) return;
                 try {
                     if (this.accountModalMode !== 'edit' || !this.editingAccountRef) {
                         this.showError('未找到要删除的账号');
@@ -1077,6 +1104,8 @@
                     const target = location.group.accounts[location.index];
                     const confirmed = await this.confirmAction(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`, '删除账号');
                     if (!confirmed) return;
+                    this.loadingText = '正在删除账号...';
+                    this.loadingVisible = true;
                     const { error } = await db.from('accounts').delete()
                         .eq('id', target.id).eq('user_id', this.currentUser.id);
                     if (error) throw error;
@@ -1089,9 +1118,13 @@
                     this.closeAccountModal();
                 } catch (e) {
                     this.showError(`删除账号失败：${e?.message || e}`);
+                } finally {
+                    this.loadingVisible = false;
+                    this.loadingText = '';
                 }
             },
             async deleteArea(group) {
+                if (this.loadingVisible) return;
                 try {
                     const areaName = this.normalizeAreaName(group?.area);
                     if (!areaName) {
@@ -1105,6 +1138,8 @@
                     }
                     const confirmed = await this.confirmAction(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`, '删除区服');
                     if (!confirmed) return;
+                    this.loadingText = '正在删除区服...';
+                    this.loadingVisible = true;
                     await db.from('accounts').delete().eq('user_id', this.currentUser.id).eq('area_name', areaName);
                     await db.from('areas').delete().eq('user_id', this.currentUser.id).eq('name', areaName);
                     this.areas = this.areas.filter(item => item.area !== areaName);
@@ -1118,6 +1153,9 @@
                     this.showSuccess(`已删除区服 ${areaName}`);
                 } catch (e) {
                     this.showError(`删除区服失败：${e?.message || e}`);
+                } finally {
+                    this.loadingVisible = false;
+                    this.loadingText = '';
                 }
             },
                 async persistToken(account, tokenInfo) {
@@ -1659,14 +1697,23 @@
                     return '';
                 },
                 async batchLaunchSelected() {
+                    if (this.loadingVisible) return;
                     const list = this.getSelectedAccountsOrdered();
                     if (!list.length) {
                         this.showError('请先勾选要启动的账号');
                         return;
                     }
-                    await this.batchLaunchAccounts(list);
+                    this.loadingText = `正在批量启动 ${list.length} 个账号...`;
+                    this.loadingVisible = true;
+                    try {
+                        await this.batchLaunchAccounts(list);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
                 },
                 async batchLaunchByAreaSlice() {
+                    if (this.loadingVisible) return;
                     const area = String(this.batchPanelArea || '').trim();
                     if (!area) {
                         this.showError('请选择区服');
@@ -1687,7 +1734,14 @@
                         );
                         return;
                     }
-                    await this.batchLaunchAccounts(slice);
+                    this.loadingText = `正在批量启动第 ${batchNo} 批（${slice.length} 个账号）...`;
+                    this.loadingVisible = true;
+                    try {
+                        await this.batchLaunchAccounts(slice);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
                 },
                 // --- 通行证登录 ---
                 /** 通行证状态 key，用于 passCodeMap */
