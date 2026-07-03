@@ -402,7 +402,7 @@ async function pcPostCodeInfo(sessionId, gameParams) {
 async function pcGetCodeInfo(sessionId) {
   const time = Date.now();
   const sign = pcCodeInfoSign(sessionId, time);
-  const url = `https://${PC_HOST}/pc/getCodeInfo?sessionId=${encodeURIComponent(sessionId)}&time=${time}&sign=${sign}`;
+  const url = `https://${PC_HOST}/pc/getCodeInfo?id=${encodeURIComponent(sessionId)}&time=${time}&sign=${sign}`;
 
   const resp = await fetch(url, {
     headers: { 'User-Agent': '37MobileGame/4.6.7 (Android)' },
