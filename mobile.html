@@ -320,18 +320,18 @@
                 </div>
                 <div class="form-group">
                     <label>昵称</label>
-                    <input v-model="addForm.name" placeholder="显示用，选填">
+                    <input v-model="addForm.name" placeholder="显示用，选填" autocomplete="off">
                     <button v-if="addForm.name" class="input-clear" @click="addForm.name=''">&times;</button>
                 </div>
                 <div class="form-group">
                     <label>账号 *</label>
-                    <input v-model="addForm.uname" placeholder="必填">
+                    <input v-model="addForm.uname" placeholder="必填" autocomplete="off">
                     <button v-if="addForm.uname" class="input-clear" @click="addForm.uname=''">&times;</button>
                 </div>
                 <div class="form-group">
                     <label>密码 *</label>
                     <div class="pwd-wrap">
-                        <input v-model="addForm.upwd" :type="addShowPwd ? 'text' : 'password'" placeholder="必填">
+                        <input v-model="addForm.upwd" :type="addShowPwd ? 'text' : 'password'" placeholder="必填" autocomplete="new-password">
                         <button class="input-clear" v-if="addForm.upwd" @click="addForm.upwd=''">&times;</button>
                         <button class="pwd-toggle" @click="addShowPwd = !addShowPwd">{{ addShowPwd ? '🙈' : '👁' }}</button>
                     </div>
