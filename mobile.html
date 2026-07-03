@@ -444,6 +444,20 @@ createApp({
             }
             addLoading.value = true; addError.value = '';
             try {
+                // 确保区服存在（不存在则自动创建）
+                var areaResp = await fetch(API + '/areas?name=eq.' + encodeURIComponent(area) + '&user_id=eq.' + currentUser.value.id + '&limit=1', {
+                    headers: hdrs()
+                });
+                var existingAreas = await areaResp.json();
+                if (!existingAreas || !existingAreas.length) {
+                    var createAreaResp = await fetch(API + '/areas', {
+                        method: 'POST',
+                        headers: jsonHdrs(),
+                        body: JSON.stringify({ name: area, user_id: currentUser.value.id, sort_order: 999 })
+                    });
+                    if (!createAreaResp.ok) throw new Error('创建区服失败 (' + createAreaResp.status + ')');
+                }
+
                 var body = {
                     area_name: area,
                     uname: uname,
