@@ -171,6 +171,7 @@
             <h1>DLDL</h1>
             <div class="user-info">
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <a class="btn btn-secondary btn-sm" :href="desktopUrl" target="_blank">新增</a>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
         </div>
@@ -261,6 +262,7 @@ createApp({
         const scanError = ref('');
         const scanResult = ref('');
         const scanLoading = ref(false);
+        const desktopUrl = location.origin + '/dldl/account.html';
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
         let html5QrCode = null;
@@ -658,6 +660,7 @@ createApp({
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
+            desktopUrl: desktopUrl,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
             openScanner, closeScanner, onScanSuccess, handleFileUpload
