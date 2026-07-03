@@ -1,6 +1,8 @@
 // Cloudflare Worker - DLDL API Proxy
 // 处理 /api/app-login（SDK 登录 + PC 扫码流程），以及通用代理
 
+import { createCipheriv } from 'node:crypto';
+
 // ==================== 配置常量 ====================
 
 const APP_KEY = 'CR.wdPyFoanb6Thv8sJ5rjNDMEeI3@X1';
@@ -177,50 +179,17 @@ function md5(string) {
 // ==================== AES-128-ECB ====================
 
 /**
- * AES-128-ECB 加密（使用 Web Crypto API，通过 CBC + 零 IV 逐块模拟 ECB）
+ * AES-128-ECB 加密（使用 node:crypto，与 proxy.js 完全一致）
  * @param {string} plaintext - 明文
  * @param {string} keyStr - 16字节密钥
- * @returns {Promise<string>} base64 密文
+ * @returns {string} base64 密文
  */
-async function aes128EcbEncrypt(plaintext, keyStr) {
-  const encoder = new TextEncoder();
-  const keyBytes = encoder.encode(keyStr); // 必须是 16 字节
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', keyBytes, { name: 'AES-CBC' }, false, ['encrypt']
-  );
-
-  // PKCS7 padding
-  const blockSize = 16;
-  let inputBytes = encoder.encode(plaintext);
-  const padLen = blockSize - (inputBytes.length % blockSize);
-  const padded = new Uint8Array(inputBytes.length + padLen);
-  padded.set(inputBytes);
-  padded.fill(padLen, inputBytes.length);
-
-  // 逐块加密（CBC + 零IV = ECB）
-  const zeroIV = new Uint8Array(16);
-  const blocks = [];
-  for (let i = 0; i < padded.length; i += blockSize) {
-    const block = padded.slice(i, i + blockSize);
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-CBC', iv: zeroIV }, cryptoKey, block
-    );
-    // 取前 16 字节（CBC 输出包含 IV，实际密文是后 16 字节？不，encrypt 返回的是密文块，不包含IV）
-    // SubtleCrypto encrypt 返回的 ArrayBuffer 就是纯密文（16 字节）
-    blocks.push(new Uint8Array(encrypted));
-  }
-
-  // 拼接所有块并转 base64
-  const totalLen = blocks.reduce((sum, b) => sum + b.length, 0);
-  const result = new Uint8Array(totalLen);
-  let offset = 0;
-  for (const block of blocks) {
-    result.set(block, offset);
-    offset += block.length;
-  }
-
-  return btoa(String.fromCharCode(...result));
+function aes128EcbEncrypt(plaintext, keyStr) {
+  const cipher = createCipheriv('aes-128-ecb', Buffer.from(keyStr, 'utf8'), null);
+  cipher.setAutoPadding(true);
+  let encrypted = cipher.update(plaintext, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encrypted;
 }
 
 // ==================== 签名算法 ====================
@@ -467,7 +436,7 @@ async function handlePassCode(request) {
     console.log('[pass-code] 开始处理:', uname, 'sessionId:', sessionId.slice(0, 10) + '...');
 
     // 1. AES 加密密码
-    const encryptedPwd = await aes128EcbEncrypt(upwd, AES_KEY);
+    const encryptedPwd = aes128EcbEncrypt(upwd, AES_KEY);
 
     // 2. SDK 登录
     const sdkResp = await sdkLogin(uname, encryptedPwd);
@@ -518,7 +487,7 @@ async function handleAppLogin(request) {
   try {
     // 1. AES 加密密码
     console.log('[app-login] 开始处理:', uname);
-    const encryptedPwd = await aes128EcbEncrypt(upwd, AES_KEY);
+    const encryptedPwd = aes128EcbEncrypt(upwd, AES_KEY);
 
     // 2. SDK 登录
     const sdkResp = await sdkLogin(uname, encryptedPwd);
