@@ -8,126 +8,141 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-    <script>new VConsole();</script>
+    <script>new VConsole().setSwitchPosition(20, window.innerHeight - 80);</script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 15px;
-            background: #0d0d1a; color: #e0e0e0;
+            background: #F5F0E8; color: #3d3025;
             -webkit-tap-highlight-color: transparent;
         }
-        .container { max-width: 480px; margin: 0 auto; padding: 16px; min-height: 100%; }
+        .container { max-width: 480px; margin: 0 auto; padding: 0 16px 80px; min-height: 100%; }
         .header {
-            position: sticky; top: 0; z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 0; border-bottom: 1px solid #2a2a4a; margin-bottom: 16px;
-            background: #0d0d1a;
+            padding: 12px 0; border-bottom: 1px solid #E0D5C5;
+            position: sticky; top: 0; z-index: 100;
+            background: #F5F0E8;
         }
-        .header h1 { font-size: 18px; font-weight: 600; color: #fff; }
-        .header .user-info { font-size: 13px; color: #7c7caa; display: flex; align-items: center; gap: 8px; }
+        .header h1 { font-size: 18px; font-weight: 600; color: #4a3520; }
+        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; }
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
             padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
             border: none; cursor: pointer; transition: all 0.15s;
-            color: #fff; background: #6366f1; white-space: nowrap;
+            color: #fff; background: #C3702A; white-space: nowrap;
             -webkit-tap-highlight-color: transparent; user-select: none;
         }
         .btn:active { opacity: 0.8; transform: scale(0.97); }
-        .btn-secondary { background: #2a2a4a; color: #a0a0c0; }
+        .btn-secondary { background: #E8DFD0; color: #6b5a42; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-block { display: flex; width: 100%; }
 
         /* 登录表单 */
         .login-box {
-            background: #1e1e3a; border-radius: 12px; padding: 24px;
-            max-width: 360px; margin: 60px auto 0;
+            background: #FFF9F3; border-radius: 12px; padding: 24px;
+            max-width: 360px; margin: 60px auto 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
-        .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #fff; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+        .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #4a3520; }
+        .form-group { margin-bottom: 14px; position: relative; }
+        .form-group label { display: block; font-size: 13px; color: #8a7560; margin-bottom: 4px; }
         .form-group input {
-            width: 100%; padding: 10px 36px 10px 12px; border-radius: 8px;
-            border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
-            font-size: 15px; outline: none;
+            width: 100%; padding: 12px 36px 12px 12px; border-radius: 8px;
+            border: 1px solid #D4C8B5; background: #fff; color: #3d3025;
+            font-size: 16px; outline: none;
         }
-        .form-group input:focus { border-color: #6366f1; }
-        .input-wrapper { position: relative; }
+        .form-group input:focus { border-color: #C3702A; }
         .input-clear {
-            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-            width: 24px; height: 24px; border-radius: 50%; border: none;
-            background: #33335a; color: #a0a0c0; font-size: 14px; line-height: 1;
+            position: absolute; right: 4px; bottom: 4px; width: 32px; height: 32px;
+            background: none; border: none; color: #b0a090; font-size: 18px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            padding: 0; -webkit-tap-highlight-color: transparent;
         }
-        .input-clear:active { background: #4a4a7a; }
-        .input-toggle {
-            position: absolute; right: 34px; top: 50%; transform: translateY(-50%);
-            width: 24px; height: 24px; border-radius: 4px; border: none;
-            background: transparent; color: #6a6a8a; font-size: 14px; line-height: 1;
+        .input-clear:active { color: #3d3025; }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 64px !important; }
+        .pwd-toggle {
+            position: absolute; right: 36px; bottom: 4px; width: 28px; height: 32px;
+            background: none; border: none; font-size: 16px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
-            padding: 0; -webkit-tap-highlight-color: transparent;
+            color: #b0a090;
         }
-        .input-toggle:active { color: #a0a0c0; }
-        .login-error { color: #ef4444; font-size: 13px; margin-top: 10px; text-align: center; }
-        .login-toggle { text-align: center; margin-top: 14px; font-size: 13px; color: #7c7caa; }
-        .login-toggle a { color: #6366f1; cursor: pointer; text-decoration: none; margin-left: 4px; }
-        .login-toggle a:active { opacity: 0.7; }
+        .pwd-toggle:active { transform: scale(0.9); }
+        .login-error { color: #d44235; font-size: 13px; margin-top: 10px; text-align: center; }
 
         /* 区服分组 */
         .area-group { margin-bottom: 16px; }
         .area-group-header {
             display: flex; align-items: center; gap: 8px;
-            padding: 8px 12px; background: #1e1e3a; border-radius: 8px 8px 0 0;
-            font-size: 14px; font-weight: 600; color: #c0c0e0;
+            padding: 8px 12px; background: #fff; border-radius: 10px 10px 0 0;
+            font-size: 14px; font-weight: 600; color: #5a4030;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
         }
-        .area-group-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; flex-shrink: 0; }
-        .area-group-header .count { margin-left: auto; font-size: 12px; color: #7c7caa; }
+        .area-group-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #C3702A; flex-shrink: 0; }
+        .area-group-header .count { margin-left: auto; font-size: 12px; color: #8a7560; }
 
-        /* 账号卡片 - 两列网格 */
-        .area-accounts {
+        /* 账号卡片 */
+        .account-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            padding: 8px;
+            padding: 8px 8px 12px;
         }
         .account-card {
-            display: flex; flex-direction: column; gap: 10px;
-            padding: 14px; background: #161632; border-radius: 10px;
-            min-height: 0;
+            display: flex; flex-direction: column;
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
         }
         .account-info {
-            display: flex; align-items: flex-start; gap: 6px; min-width: 0;
+            display: flex; align-items: flex-start; gap: 6px;
+            padding: 10px 10px 0;
         }
         .account-main { flex: 1; min-width: 0; }
         .account-nick {
-            font-size: 13px; color: #d0d0e0; line-height: 1.4;
+            font-size: 13px; font-weight: 600; color: #3d3025; line-height: 1.35;
             word-break: break-all;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
             overflow: hidden;
         }
         .account-meta {
-            display: flex; align-items: center; gap: 4px; margin-top: 4px;
+            display: flex; align-items: center; gap: 5px; margin-top: 4px;
+            min-height: 18px;
         }
         .url-dot {
-            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px;
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
         }
-        .url-dot.has { background: #10b981; box-shadow: 0 0 4px rgba(16,185,129,0.5); }
-        .url-dot.no  { background: #444; }
+        .url-dot.has { background: #10b981; box-shadow: 0 0 3px rgba(16,185,129,0.4); }
+        .url-dot.no  { background: #d0c8bb; }
         .app-status {
-            font-size: 11px; color: #10b981; flex-shrink: 0;
-            padding: 2px 6px; border-radius: 10px; background: rgba(16,185,129,0.12);
+            font-size: 10px; color: #059669; flex-shrink: 0;
+            padding: 1px 6px; border-radius: 8px; background: #ecfdf5; font-weight: 500;
         }
         .account-actions {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+            padding: 8px 10px 10px;
         }
-        .account-actions .btn { padding: 10px 4px; font-size: 12px; border-radius: 8px; }
+        .account-actions .btn {
+            padding: 7px 4px; font-size: 11px; border-radius: 6px;
+            font-weight: 500; transition: none;
+        }
+        .btn-refresh { background: #f5f0e8 !important; color: #8a7560 !important; }
+        .btn-login  { background: #C3702A !important; color: #fff !important; }
+        .btn-scan   { background: #ecfdf5 !important; color: #059669 !important; }
+        .btn-edit   { background: #f5f0e8 !important; color: #8a7560 !important; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
+        .back-top {
+            position: fixed; right: 20px; bottom: 30px; z-index: 200;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #6366f1; color: #fff; border: none;
+            font-size: 20px; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.2s; opacity: 0.85;
+        }
+        .back-top:active { opacity: 1; transform: scale(0.95); }
         .url-age {
             font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
         }
-        .empty { text-align: center; padding: 40px 16px; color: #6a6a8a; font-size: 14px; }
-        .tip { font-size: 12px; color: #5a5a7a; margin-bottom: 16px; line-height: 1.5; }
-        .loading { text-align: center; padding: 20px; color: #6a6a8a; }
+        .empty { text-align: center; padding: 40px 16px; color: #8a7560; font-size: 14px; }
+        .tip { font-size: 12px; color: #8a7560; margin-bottom: 16px; line-height: 1.5; }
+        .loading { text-align: center; padding: 20px; color: #8a7560; }
 
         /* 扫码器模态框 */
         .scan-overlay {
@@ -137,76 +152,61 @@
         }
         .scan-box {
             width: 90vw; max-width: 360px;
-            background: #1e1e3a; border-radius: 12px; overflow: hidden;
+            background: #FFF9F3; border-radius: 12px; overflow: hidden;
         }
         .scan-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; border-bottom: 1px solid #2a2a4a;
+            padding: 12px 16px; border-bottom: 1px solid #E0D5C5;
         }
-        .scan-header span { font-size: 15px; font-weight: 600; color: #fff; }
+        .scan-header span { font-size: 15px; font-weight: 600; color: #4a3520; }
         .scan-close {
-            background: none; border: none; color: #a0a0c0; font-size: 20px;
+            background: none; border: none; color: #8a7560; font-size: 20px;
             cursor: pointer; padding: 4px 8px;
         }
         .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; }
         .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
         .scan-tip {
-            padding: 14px 16px; font-size: 13px; color: #a0a0c0; text-align: center;
+            padding: 14px 16px; font-size: 13px; color: #8a7560; text-align: center;
             line-height: 1.5;
         }
         .scan-error {
-            padding: 12px 16px; font-size: 13px; color: #ef4444; text-align: center;
+            padding: 12px 16px; font-size: 13px; color: #d44235; text-align: center;
         }
-        .scan-loading { color: #6366f1; }
-        .scan-success { color: #10b981; }
-        .btn-scan {
-            background: #10b981;
-        }
+        .scan-loading { color: #C3702A; }
+        .scan-success { color: #2d8a5e; }
+        .btn-scan { background: #2d8a5e; }
         .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
         .scan-upload {
-            padding: 10px 16px; display: flex; gap: 8px; justify-content: center; border-top: 1px solid #2a2a4a;
+            padding: 10px 16px; display: flex; gap: 8px; justify-content: center; border-top: 1px solid #E0D5C5;
         }
         .scan-upload input[type="file"] { display: none; }
         .scan-upload .btn { font-size: 13px; padding: 8px 14px; }
-        .btn-upload { background: #2a2a4a; color: #a0a0c0; }
-        .login-success { color: #10b981; font-size: 13px; margin-top: 10px; text-align: center; }
-        .btn-new { background: #10b981; }
+        .btn-upload { background: #EDE4D5; color: #6b5a42; }
 
-        /* 新增账号弹窗 */
+        /* 新增账号模态框 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000;
+            background: rgba(0,0,0,0.5); z-index: 1000;
             display: flex; align-items: center; justify-content: center;
-            padding: 16px;
         }
         .modal-box {
-            width: 100%; max-width: 380px;
-            background: #1e1e3a; border-radius: 12px; padding: 20px;
+            width: 90vw; max-width: 360px; max-height: 85vh; overflow-y: auto;
+            background: #FFF9F3; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-        .modal-box h3 { font-size: 17px; color: #fff; margin-bottom: 16px; text-align: center; }
-        .modal-box .form-group select {
+        .modal-box h3 { font-size: 16px; color: #4a3520; margin-bottom: 16px; }
+        .modal-box .form-group { margin-bottom: 12px; }
+        .modal-box .form-group label { display: block; font-size: 13px; color: #8a7560; margin-bottom: 4px; }
+        .modal-box .form-group input, .modal-box .form-group select {
             width: 100%; padding: 10px 12px; border-radius: 8px;
-            border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
-            font-size: 15px; outline: none; -webkit-appearance: none; appearance: none;
+            border: 1px solid #D4C8B5; background: #fff; color: #3d3025;
+            font-size: 15px; outline: none;
         }
-        .modal-box .form-group select:focus { border-color: #6366f1; }
-        .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
-        .modal-actions .btn { flex: 1; }
-        .btn-danger { background: #dc2626; color: #fff; }
-        .btn-danger:active { background: #b91c1c; }
-
-        /* 返回顶部 */
-        .back-to-top {
-            position: fixed; right: 20px; bottom: 30px; z-index: 200;
-            width: 44px; height: 44px; border-radius: 50%;
-            background: #6366f1; color: #fff; border: none;
-            font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
-            transition: opacity 0.2s, transform 0.2s;
-            -webkit-tap-highlight-color: transparent;
+        .modal-box .form-group input:focus, .modal-box .form-group select:focus { border-color: #C3702A; }
+        .modal-box .form-group select { appearance: none; }
+        .modal-actions {
+            display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
         }
-        .back-to-top:active { transform: scale(0.9); opacity: 0.8; }
+        .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
     </style>
 </head>
 <body>
@@ -214,41 +214,25 @@
     <!-- 未登录 -->
     <div v-if="!isLoggedIn" class="container">
         <div class="login-box">
-            <h2>{{ isRegistering ? '注册新账号' : 'DLDL 账号管理' }}</h2>
-            <!-- 隐藏诱饵输入框，吸收浏览器自动填充 -->
-            <input type="text" style="display:none;position:absolute;left:-9999px" autocomplete="username" />
-            <input type="password" style="display:none;position:absolute;left:-9999px" autocomplete="current-password" />
-            <div class="form-group">
-                <label>用户名</label>
-                <div class="input-wrapper">
-                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" autocomplete="off" name="dldl-username" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" />
-                    <button v-if="loginForm.username" class="input-clear" @click="loginForm.username = ''">&times;</button>
+            <h2>DLDL 账号管理</h2>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.username" class="input-clear" @click="loginForm.username=''">&times;</button>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>密码</label>
-                <div class="input-wrapper" style="position:relative">
-                    <input v-model="loginForm.password" :type="showPwd ? 'text' : 'password'" placeholder="请输入密码" :autocomplete="isRegistering ? 'new-password' : 'off'" name="dldl-password" @keyup.enter="isRegistering ? handleRegister() : handleLogin()" style="padding-right:60px" />
-                    <button v-if="loginForm.password" class="input-toggle" @click="showPwd = !showPwd">{{ showPwd ? '🙈' : '👁' }}</button>
-                    <button v-if="loginForm.password" class="input-clear" @click="loginForm.password = ''">&times;</button>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="pwd-wrap">
+                        <input v-model="loginForm.password" :type="loginShowPwd ? 'text' : 'password'" placeholder="请输入密码" @keyup.enter="handleLogin" />
+                        <button class="pwd-toggle" @click="loginShowPwd = !loginShowPwd">{{ loginShowPwd ? '🙈' : '👁' }}</button>
+                        <button v-if="loginForm.password" class="input-clear" style="right:4px" @click="loginForm.password=''">&times;</button>
+                    </div>
                 </div>
-            </div>
-            <div v-if="isRegistering" class="form-group">
-                <label>确认密码</label>
-                <div class="input-wrapper" style="position:relative">
-                    <input v-model="registerConfirmPwd" :type="showConfirmPwd ? 'text' : 'password'" placeholder="请再次输入密码" autocomplete="new-password" name="dldl-confirm-pwd" @keyup.enter="handleRegister" style="padding-right:60px" />
-                    <button v-if="registerConfirmPwd" class="input-toggle" @click="showConfirmPwd = !showConfirmPwd">{{ showConfirmPwd ? '🙈' : '👁' }}</button>
-                    <button v-if="registerConfirmPwd" class="input-clear" @click="registerConfirmPwd = ''">&times;</button>
+                <div style="display:flex;gap:10px;margin-top:4px">
+                    <button class="btn" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                    <button class="btn btn-secondary" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
                 </div>
-            </div>
-            <button v-if="!isRegistering" class="btn btn-block" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
-            <button v-else class="btn btn-block btn-new" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
             <div v-if="loginError" class="login-error">{{ loginError }}</div>
-            <div v-if="loginSuccess" class="login-success">{{ loginSuccess }}</div>
-            <div class="login-toggle">
-                <template v-if="!isRegistering">没有账号？<a @click="switchToRegister">去注册</a></template>
-                <template v-else><a @click="switchToLogin">返回登录</a></template>
-            </div>
         </div>
     </div>
 
@@ -258,7 +242,7 @@
             <h1>DLDL</h1>
             <div class="user-info">
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
-                <button class="btn btn-sm btn-new" @click="openAddAccount">新增</button>
+                <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
         </div>
@@ -273,134 +257,32 @@
                     <span>{{ g.name || '未命名区服' }}</span>
                     <span class="count">{{ g.accounts?.length || 0 }} 个</span>
                 </div>
-                <div class="area-accounts">
-                    <div v-for="a in g.accounts" :key="a.id" class="account-card">
-                        <div class="account-info">
-                            <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
-                            <div class="account-main">
-                                <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
-                                <div class="account-meta">
-                                    <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
-                                    <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
-                                </div>
+                <div class="account-grid">
+                <div v-for="a in g.accounts" :key="a.id" class="account-card">
+                    <div class="account-info">
+                        <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                        <div class="account-main">
+                            <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
+                            <div class="account-meta">
+                                <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
+                                <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
                             </div>
                         </div>
-                        <div class="account-actions">
-                            <button class="btn btn-secondary" @click="openEdit(g.area, a)">编辑</button>
-                            <button class="btn btn-secondary" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
-                            <button class="btn" @click="doAppLogin(g.area, a)">APP登录</button>
-                            <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
-                        </div>
                     </div>
+                    <div class="account-actions">
+                        <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
+                        <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
+                        <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                        <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
+                    </div>
+                </div>
                 </div>
             </div>
         </template>
         <div v-else-if="loadError" class="empty">{{ loadError }}</div>
         <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
 
-        <!-- 返回顶部 -->
-        <button v-if="showBackTop" class="back-to-top" @click="scrollToTop" title="返回顶部">↑</button>
-
-        <!-- 新增账号弹窗 -->
-        <div v-if="addAccountVisible" class="modal-overlay" @click.self="closeAddAccount">
-            <div class="modal-box">
-                <h3>新增账号</h3>
-                <!-- 隐藏诱饵输入框，吸收浏览器自动填充 -->
-                <input type="text" style="display:none;position:absolute;left:-9999px" autocomplete="username" />
-                <input type="password" style="display:none;position:absolute;left:-9999px" autocomplete="current-password" />
-                <div class="form-group">
-                    <label>区服</label>
-                    <div class="input-wrapper">
-                        <select v-model="addForm.area_name">
-                            <option value="">-- 选择区服 --</option>
-                            <option v-for="g in areas" :key="g.area" :value="g.area">{{ g.name || g.area }}</option>
-                            <option value="__new__">+ 新建区服</option>
-                        </select>
-                    </div>
-                </div>
-                <div v-if="addForm.area_name === '__new__'" class="form-group">
-                    <label>新区服名称</label>
-                    <div class="input-wrapper">
-                        <input v-model="addForm.newAreaName" type="text" placeholder="输入区服名称" autocomplete="off" name="new-area-name" />
-                        <button v-if="addForm.newAreaName" class="input-clear" @click="addForm.newAreaName = ''">&times;</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>账号名称（昵称）</label>
-                    <div class="input-wrapper">
-                        <input v-model="addForm.name" type="text" placeholder="如：大号、小号" autocomplete="off" name="account-nickname" />
-                        <button v-if="addForm.name" class="input-clear" @click="addForm.name = ''">&times;</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>游戏账号</label>
-                    <div class="input-wrapper">
-                        <input v-model="addForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="game-account" />
-                        <button v-if="addForm.uname" class="input-clear" @click="addForm.uname = ''">&times;</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>游戏密码</label>
-                    <div class="input-wrapper" style="position:relative">
-                        <input v-model="addForm.upwd" :type="showAddPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="game-password" style="padding-right:60px" />
-                        <button v-if="addForm.upwd" class="input-toggle" @click="showAddPwd = !showAddPwd">{{ showAddPwd ? '🙈' : '👁' }}</button>
-                        <button v-if="addForm.upwd" class="input-clear" @click="addForm.upwd = ''">&times;</button>
-                    </div>
-                </div>
-                <div v-if="addError" class="login-error">{{ addError }}</div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" @click="closeAddAccount">取消</button>
-                    <button class="btn" :disabled="addLoading" @click="handleAddAccount">{{ addLoading ? '添加中...' : '确认添加' }}</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 编辑账号弹窗 -->
-        <div v-if="editVisible" class="modal-overlay" @click.self="closeEdit">
-            <div class="modal-box">
-                <h3>编辑账号</h3>
-                <!-- 隐藏诱饵输入框，吸收浏览器自动填充 -->
-                <input type="text" style="display:none;position:absolute;left:-9999px" autocomplete="username" />
-                <input type="password" style="display:none;position:absolute;left:-9999px" autocomplete="current-password" />
-                <div class="form-group">
-                    <label>区服</label>
-                    <div class="input-wrapper">
-                        <select v-model="editForm.area_name">
-                            <option value="">-- 选择区服 --</option>
-                            <option v-for="g in areas" :key="g.area" :value="g.area">{{ g.name || g.area }}</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>账号名称（昵称）</label>
-                    <div class="input-wrapper">
-                        <input v-model="editForm.name" type="text" placeholder="如：大号、小号" autocomplete="off" name="edit-nickname" />
-                        <button v-if="editForm.name" class="input-clear" @click="editForm.name = ''">&times;</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>游戏账号</label>
-                    <div class="input-wrapper">
-                        <input v-model="editForm.uname" type="text" placeholder="游戏登录账号" autocomplete="off" name="edit-game-account" />
-                        <button v-if="editForm.uname" class="input-clear" @click="editForm.uname = ''">&times;</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>游戏密码</label>
-                    <div class="input-wrapper" style="position:relative">
-                        <input v-model="editForm.upwd" :type="showEditPwd ? 'text' : 'password'" placeholder="游戏登录密码" autocomplete="new-password" name="edit-game-password" style="padding-right:60px" />
-                        <button v-if="editForm.upwd" class="input-toggle" @click="showEditPwd = !showEditPwd">{{ showEditPwd ? '🙈' : '👁' }}</button>
-                        <button v-if="editForm.upwd" class="input-clear" @click="editForm.upwd = ''">&times;</button>
-                    </div>
-                </div>
-                <div v-if="editError" class="login-error">{{ editError }}</div>
-                <div class="modal-actions">
-                    <button class="btn btn-danger" :disabled="editLoading" @click="handleDeleteAccount">删除账号</button>
-                    <button class="btn btn-secondary" @click="closeEdit">取消</button>
-                    <button class="btn" :disabled="editLoading" @click="handleSaveEdit">保存</button>
-                </div>
-            </div>
-        </div>
+        <button v-if="areas.length" class="back-top" title="回到顶部" @click="scrollToTop">&#9650;</button>
 
         <!-- 扫码器模态框 -->
         <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
@@ -423,6 +305,43 @@
                 </div>
             </div>
         </div>
+
+        <!-- 新增/编辑账号模态框 -->
+        <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
+            <div class="modal-box">
+                <h3>{{ editAccountId ? '编辑账号' : '新增账号' }}</h3>
+                <div v-if="addError" class="login-error" style="margin-bottom:10px">{{ addError }}</div>
+                <div class="form-group">
+                    <label>区服</label>
+                    <select v-model="addForm.area">
+                        <option value="">请选择区服</option>
+                        <option v-for="g in areas" :key="g.id" :value="g.name">{{ g.name || '未命名区服' }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input v-model="addForm.name" placeholder="显示用，选填" autocomplete="off">
+                    <button v-if="addForm.name" class="input-clear" @click="addForm.name=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>账号 *</label>
+                    <input v-model="addForm.uname" placeholder="必填" autocomplete="off">
+                    <button v-if="addForm.uname" class="input-clear" @click="addForm.uname=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <div class="pwd-wrap">
+                        <input v-model="addForm.upwd" :type="addShowPwd ? 'text' : 'password'" placeholder="必填" autocomplete="new-password">
+                        <button class="input-clear" v-if="addForm.upwd" @click="addForm.upwd=''">&times;</button>
+                        <button class="pwd-toggle" @click="addShowPwd = !addShowPwd">{{ addShowPwd ? '🙈' : '👁' }}</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" @click="closeAddModal">取消</button>
+                    <button class="btn" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -439,15 +358,10 @@ createApp({
 
         // ===== 状态 =====
         const isLoggedIn = ref(false);
-        const isRegistering = ref(false);
         const currentUser = ref(null);
         const loginForm = reactive({ username: '', password: '' });
-        const registerConfirmPwd = ref('');
-        const showPwd = ref(false);
-        const showConfirmPwd = ref(false);
         const loginLoading = ref(false);
         const loginError = ref('');
-        const loginSuccess = ref('');
         const areas = ref([]);
         const loading = ref(false);
         const loadError = ref('');
@@ -455,28 +369,91 @@ createApp({
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
-        const showBackTop = ref(false);
-
-        // 新增账号
-        const addAccountVisible = ref(false);
-        const addLoading = ref(false);
-        const addError = ref('');
-        const addForm = reactive({ area_name: '', newAreaName: '', name: '', uname: '', upwd: '' });
-        const showAddPwd = ref(false);
-
-        // 编辑账号
-        const editVisible = ref(false);
-        const editLoading = ref(false);
-        const editError = ref('');
-        const editForm = reactive({ area_name: '', name: '', uname: '', upwd: '' });
-        const showEditPwd = ref(false);
-        let editAccountId = null;
+        const loginShowPwd = ref(false);
+        const addShowPwd = ref(false);
 
         // ===== 扫码器 =====
         const scanVisible = ref(false);
         const scanError = ref('');
         const scanResult = ref('');
         const scanLoading = ref(false);
+        // ===== 新增/编辑账号 =====
+        const addVisible = ref(false);
+        const addLoading = ref(false);
+        const addError = ref('');
+        const addForm = reactive({ area: '', name: '', uname: '', upwd: '' });
+        const editAccountId = ref(null);
+
+        function openAddModal(account) {
+            addError.value = '';
+            addShowPwd.value = false;
+            if (account) {
+                editAccountId.value = account.id;
+                addForm.area = account.area_name || '';
+                addForm.name = account.name || '';
+                addForm.uname = account.uname || '';
+                addForm.upwd = account.upwd || '';
+            } else {
+                editAccountId.value = null;
+                addForm.area = '';
+                addForm.name = '';
+                addForm.uname = '';
+                addForm.upwd = '';
+            }
+            addVisible.value = true;
+        }
+
+        function closeAddModal() {
+            addVisible.value = false;
+            editAccountId.value = null;
+        }
+
+        async function submitAddAccount() {
+            var area = String(addForm.area || '').trim();
+            var uname = String(addForm.uname || '').trim();
+            var upwd = String(addForm.upwd || '').trim();
+            if (!area || !uname || !upwd) {
+                addError.value = '区服、账号、密码为必填项';
+                return;
+            }
+            addLoading.value = true; addError.value = '';
+            try {
+                var body = {
+                    area_name: area,
+                    uname: uname,
+                    upwd: upwd,
+                    name: String(addForm.name || '').trim(),
+                };
+                if (editAccountId.value) {
+                    // 编辑模式：PATCH
+                    var patchUrl = API + '/accounts?id=eq.' + editAccountId.value + '&user_id=eq.' + currentUser.value.id;
+                    var resp = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: jsonHdrs(),
+                        body: JSON.stringify(body)
+                    });
+                    if (!resp.ok) throw new Error('更新失败 (' + resp.status + ')');
+                } else {
+                    // 新增模式：POST
+                    body.user_id = currentUser.value.id;
+                    body.token = ''; body.time = ''; body.sign = ''; body.uinfo = ''; body.history = ''; body.url = '';
+                    var resp = await fetch(API + '/accounts', {
+                        method: 'POST',
+                        headers: jsonHdrs(),
+                        body: JSON.stringify(body)
+                    });
+                    if (!resp.ok) throw new Error('保存失败 (' + resp.status + ')');
+                }
+                closeAddModal();
+                handleRefresh();
+            } catch (e) {
+                console.error('[add] failed:', e);
+                addError.value = e.message || '编辑失败';
+            } finally { addLoading.value = false; }
+        }
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
         let html5QrCode = null;
@@ -602,11 +579,15 @@ createApp({
             }
 
             try {
+                var ctrl = new AbortController();
+                var t = setTimeout(function() { ctrl.abort(); }, 15000);
                 var resp = await fetch(WORKER + '/api/pass-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd })
+                    body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd }),
+                    signal: ctrl.signal
                 });
+                clearTimeout(t);
                 var result = await resp.json();
                 if (!result.ok || result.state !== 1) {
                     throw new Error(result.message || result.msg || '通行证验证失败');
@@ -620,7 +601,10 @@ createApp({
                 }, 2000);
             } catch (e) {
                 console.error('[scan] pass-code failed:', e);
-                scanError.value = '验证失败：' + (e.message || e);
+                var msg = e.message || e;
+                if (e.name === 'AbortError') msg = '请求超时，请检查网络';
+                else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
+                scanError.value = '验证失败：' + msg;
                 if (html5QrCode) html5QrCode.resume();
             } finally {
                 scanLoading.value = false;
@@ -655,65 +639,6 @@ createApp({
             return hash.toString(CryptoJS.enc.Hex);
         }
 
-        // ===== 密码加密（与桌面端一致） =====
-        function encryptPassword(pwd) {
-            return CryptoJS.AES.encrypt(pwd, 'dldl_aes_key_2024').toString();
-        }
-
-        // ===== 切换登录/注册 =====
-        function switchToRegister() {
-            isRegistering.value = true;
-            loginError.value = '';
-            loginSuccess.value = '';
-            showPwd.value = false;
-            showConfirmPwd.value = false;
-        }
-        function switchToLogin() {
-            isRegistering.value = false;
-            registerConfirmPwd.value = '';
-            loginError.value = '';
-            loginSuccess.value = '';
-            showPwd.value = false;
-            showConfirmPwd.value = false;
-        }
-
-        // ===== 注册 =====
-        async function handleRegister() {
-            var username = String(loginForm.username || '').trim();
-            var password = String(loginForm.password || '').trim();
-            var confirmPwd = String(registerConfirmPwd.value || '').trim();
-            if (!username || !password) { loginError.value = '请输入用户名和密码'; loginSuccess.value = ''; return; }
-            if (password.length < 6) { loginError.value = '密码至少6位'; loginSuccess.value = ''; return; }
-            if (password !== confirmPwd) { loginError.value = '两次密码不一致'; loginSuccess.value = ''; return; }
-            loginLoading.value = true; loginError.value = ''; loginSuccess.value = '';
-            try {
-                var password_hash = hashPassword(password);
-                var encrypted_pwd = encryptPassword(password);
-                var resp = await fetch(API + '/users', {
-                    method: 'POST',
-                    headers: Object.assign({}, jsonHdrs(), { 'Prefer': 'return=representation' }),
-                    body: JSON.stringify({ username: username, password_hash: password_hash, encrypted_pwd: encrypted_pwd })
-                });
-                if (resp.status === 409) {
-                    var errData = await resp.json();
-                    if (errData && errData.code === '23505') throw new Error('用户名已存在');
-                    throw new Error('注册失败 (' + resp.status + ')');
-                }
-                if (!resp.ok) throw new Error('注册失败 (' + resp.status + ')');
-                var userData = await resp.json();
-                if (!userData || !userData.length) throw new Error('注册返回数据异常');
-                var user = userData[0];
-                delete user.password_hash;
-                currentUser.value = user; isLoggedIn.value = true;
-                localStorage.setItem('dldl_user', JSON.stringify(user));
-                loginForm.username = ''; loginForm.password = '';
-                registerConfirmPwd.value = '';
-                isRegistering.value = false;
-                loadAccounts();
-            } catch (e) { loginError.value = e.message || '注册失败'; loginSuccess.value = ''; }
-            finally { loginLoading.value = false; }
-        }
-
         // ===== 登录 =====
         async function handleLogin() {
             var username = String(loginForm.username || '').trim();
@@ -737,6 +662,34 @@ createApp({
                 loginForm.username = ''; loginForm.password = '';
                 loadAccounts();
             } catch (e) { loginError.value = e.message || '登录失败'; }
+            finally { loginLoading.value = false; }
+        }
+
+        async function handleRegister() {
+            var username = String(loginForm.username || '').trim();
+            var password = String(loginForm.password || '').trim();
+            if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+            if (password.length < 6) { loginError.value = '密码至少6位'; return; }
+            loginLoading.value = true; loginError.value = '';
+            try {
+                var hash = hashPassword(password);
+                var resp = await fetch(API + '/users', {
+                    method: 'POST',
+                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true })
+                });
+                if (!resp.ok) {
+                    if (resp.status === 409) throw new Error('用户名已存在');
+                    throw new Error('注册失败 (' + resp.status + ')');
+                }
+                var data = await resp.json();
+                var user = Array.isArray(data) ? data[0] : data;
+                currentUser.value = { id: user.id, username: user.username, enabled: user.enabled };
+                isLoggedIn.value = true;
+                localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
+                loginForm.username = ''; loginForm.password = '';
+                loadAccounts();
+            } catch (e) { loginError.value = e.message || '注册失败'; }
             finally { loginLoading.value = false; }
         }
 
@@ -873,11 +826,15 @@ createApp({
             if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
             actionLoading.value = true;
             try {
+                var ctrl = new AbortController();
+                var t = setTimeout(function() { ctrl.abort(); }, 15000);
                 var resp = await fetch(WORKER + '/api/app-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ uname: uname, upwd: upwd })
+                    body: JSON.stringify({ uname: uname, upwd: upwd }),
+                    signal: ctrl.signal
                 });
+                clearTimeout(t);
                 var result = await resp.json();
                 if (!result.ok || result.state !== 1) {
                     throw new Error(result.msg || result.message || 'APP 登录刷新失败');
@@ -904,132 +861,11 @@ createApp({
                 alert('已刷新 ' + uname + ' 的 APP token');
             } catch (e) {
                 console.error('doRefreshToken failed', e);
-                alert('刷新 APP token 失败：' + (e.message || e));
+                var msg = e.message || e;
+                if (e.name === 'AbortError') msg = '请求超时，请检查网络或稍后重试';
+                else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
+                alert('刷新 APP token 失败：' + msg);
             } finally { actionLoading.value = false; }
-        }
-
-        // ===== 新增账号 =====
-        function openAddAccount() {
-            addForm.area_name = '';
-            addForm.newAreaName = '';
-            addForm.name = '';
-            addForm.uname = '';
-            addForm.upwd = '';
-            addError.value = '';
-            showAddPwd.value = false;
-            addAccountVisible.value = true;
-        }
-        function closeAddAccount() {
-            addAccountVisible.value = false;
-            showAddPwd.value = false;
-        }
-        async function handleAddAccount() {
-            var areaName = String(addForm.area_name || '').trim();
-            if (areaName === '__new__') {
-                areaName = String(addForm.newAreaName || '').trim();
-            }
-            var name = String(addForm.name || '').trim();
-            var uname = String(addForm.uname || '').trim();
-            var upwd = String(addForm.upwd || '').trim();
-            if (!areaName) { addError.value = '请选择或输入区服'; return; }
-            if (!name) { addError.value = '请输入账号名称'; return; }
-            if (!uname) { addError.value = '请输入游戏账号'; return; }
-            if (!upwd) { addError.value = '请输入游戏密码'; return; }
-            addLoading.value = true; addError.value = '';
-            try {
-                var uid = currentUser.value.id;
-                // 如果是新区服，先创建区服
-                if (addForm.area_name === '__new__') {
-                    var areaResp = await fetch(API + '/areas', {
-                        method: 'POST',
-                        headers: jsonHdrs(),
-                        body: JSON.stringify({ user_id: uid, name: areaName, sort_order: 99 })
-                    });
-                    if (!areaResp.ok) {
-                        var ae = await areaResp.json();
-                        if (ae && ae.code === '23505') {
-                            // 区服已存在，直接使用
-                        } else {
-                            throw new Error('创建区服失败 (' + areaResp.status + ')');
-                        }
-                    }
-                }
-                // 创建账号
-                var accountResp = await fetch(API + '/accounts', {
-                    method: 'POST',
-                    headers: jsonHdrs(),
-                    body: JSON.stringify({ user_id: uid, area_name: areaName, name: name, uname: uname, upwd: upwd })
-                });
-                if (!accountResp.ok) {
-                    var errData = await accountResp.json();
-                    if (errData && errData.code === '23505') throw new Error('该区服下账号名称已存在');
-                    throw new Error('创建账号失败 (' + accountResp.status + ')');
-                }
-                closeAddAccount();
-                // 刷新列表
-                await handleRefresh();
-            } catch (e) { addError.value = e.message || '添加失败'; }
-            finally { addLoading.value = false; }
-        }
-
-        // ===== 编辑/删除账号 =====
-        function openEdit(area, account) {
-            editAccountId = account.id;
-            editForm.area_name = account.area_name || area || '';
-            editForm.name = account.name || '';
-            editForm.uname = account.uname || '';
-            editForm.upwd = account.upwd || '';
-            editError.value = '';
-            showEditPwd.value = false;
-            editVisible.value = true;
-        }
-        function closeEdit() {
-            editVisible.value = false;
-            editAccountId = null;
-            showEditPwd.value = false;
-        }
-        async function handleSaveEdit() {
-            var areaName = String(editForm.area_name || '').trim();
-            var name = String(editForm.name || '').trim();
-            var uname = String(editForm.uname || '').trim();
-            var upwd = String(editForm.upwd || '').trim();
-            if (!areaName) { editError.value = '请选择区服'; return; }
-            if (!name) { editError.value = '请输入账号名称'; return; }
-            if (!uname) { editError.value = '请输入游戏账号'; return; }
-            if (!upwd) { editError.value = '请输入游戏密码'; return; }
-            editLoading.value = true; editError.value = '';
-            try {
-                var patchUrl = API + '/accounts?id=eq.' + editAccountId + '&user_id=eq.' + currentUser.value.id;
-                var patchResp = await fetch(patchUrl, {
-                    method: 'PATCH',
-                    headers: jsonHdrs(),
-                    body: JSON.stringify({ area_name: areaName, name: name, uname: uname, upwd: upwd })
-                });
-                if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
-                closeEdit();
-                await handleRefresh();
-            } catch (e) { editError.value = e.message || '保存失败'; }
-            finally { editLoading.value = false; }
-        }
-        async function handleDeleteAccount() {
-            if (!confirm('确定要删除该账号吗？此操作不可撤销！')) return;
-            editLoading.value = true; editError.value = '';
-            try {
-                var deleteUrl = API + '/accounts?id=eq.' + editAccountId + '&user_id=eq.' + currentUser.value.id;
-                var delResp = await fetch(deleteUrl, { method: 'DELETE', headers: hdrs() });
-                if (!delResp.ok) throw new Error('删除失败 (' + delResp.status + ')');
-                closeEdit();
-                await handleRefresh();
-            } catch (e) { editError.value = e.message || '删除失败'; }
-            finally { editLoading.value = false; }
-        }
-
-        // ===== 返回顶部 =====
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function handleScroll() {
-            showBackTop.value = window.scrollY > 300;
         }
 
         // ===== 初始化 =====
@@ -1045,36 +881,26 @@ createApp({
                     }
                 } catch (e) { localStorage.removeItem('dldl_user'); }
             }
-            window.addEventListener('scroll', handleScroll, { passive: true });
         });
 
         return {
             isLoggedIn: isLoggedIn, currentUser: currentUser, loginForm: loginForm,
-            isRegistering: isRegistering, registerConfirmPwd: registerConfirmPwd,
-            showPwd: showPwd, showConfirmPwd: showConfirmPwd,
-            loginLoading: loginLoading, loginError: loginError, loginSuccess: loginSuccess,
+            loginLoading: loginLoading, loginError: loginError,
+            loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
             actionLoading: actionLoading,
-            hashPassword: hashPassword, switchToRegister: switchToRegister, switchToLogin: switchToLogin,
-            handleRegister: handleRegister, handleLogin: handleLogin, handleLogout: handleLogout,
+            hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
-            showBackTop: showBackTop, scrollToTop: scrollToTop,
             // 新增账号
-            addAccountVisible: addAccountVisible, addLoading: addLoading,
-            addError: addError, addForm: addForm, showAddPwd: showAddPwd,
-            openAddAccount: openAddAccount, closeAddAccount: closeAddAccount,
-            handleAddAccount: handleAddAccount,
-            // 编辑/删除账号
-            editVisible: editVisible, editLoading: editLoading,
-            editError: editError, editForm: editForm, showEditPwd: showEditPwd,
-            openEdit: openEdit, closeEdit: closeEdit,
-            handleSaveEdit: handleSaveEdit, handleDeleteAccount: handleDeleteAccount,
+            addVisible, addLoading, addError, addForm, editAccountId,
+            openAddModal, closeAddModal, submitAddAccount,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
-            openScanner, closeScanner, onScanSuccess, handleFileUpload
+            openScanner, closeScanner, onScanSuccess, handleFileUpload,
+            scrollToTop
         };
     }
 }).mount('#app');
