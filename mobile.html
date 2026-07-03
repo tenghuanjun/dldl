@@ -144,6 +144,31 @@
         .scan-upload input[type="file"] { display: none; }
         .scan-upload .btn { font-size: 13px; padding: 8px 14px; }
         .btn-upload { background: #2a2a4a; color: #a0a0c0; }
+
+        /* 新增账号模态框 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            width: 90vw; max-width: 360px; max-height: 85vh; overflow-y: auto;
+            background: #1e1e3a; border-radius: 12px; padding: 20px;
+        }
+        .modal-box h3 { font-size: 16px; color: #fff; margin-bottom: 16px; }
+        .modal-box .form-group { margin-bottom: 12px; }
+        .modal-box .form-group label { display: block; font-size: 13px; color: #a0a0c0; margin-bottom: 4px; }
+        .modal-box .form-group input, .modal-box .form-group select {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid #33335a; background: #12122a; color: #e0e0e0;
+            font-size: 15px; outline: none;
+        }
+        .modal-box .form-group input:focus, .modal-box .form-group select:focus { border-color: #6366f1; }
+        .modal-box .form-group select { appearance: none; }
+        .modal-actions {
+            display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+        }
+        .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
     </style>
 </head>
 <body>
@@ -160,7 +185,8 @@
                 <label>密码</label>
                 <input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter="handleLogin" />
             </div>
-            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">登录</button>
+            <button class="btn btn-block" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+            <button class="btn btn-block btn-secondary" style="margin-top:8px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
             <div v-if="loginError" class="login-error">{{ loginError }}</div>
         </div>
     </div>
@@ -171,6 +197,7 @@
             <h1>DLDL</h1>
             <div class="user-info">
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
         </div>
@@ -228,6 +255,36 @@
                 </div>
             </div>
         </div>
+
+        <!-- 新增账号模态框 -->
+        <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
+            <div class="modal-box">
+                <h3>新增账号</h3>
+                <div v-if="addError" class="login-error" style="margin-bottom:10px">{{ addError }}</div>
+                <div class="form-group">
+                    <label>区服</label>
+                    <select v-model="addForm.area">
+                        <option v-for="g in areas" :key="g.id" :value="g.name">{{ g.name || '未命名区服' }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input v-model="addForm.name" placeholder="可选，显示用">
+                </div>
+                <div class="form-group">
+                    <label>账号 *</label>
+                    <input v-model="addForm.uname" placeholder="必填">
+                </div>
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <input v-model="addForm.upwd" type="password" placeholder="必填">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" @click="closeAddModal">取消</button>
+                    <button class="btn" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -261,6 +318,59 @@ createApp({
         const scanError = ref('');
         const scanResult = ref('');
         const scanLoading = ref(false);
+        // ===== 新增账号 =====
+        const addVisible = ref(false);
+        const addLoading = ref(false);
+        const addError = ref('');
+        const addForm = reactive({ area: '', name: '', uname: '', upwd: '' });
+
+        function openAddModal() {
+            addError.value = '';
+            addForm.area = areas.value[0]?.name || '';
+            addForm.name = '';
+            addForm.uname = '';
+            addForm.upwd = '';
+            addVisible.value = true;
+        }
+
+        function closeAddModal() {
+            addVisible.value = false;
+        }
+
+        async function submitAddAccount() {
+            var area = String(addForm.area || '').trim();
+            var uname = String(addForm.uname || '').trim();
+            var upwd = String(addForm.upwd || '').trim();
+            if (!area || !uname || !upwd) {
+                addError.value = '区服、账号、密码为必填项';
+                return;
+            }
+            addLoading.value = true; addError.value = '';
+            try {
+                var insertUrl = API + '/accounts';
+                var body = {
+                    user_id: currentUser.value.id,
+                    area_name: area,
+                    uname: uname,
+                    upwd: upwd,
+                    name: String(addForm.name || '').trim(),
+                    token: '', time: '', sign: '', uinfo: '', history: '', url: ''
+                };
+                var resp = await fetch(insertUrl, {
+                    method: 'POST',
+                    headers: jsonHdrs(),
+                    body: JSON.stringify(body)
+                });
+                if (!resp.ok) throw new Error('保存失败 (' + resp.status + ')');
+                closeAddModal();
+                // 刷新账号列表
+                handleRefresh();
+            } catch (e) {
+                console.error('[add] failed:', e);
+                addError.value = e.message || '添加失败';
+            } finally { addLoading.value = false; }
+        }
+
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
         let html5QrCode = null;
@@ -465,6 +575,34 @@ createApp({
             finally { loginLoading.value = false; }
         }
 
+        async function handleRegister() {
+            var username = String(loginForm.username || '').trim();
+            var password = String(loginForm.password || '').trim();
+            if (!username || !password) { loginError.value = '请输入用户名和密码'; return; }
+            if (password.length < 6) { loginError.value = '密码至少6位'; return; }
+            loginLoading.value = true; loginError.value = '';
+            try {
+                var hash = hashPassword(password);
+                var resp = await fetch(API + '/users', {
+                    method: 'POST',
+                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true, role: 'user' })
+                });
+                if (!resp.ok) {
+                    if (resp.status === 409) throw new Error('用户名已存在');
+                    throw new Error('注册失败 (' + resp.status + ')');
+                }
+                var data = await resp.json();
+                var user = Array.isArray(data) ? data[0] : data;
+                currentUser.value = { id: user.id, username: user.username, role: user.role, enabled: user.enabled };
+                isLoggedIn.value = true;
+                localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
+                loginForm.username = ''; loginForm.password = '';
+                loadAccounts();
+            } catch (e) { loginError.value = e.message || '注册失败'; }
+            finally { loginLoading.value = false; }
+        }
+
         function handleLogout() {
             localStorage.removeItem('dldl_user');
             localStorage.removeItem(CACHE_KEY());
@@ -654,10 +792,13 @@ createApp({
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
             actionLoading: actionLoading,
-            hashPassword: hashPassword, handleLogin: handleLogin, handleLogout: handleLogout,
+            hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
+            // 新增账号
+            addVisible, addLoading, addError, addForm,
+            openAddModal, closeAddModal, submitAddAccount,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
             openScanner, closeScanner, onScanSuccess, handleFileUpload
