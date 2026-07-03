@@ -221,9 +221,10 @@
         .modal-box .form-group input:focus, .modal-box .form-group select:focus { border-color: #C3702A; }
         .modal-box .form-group select { appearance: none; }
         .modal-actions {
-            display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;
+            display: flex; gap: 8px; justify-content: space-between; margin-top: 16px;
         }
         .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
+        .btn-danger { background: #d44235 !important; }
     </style>
 </head>
 <body>
@@ -361,8 +362,12 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" @click="closeAddModal">取消</button>
-                    <button class="btn" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                    <button v-if="editAccountId" class="btn btn-danger" :disabled="addLoading" @click="deleteAccount">删除</button>
+                    <span v-else></span>
+                    <span>
+                        <button class="btn btn-secondary" @click="closeAddModal">取消</button>
+                        <button class="btn" style="margin-left:8px" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                    </span>
                 </div>
             </div>
         </div>
@@ -492,6 +497,22 @@ createApp({
         }
 
         function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        async function deleteAccount() {
+            if (!editAccountId.value) return;
+            if (!confirm('确定要删除该账号吗？此操作不可恢复。')) return;
+            addLoading.value = true; addError.value = '';
+            try {
+                var delUrl = API + '/accounts?id=eq.' + editAccountId.value + '&user_id=eq.' + currentUser.value.id;
+                var resp = await fetch(delUrl, { method: 'DELETE', headers: hdrs() });
+                if (!resp.ok) throw new Error('删除失败 (' + resp.status + ')');
+                closeAddModal();
+                handleRefresh();
+            } catch (e) {
+                console.error('[delete] failed:', e);
+                addError.value = e.message || '删除失败';
+            } finally { addLoading.value = false; }
+        }
 
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
@@ -947,7 +968,7 @@ createApp({
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
             // 新增账号
             addVisible, addLoading, addError, addForm, editAccountId,
-            openAddModal, closeAddModal, submitAddAccount,
+            openAddModal, closeAddModal, submitAddAccount, deleteAccount,
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
             openScanner, closeScanner, onScanSuccess, handleFileUpload,
