@@ -586,7 +586,7 @@ createApp({
                 var resp = await fetch(API + '/users', {
                     method: 'POST',
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true, role: 'user' })
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true })
                 });
                 if (!resp.ok) {
                     if (resp.status === 409) throw new Error('用户名已存在');
@@ -594,7 +594,7 @@ createApp({
                 }
                 var data = await resp.json();
                 var user = Array.isArray(data) ? data[0] : data;
-                currentUser.value = { id: user.id, username: user.username, role: user.role, enabled: user.enabled };
+                currentUser.value = { id: user.id, username: user.username, enabled: user.enabled };
                 isLoggedIn.value = true;
                 localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
                 loginForm.username = ''; loginForm.password = '';
