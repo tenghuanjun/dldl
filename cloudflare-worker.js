@@ -2,6 +2,7 @@
 // 处理 /api/app-login（SDK 登录 + PC 扫码流程），以及通用代理
 
 import { createCipheriv } from 'node:crypto';
+import { Buffer } from 'node:buffer';
 
 // ==================== 配置常量 ====================
 
