@@ -381,7 +381,23 @@ createApp({
     setup() {
         const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
-        const WORKER = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+        // 多 Worker 轮询（突破 IP 限制）
+        const WORKERS = [
+            'https://red-moon-ff95.tenghuanjun.workers.dev',
+            'https://dlapi-1.tenghuanjun.workers.dev',
+            'https://dlapi-2.tenghuanjun.workers.dev',
+            'https://dlapi-3.tenghuanjun.workers.dev',
+            'https://dlapi-4.tenghuanjun.workers.dev',
+            'https://dlapi-5.tenghuanjun.workers.dev',
+            'https://dlapi-6.tenghuanjun.workers.dev',
+            'https://dlapi-7.tenghuanjun.workers.dev',
+            'https://dlapi-8.tenghuanjun.workers.dev',
+            'https://dlapi-9.tenghuanjun.workers.dev',
+            'https://dlapi-10.tenghuanjun.workers.dev',
+        ];
+        let workerIdx = 0;
+        function getWorker() { return WORKERS[workerIdx % WORKERS.length]; }
+        function nextWorker() { workerIdx++; console.log('[IP] 切换到 Worker #' + (workerIdx % WORKERS.length + 1)); return getWorker(); }
         function hdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }; }
         function jsonHdrs() { return { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' }; }
 
@@ -653,7 +669,7 @@ createApp({
             try {
                 var ctrl = new AbortController();
                 var t = setTimeout(function() { ctrl.abort(); }, 60000);
-                var resp = await fetch(WORKER + '/api/pass-code', {
+                var resp = await fetch(getWorker() + '/api/pass-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd }),
@@ -897,58 +913,80 @@ createApp({
             var upwd = String(account && account.upwd || '').trim();
             if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
             actionLoading.value = true; globalLoading.value = true; globalLoadingText.value = '刷新 ' + uname + ' 的token…';
-            try {
-                var ctrl = new AbortController();
-                var t = setTimeout(function() { ctrl.abort(); }, 60000);
-                var resp = await fetch(WORKER + '/api/app-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ uname: uname, upwd: upwd }),
-                    signal: ctrl.signal
-                });
-                clearTimeout(t);
-                var result = await resp.json();
-                if (!result.ok || result.state !== 1) {
-                    throw new Error(result.msg || result.message || 'APP 登录刷新失败');
-                }
-                var url = buildAppLoginUrl(result, account);
-                var appToken = String(result.token || '');
-                var appSign = String(result.sign || '');
-                var now = new Date().toISOString();
-                // 更新本地 account 对象
-                account.url = url;
-                account.app_token = appToken;
-                account.app_sign = appSign;
-                account.url_created_at = now;
-                // 写回 Supabase
-                if (account.id != null) {
-                    var patchUrl = API + '/accounts?id=eq.' + account.id + '&user_id=eq.' + currentUser.value.id;
-                    var patchResp = await fetch(patchUrl, {
-                        method: 'PATCH',
-                        headers: jsonHdrs(),
-                        body: JSON.stringify({ url: url, app_token: appToken, app_sign: appSign, url_created_at: now })
+            
+            // 最多尝试3个 Worker
+            for (var attempt = 0; attempt < 3; attempt++) {
+                var worker = getWorker();
+                try {
+                    var ctrl = new AbortController();
+                    var t = setTimeout(function() { ctrl.abort(); }, 60000);
+                    var resp = await fetch(worker + '/api/app-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uname: uname, upwd: upwd }),
+                        signal: ctrl.signal
                     });
-                    if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
-                }
-                // 触发Vue响应式更新 & 同步本地缓存
-                for (var i = 0; i < areas.value.length; i++) {
-                    var ga = areas.value[i];
-                    for (var j = 0; j < ga.accounts.length; j++) {
-                        if (ga.accounts[j].id === account.id || ga.accounts[j].uname === uname) {
-                            ga.accounts[j] = Object.assign({}, ga.accounts[j]);
-                            break;
+                    clearTimeout(t);
+                    var result = await resp.json();
+                    if (!result.ok || result.state !== 1) {
+                        var errMsg = result.msg || result.message || 'APP 登录刷新失败';
+                        // 40025 = IP 限制，切 Worker
+                        if (errMsg.includes('40025') && attempt < 2) {
+                            console.log('[IP] 40025 限制，切 Worker...');
+                            nextWorker();
+                            continue;
+                        }
+                        throw new Error(errMsg);
+                    }
+                    // 成功！保存结果
+                    var url = buildAppLoginUrl(result, account);
+                    var appToken = String(result.token || '');
+                    var appSign = String(result.sign || '');
+                    var now = new Date().toISOString();
+                    account.url = url;
+                    account.app_token = appToken;
+                    account.app_sign = appSign;
+                    account.url_created_at = now;
+                    if (account.id != null) {
+                        var patchUrl = API + '/accounts?id=eq.' + account.id + '&user_id=eq.' + currentUser.value.id;
+                        var patchResp = await fetch(patchUrl, {
+                            method: 'PATCH',
+                            headers: jsonHdrs(),
+                            body: JSON.stringify({ url: url, app_token: appToken, app_sign: appSign, url_created_at: now })
+                        });
+                        if (!patchResp.ok) throw new Error('保存失败 (' + patchResp.status + ')');
+                    }
+                    for (var i = 0; i < areas.value.length; i++) {
+                        var ga = areas.value[i];
+                        for (var j = 0; j < ga.accounts.length; j++) {
+                            if (ga.accounts[j].id === account.id || ga.accounts[j].uname === uname) {
+                                ga.accounts[j] = Object.assign({}, ga.accounts[j]);
+                                break;
+                            }
                         }
                     }
+                    saveToCache([...areas.value]);
+                    alert('已刷新 ' + uname + ' 的 APP token');
+                    actionLoading.value = false; globalLoading.value = false;
+                    return;  // 成功退出
+                } catch (e) {
+                    var msg = e.message || e;
+                    // 非 40025 错误直接退出循环
+                    if (!msg.includes('40025') || attempt >= 2) {
+                        if (e.name === 'AbortError') msg = '请求超时，请检查网络或稍后重试';
+                        else if (msg === 'Load failed' || msg.includes('NetworkError')) msg = '网络连接失败，请检查网络';
+                        if (!msg.includes('40025')) {
+                            alert('刷新 APP token 失败：' + msg);
+                            actionLoading.value = false; globalLoading.value = false;
+                            return;
+                        }
+                    }
+                    // 40025 + 还有备选 Worker，继续循环
+                    if (attempt < 2) nextWorker();
                 }
-                saveToCache([...areas.value]);
-                alert('已刷新 ' + uname + ' 的 APP token');
-            } catch (e) {
-                console.error('doRefreshToken failed', e);
-                var msg = e.message || e;
-                if (e.name === 'AbortError') msg = '请求超时，请检查网络或稍后重试';
-                else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
-                alert('刷新 APP token 失败：' + msg);
-            } finally { actionLoading.value = false; globalLoading.value = false; }
+            }
+            // 所有 Worker 都失败了
+            actionLoading.value = false; globalLoading.value = false;
         }
 
         // ===== 初始化 =====
