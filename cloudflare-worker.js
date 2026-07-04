@@ -214,9 +214,9 @@ function fromBase64Url(s) {
   return s;
 }
 
-/** AES-CBC 加密 → URL-safe Base64 */
+/** AES-CBC 加密 → URL-safe Base64（key=32字节，用AES-256） */
 function gatewayEncrypt(plaintext, key, iv) {
-  const cipher = createCipheriv('aes-128-cbc', Buffer.from(key, 'utf8'), Buffer.from(iv, 'utf8'));
+  const cipher = createCipheriv('aes-256-cbc', Buffer.from(key, 'utf8'), Buffer.from(iv, 'utf8'));
   let enc = cipher.update(plaintext, 'utf8', 'base64');
   enc += cipher.final('base64');
   return toBase64Url(enc);
@@ -255,14 +255,8 @@ async function securePost(path, params, bodyObj) {
     const dKey = GATEWAY_DEFAULT_KEY + nonce.substring(0, 8) + respNonce.substring(0, 8);
     const dIv = respNonce.substring(8, 24);
     const b64Body = fromBase64Url(respBody);
-    const decipher = crypto.createDecipheriv ? 
-      // Workers with nodejs_compat
-      (() => { const d = createCipheriv('aes-128-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8')); 
-        d.setAutoPadding(true); let r = d.update(b64Body, 'base64', 'utf8'); r += d.final('utf8'); return r; })() :
-      respBody; // fallback
-    // 简化：尝试直接解密，失败则返回原始body
     try {
-      const decipher = createCipheriv('aes-128-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8'));
+      const decipher = createCipheriv('aes-256-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8'));
       decipher.setAutoPadding(true);
       let decrypted = decipher.update(b64Body, 'base64', 'utf8');
       decrypted += decipher.final('utf8');
