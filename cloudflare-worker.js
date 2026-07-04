@@ -198,13 +198,16 @@ function aes128EcbEncrypt(plaintext, keyStr) {
 
 const GATEWAY_DEFAULT_KEY = 'soC2GAr8jN2fsbry'; // GateWayManager 硬编码默认密钥
 const GATEWAY_XVERSION = '1';
-const SECURE_BASE = 'http://s-api-secure.37.com.cn';
+const SECURE_BASE = 'https://s-api-secure.37.com.cn';
+const SDK_APIX_BASE = 'https://sdk-apix-secure.37.com.cn';
 
 /** 生成随机 hex 字符串 */
 function randomHex(len) { return randomBytes(Math.ceil(len/2)).toString('hex').slice(0, len); }
 
-/** 模拟 Request-Id 生成 */
-function generateSecRequestId() { return 'android-9999-' + Date.now() + '-' + randomHex(16); }
+/** 模拟 Request-Id 生成（格式: platform-pid-timestamp-random） */
+function generateSecRequestId() { return 'android-' + SDK_PID + '-' + Date.now() + '-' + randomHex(16); }
+/** 生成 Request-LiveId（格式: platform-pid-timestamp-random） */
+function generateLiveId() { return 'Android-' + SDK_PID + '-' + Date.now() + '-' + randomHex(16).toUpperCase(); }
 
 /** MD5 URL-safe Base64 编解码 */
 function toBase64Url(b64) { return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, ''); }
@@ -228,12 +231,13 @@ function buildNonceStr(method, query, body, xRequestId) {
 }
 
 /** 发加密请求到 s-api-secure 的端点 */
-async function securePost(path, params, bodyObj) {
+async function securePost(path, params, bodyObj, optKey) {
   const reqId = generateSecRequestId();
   const xRequestId = md5(reqId);
   const formBody = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k]))).join('&');
   const nonce = buildNonceStr('POST', '', formBody, xRequestId);
-  const encKey = GATEWAY_DEFAULT_KEY + nonce.substring(0, 16);
+  const baseKey = optKey || GATEWAY_DEFAULT_KEY;
+  const encKey = baseKey + nonce.substring(0, 16);
   const iv = nonce.substring(nonce.length - 16);
   const encBody = gatewayEncrypt(formBody, encKey, iv);
 
@@ -242,9 +246,11 @@ async function securePost(path, params, bodyObj) {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       'Accept': '*/*',
-      'x-request-id': xRequestId,
+      'X-Request-Id': xRequestId,
       'X-Request-Nonce-Str': nonce,
       'X-Request-Version': GATEWAY_XVERSION,
+      'Request-LiveId': generateLiveId(),
+      'User-Agent': 'H5App/136 (com.m37.dldlsy.sy37; build:136; Android 10) Dalvik/2.1.0',
     },
     body: encBody,
   });
@@ -255,7 +261,7 @@ async function securePost(path, params, bodyObj) {
   const respBody = await resp.text();
   const respNonce = resp.headers.get('x-response-nonce-str') || '';
   if (respNonce) {
-    const dKey = GATEWAY_DEFAULT_KEY + nonce.substring(0, 8) + respNonce.substring(0, 8);
+    const dKey = baseKey + nonce.substring(0, 8) + respNonce.substring(0, 8);
     const dIv = respNonce.substring(8, 24);
     const b64Body = fromBase64Url(respBody);
     try {
@@ -272,10 +278,144 @@ async function securePost(path, params, bodyObj) {
 }
 
 /** 发加密 POST 请求并解析 JSON */
-async function securePostJson(path, params) {
-  const result = await securePost(path, params);
+async function securePostJson(path, params, optKey) {
+  const result = await securePost(path, params, null, optKey);
   return { status: result.status, json: safeJsonParse(result.body) };
 }
+
+/** 发加密 GET 请求（query参数加密） */
+async function secureGet(path, queryParams, optKey) {
+  const reqId = generateSecRequestId();
+  const xRequestId = md5(reqId);
+  const plainQuery = Object.keys(queryParams).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(queryParams[k]))).join('&');
+  const nonce = buildNonceStr('GET', plainQuery, '', xRequestId);
+  const baseKey = optKey || GATEWAY_DEFAULT_KEY;
+  const encKey = baseKey + nonce.substring(0, 16);
+  const iv = nonce.substring(nonce.length - 16);
+  const encQuery = gatewayEncrypt(plainQuery, encKey, iv);
+
+  const resp = await fetch(SDK_APIX_BASE + path + '?' + encQuery, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
+      'X-Request-Id': xRequestId,
+      'X-Request-Nonce-Str': nonce,
+      'X-Request-Version': GATEWAY_XVERSION,
+      'Request-LiveId': generateLiveId(),
+      'User-Agent': 'H5App/136 (com.m37.dldlsy.sy37; build:136; Android 10) Dalvik/2.1.0',
+    },
+  });
+
+  console.log('[secureGet]', path, 'HTTP', resp.status);
+
+  const respBody = await resp.text();
+  const respNonce = resp.headers.get('x-response-nonce-str') || '';
+  if (respNonce) {
+    const dKey = baseKey + nonce.substring(0, 8) + respNonce.substring(0, 8);
+    const dIv = respNonce.substring(8, 24);
+    const b64Body = fromBase64Url(respBody);
+    try {
+      const decipher = createCipheriv('aes-256-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8'));
+      decipher.setAutoPadding(true);
+      let decrypted = decipher.update(b64Body, 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
+      return { status: resp.status, body: decrypted };
+    } catch (_) {
+      return { status: resp.status, body: respBody };
+    }
+  }
+  return { status: resp.status, body: respBody };
+}
+
+/** 从 get-url 响应中解密动态密钥 (getFixedKey) */
+function computeDynamicKey(jsonResp) {
+  let json;
+  try { json = JSON.parse(jsonResp); } catch (_) { console.log('[computeDynamicKey] JSON解析失败'); return null; }
+  
+  // findSecureKey: 在 api_infos 数组中找 api_key == "x_secure_key"
+  const apiInfos = json.api_infos;
+  if (!apiInfos || !Array.isArray(apiInfos)) {
+    console.log('[computeDynamicKey] 无 api_infos 数组');
+    return null;
+  }
+  
+  for (const item of apiInfos) {
+    if (item.api_key === 'x_secure_key' && item.api_info) {
+      let secJson;
+      try { secJson = JSON.parse(item.api_info); } catch (_) { continue; }
+      
+      const appKey = secJson['X-Request-AppKey'];
+      const appSecret = secJson['X-Request-AppSecret'];
+      if (!appKey || !appSecret) continue;
+      
+      console.log('[computeDynamicKey] appKey:', appKey.slice(0, 30), 'len:', appKey.length);
+      
+      // getFixedKey = decryptDefault(appSecret, appKey, iv=appKey.getBytes())
+      // Java: new SecretKeySpec(appKey.getBytes(), "AES") → 根据key长度选AES-128/192/256
+      const keyBytes = Buffer.from(appKey, 'utf8');
+      const algo = keyBytes.length === 32 ? 'aes-256-cbc' : keyBytes.length === 24 ? 'aes-192-cbc' : 'aes-128-cbc';
+      // Base64.decode(cipherText, 0) → DEFAULT mode (标准base64)
+      const secret = Buffer.from(String(appSecret), 'base64');
+      
+      try {
+        const decipher = createDecipheriv(algo, keyBytes, keyBytes);
+        decipher.setAutoPadding(true);
+        let decrypted = Buffer.concat([decipher.update(secret), decipher.final()]);
+        const result = decrypted.toString('utf8');
+        console.log('[computeDynamicKey] ✅ 密钥解密成功, len:', result.length, 'algo:', algo);
+        return result;
+      } catch (e) {
+        console.log('[computeDynamicKey] 解密失败:', e.message, 'algo:', algo);
+        return null;
+      }
+    }
+  }
+  
+  console.log('[computeDynamicKey] 未找到 x_secure_key');
+  return null;
+}
+
+/** 获取动态加密密钥（get-url → 解析 → 返回key） */
+let cachedDynamicKey = null;
+let debugInfo = {};
+async function getDynamicKey() {
+  if (cachedDynamicKey) { debugInfo.keySource = 'cached'; return cachedDynamicKey; }
+
+  const params = {
+    gid: GAME_GID, pid: GAME_PID, refer: SDK_REFER,
+    version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+    dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+    gwversion: '4.6.7', is_root: '0', is_simulator: '0',
+  };
+  params.sign = signV3(params, APP_KEY);
+
+  debugInfo.getUrlStatus = 'sending';
+  console.log('[getDynamicKey] 请求 get-url...');
+  const result = await secureGet('/server-info-service/get-url', params, GATEWAY_DEFAULT_KEY);
+  debugInfo.getUrlStatus = result.status;
+  
+  if (result.status === 200 && result.body) {
+    debugInfo.getUrlBodyLen = result.body.length;
+    const dynamicKey = computeDynamicKey(result.body);
+    if (dynamicKey) {
+      console.log('[getDynamicKey] ✅ 动态密钥获取成功');
+      debugInfo.keySource = 'get-url';
+      cachedDynamicKey = dynamicKey;
+      return dynamicKey;
+    }
+    debugInfo.keyError = 'computeDynamicKey failed';
+    debugInfo.getUrlBody = result.body.slice(0, 300);
+    console.log('[getDynamicKey] 解析密钥失败');
+  } else {
+    debugInfo.keyError = 'HTTP ' + result.status;
+    debugInfo.getUrlBody = String(result.body || '').slice(0, 200);
+    console.log('[getDynamicKey] HTTP', result.status);
+  }
+  return null;
+}
+
+/** 修改 securePost 支持可选密钥参数 */
 
 // ==================== 签名算法 ====================
 
@@ -367,7 +507,7 @@ async function sdkLogin(uname, encryptedPwd) {
 
   console.log('[app-login] SDK登录请求:', uname);
 
-  const resp = await fetch(SDK_LOGIN_URL, {
+  const body = await safeFetch(SDK_LOGIN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -376,7 +516,6 @@ async function sdkLogin(uname, encryptedPwd) {
     body: formBody,
   });
 
-  const body = await resp.text();
   const json = safeJsonParse(body);
   if (!json) throw new Error('SDK 登录响应解析失败: ' + body.slice(0, 200));
 
@@ -392,11 +531,9 @@ async function pcGetId() {
   const sign = pcSign(time);
   const url = `https://${PC_HOST}/pc/getId?time=${time}&sign=${sign}`;
 
-  const resp = await fetch(url, {
+  const body = await safeFetch(url, {
     headers: { 'User-Agent': '37MobileGame/4.6.7 (Android)' },
   });
-  const body = await resp.text();
-  if (resp.status !== 200) throw new Error('pc/getId HTTP ' + resp.status);
 
   const json = safeJsonParse(body);
   if (!json || json.state !== 1 || !json.data) {
@@ -429,10 +566,9 @@ async function h5sdkLogin(uname, upwd) {
 
   console.log('[app-login] h5sdk/login 请求...');
 
-  const resp = await fetch(url, {
+  const text = await safeFetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' },
   });
-  const text = await resp.text();
 
   const match = text.match(/^callback\(([\s\S]+)\);?$/);
   const jsonText = match ? match[1] : text;
@@ -440,12 +576,13 @@ async function h5sdkLogin(uname, upwd) {
   if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
     throw new Error('h5sdk/login 失败: ' + (payload && payload.msg || text.slice(0, 200)));
   }
-  console.log('[app-login] h5sdk/login 成功');
-  return {
+  const result = {
     token: String(payload.data.token),
     time: String(payload.data.time || time),
     sign: String(payload.data.sign || sign),
   };
+  console.log('[app-login] h5sdk/login 成功');
+  return result;
 }
 
 /**
@@ -463,7 +600,7 @@ async function pcPostCodeInfo(sessionId, gameParams) {
 
   console.log('[app-login] postCodeInfo 写入参数: gid=' + gameParams.gid);
 
-  const resp = await fetch('https://' + PC_HOST + '/pc/postCodeInfo', {
+  const body = await safeFetch('https://' + PC_HOST + '/pc/postCodeInfo', {
     method: 'POST',
     headers: {
       'User-Agent': '37MobileGame/4.6.7 (Android)',
@@ -471,7 +608,6 @@ async function pcPostCodeInfo(sessionId, gameParams) {
     },
     body: formBody,
   });
-  const body = await resp.text();
   const json = safeJsonParse(body);
   if (!json || json.state !== 1) {
     throw new Error('pc/postCodeInfo 失败: ' + body.slice(0, 200));
@@ -488,11 +624,9 @@ async function pcGetCodeInfo(sessionId) {
   const sign = pcCodeInfoSign(sessionId, time);
   const url = `https://${PC_HOST}/pc/getCodeInfo?id=${encodeURIComponent(sessionId)}&time=${time}&sign=${sign}`;
 
-  const resp = await fetch(url, {
+  const body = await safeFetch(url, {
     headers: { 'User-Agent': '37MobileGame/4.6.7 (Android)' },
   });
-  const body = await resp.text();
-  if (resp.status !== 200) throw new Error('pc/getCodeInfo HTTP ' + resp.status);
 
   const json = safeJsonParse(body);
   if (!json || json.state !== 1 || !json.data) {
@@ -502,7 +636,31 @@ async function pcGetCodeInfo(sessionId) {
   return json.data;
 }
 
-// ==================== /api/pass-code（扫码通行证） ====================
+// ==================== 请求缓存 ====================
+
+const sdkLoginCache = new Map();
+const h5sdkCache = new Map();
+const CACHE_SDK_TTL = 10 * 60 * 1000;
+const CACHE_H5SDK_TTL = 5 * 60 * 1000;
+
+function getCache(cache, key, ttl) {
+  const entry = cache.get(key);
+  if (entry && entry.expireAt > Date.now()) return entry.data;
+  cache.delete(key);
+  return null;
+}
+
+function setCache(cache, key, data, ttl) {
+  cache.set(key, { data, expireAt: Date.now() + ttl });
+  if (cache.size > 50) cache.delete(cache.keys().next().value);
+}
+
+async function safeFetch(url, options) {
+  const resp = await fetch(url, options);
+  const text = await resp.text();
+  if (resp.status !== 200) throw new Error(url.split('/')[2] + ' HTTP ' + resp.status + ': ' + text.slice(0, 100));
+  return text;
+}
 
 async function handlePassCode(request) {
   let body;
@@ -533,38 +691,14 @@ async function handlePassCode(request) {
     const rawLt = String(sdkData.login_type || '');
     const loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
 
-    // 3. 走 APP 扫码流程（加密通道优先，失败回退 h5sdk）
-    try {
-      const scanParams = {
-        os: 'android', code: sessionId, token: sdkToken, login_type: loginType,
-        gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-        version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-        dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-        gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-      };
-      scanParams.sign = signV3(scanParams, APP_KEY);
-      const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
-      if (scanResult.json && scanResult.json.state === 1) {
-        const confirmParams = { ...scanParams };
-        delete confirmParams.login_type;
-        confirmParams.sign = signV3(confirmParams, APP_KEY);
-        const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
-        if (confirmResult.json && confirmResult.json.state === 1) {
-          console.log('[pass-code] ✅ SDK扫码通道完成:', uname);
-          return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
-        }
-      }
-      console.log('[pass-code] 加密通道失败，回退h5sdk...');
-    } catch (e) { console.log('[pass-code] 加密通道异常，回退h5sdk:', e.message); }
-
-    // 回退：h5sdk + postCodeInfo
+    // 3. h5sdk 写入通行证（APP加密通道因服务器IP限制不可用）
     const h5sdkInfo = await h5sdkLogin(uname, upwd);
     await pcPostCodeInfo(sessionId, {
       gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
       time: h5sdkInfo.time, sign: h5sdkInfo.sign,
       appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
     });
-    console.log('[pass-code] ✅ h5sdk通道完成:', uname);
+    console.log('[pass-code] ✅ 完成:', uname);
     return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
   } catch (error) {
     console.error('[pass-code] 失败:', error.message);
@@ -614,41 +748,13 @@ async function handleAppLogin(request) {
     const sessionId = await pcGetId();
     console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
 
-    // 4. 走 APP 扫码流程（加密通道优先，失败回退 h5sdk）
-    let usedH5sdk = false;
-    try {
-      const scanParams = {
-        os: 'android', code: sessionId, token: sdkToken, login_type: loginType,
-        gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-        version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-        dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-        gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-      };
-      scanParams.sign = signV3(scanParams, APP_KEY);
-      const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
-      if (scanResult.json && scanResult.json.state === 1) {
-        const confirmParams = { ...scanParams };
-        delete confirmParams.login_type;
-        confirmParams.sign = signV3(confirmParams, APP_KEY);
-        const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
-        if (confirmResult.json && confirmResult.json.state === 1) {
-          console.log('[app-login] ✅ SDK扫码通道');
-        }
-      }
-      if (!scanResult.json || !scanResult.json.state || scanResult.json.state !== 1) {
-        console.log('[app-login] 加密通道失败，回退h5sdk');
-        usedH5sdk = true;
-      }
-    } catch (e) { console.log('[app-login] 加密通道异常，回退h5sdk:', e.message); usedH5sdk = true; }
-
-    if (usedH5sdk) {
-      const h5sdkInfo = await h5sdkLogin(uname, upwd);
-      await pcPostCodeInfo(sessionId, {
-        gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
-        time: h5sdkInfo.time, sign: h5sdkInfo.sign,
-        appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
-      });
-    }
+    // 4. h5sdk 登录 + PC 写入参数（APP加密通道因服务器IP限制不可用）
+    const h5sdkInfo = await h5sdkLogin(uname, upwd);
+    await pcPostCodeInfo(sessionId, {
+      gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
+      time: h5sdkInfo.time, sign: h5sdkInfo.sign,
+      appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+    });
 
     // 5. 取回参数
     const entryParams = await pcGetCodeInfo(sessionId);
@@ -667,6 +773,7 @@ async function handleAppLogin(request) {
       IMEI: entryParams.IMEI || GAME_IMEI,
       entryGid: entryParams.gid || GAME_GID,
       entryPid: entryParams.pid || GAME_PID,
+      _debug: { flow: 'h5sdk' },
     };
 
     console.log('[app-login] ✅ 完成:', uname);

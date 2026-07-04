@@ -265,6 +265,12 @@
         <div class="header">
             <h1>DLDL</h1>
             <div class="user-info">
+                <select v-model="urlFilter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="valid">地址有效</option>
+                    <option value="expired">地址过期</option>
+                    <option value="none">无地址</option>
+                </select>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
@@ -279,10 +285,10 @@
                 <div class="area-group-header">
                     <span class="dot"></span>
                     <span>{{ g.name || '未命名区服' }}</span>
-                    <span class="count">{{ g.accounts?.length || 0 }} 个</span>
+                    <span class="count">{{ filteredAccounts(g)?.length || 0 }} 个</span>
                 </div>
                 <div class="account-grid">
-                <div v-for="a in g.accounts" :key="a.id" class="account-card">
+                <div v-for="a in filteredAccounts(g)" :key="a.id" class="account-card">
                     <div class="account-info">
                         <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
                         <div class="account-main">
@@ -382,19 +388,13 @@ createApp({
         const API = 'https://xywlbjsyhpyyxboznmct.supabase.co/rest/v1';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
         // 多 Worker 轮询（突破 IP 限制）
-        const WORKERS = [
-            'https://red-moon-ff95.tenghuanjun.workers.dev',
-            'https://dlapi-1.tenghuanjun.workers.dev',
-            'https://dlapi-2.tenghuanjun.workers.dev',
-            'https://dlapi-3.tenghuanjun.workers.dev',
-            'https://dlapi-4.tenghuanjun.workers.dev',
-            'https://dlapi-5.tenghuanjun.workers.dev',
-            'https://dlapi-6.tenghuanjun.workers.dev',
-            'https://dlapi-7.tenghuanjun.workers.dev',
-            'https://dlapi-8.tenghuanjun.workers.dev',
-            'https://dlapi-9.tenghuanjun.workers.dev',
-            'https://dlapi-10.tenghuanjun.workers.dev',
-        ];
+        const WORKERS = (function() {
+            var list = ['https://red-moon-ff95.tenghuanjun.workers.dev'];
+            for (var i = 1; i <= 99; i++) {
+                list.push('https://dlapi-' + i + '.tenghuanjun.workers.dev');
+            }
+            return list;
+        })();
         let workerIdx = 0;
         function getWorker() { return WORKERS[workerIdx % WORKERS.length]; }
         function nextWorker() { workerIdx++; console.log('[IP] 切换到 Worker #' + (workerIdx % WORKERS.length + 1)); return getWorker(); }
@@ -414,6 +414,7 @@ createApp({
         const refreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
+        const urlFilter = ref('all');
         const loginShowPwd = ref(false);
         const addShowPwd = ref(false);
         const globalLoading = ref(false);
@@ -881,6 +882,28 @@ createApp({
             return '刚刚';
         }
 
+        function urlAgeHours(account) {
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return -1;
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return -1;
+            var diffMs = Date.now() - urlTime.getTime();
+            if (diffMs < 0) return 0;
+            return Math.floor(diffMs / 3600000);
+        }
+
+        function filteredAccounts(group) {
+            if (urlFilter.value === 'all') return group.accounts;
+            return group.accounts.filter(function(a) {
+                var has = !!(a.url && String(a.url).trim());
+                var age = urlAgeHours(a);
+                if (urlFilter.value === 'none') return !has;
+                if (urlFilter.value === 'valid') return has && age >= 0 && age <= 71;
+                if (urlFilter.value === 'expired') return has && age > 71;
+                return true;
+            });
+        }
+
         function generateImei() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -1011,7 +1034,8 @@ createApp({
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, lastRefresh: lastRefresh,
-            actionLoading: actionLoading,
+            actionLoading: actionLoading, urlFilter: urlFilter,
+            filteredAccounts: filteredAccounts,
             hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,

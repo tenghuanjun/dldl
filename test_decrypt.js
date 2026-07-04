@@ -1,219 +1,240 @@
-/**
- * 最后综合破解尝试
- * 已知算法: AES-128-ECB-PKCS7 (via CryptoJS)
- * 精确还原 bundle.js 的 decrypt 函数
- */
+// 验证加密/解密算法与真实APP是否一致
+import { createCipheriv, createDecipheriv } from 'node:crypto';
+import { Buffer } from 'node:buffer';
 
-const CryptoJS = require('crypto-js');
-const crypto = require('crypto');
+const GATEWAY_DEFAULT_KEY = 'soC2GAr8jN2fsbry';
 
-// ---- 数据 ----
-const body1 = 's7rBVLGlm_w-Es3gmis8K5TnfLxNYEKPmKXK6BSGPqZ0-KO9NFyf4uLpYtYDkg1fVqbiutc9MtfVSwT9cDsprGvFM4FICAa5SH77skNZ57pJQgTAxRhRbqtZFrxI55bBjZIYk72sTMcyTG8KdQ6w4t4xgdoych2M2Ix6zopGcZuoqvJGOHPkcMUAzfgSzq_6wURnZC2YRAikmzjah8QMKGTmmkxep6O7uPXDeE-hPPnS1RXcLLcLYVetIQ2RaKOb_4x6NQ57tLQ-grqJKaM2SzQyY_qIu-TpbCKiESpH1C9mafpqfm2ujTNETL6fpcz6z0i6rB5LV9fLhPq5LQVoCrk7WdNEjmCwKQzKbRj1PSzEFzArC3tKVkCNuWBF3T_PLuq5ngbsRiq_dQGg70fEtGZCDxB_Hjh7fWGJ2zRo6Uit9ux4pp4HzFhbsWruBCND9hybeq9jef1QzyTb4H0lcC-ioU_jBpOWXFpynNBxNZ2Y4_LEiE_h5jcnZ6hrguRGKo-QI01NoOvKrBE_BcFo0u2uspAUaSxWM3yr4F8Xy86JqPjcfF1kL9HFDjz6FR_yNkJL7hW9SkoCbGXJ0ns1sLawD2Rki-j2VPeVNBAIGieRdzpUJSsQ4YNSCzTHGkoTrMKfUSOTJ9kiLFy1H-Dyk-2mgYbzKVzEjbsM2xtiSKdPIgFVZEyDly9PIrTG2YbVhCbsc-wjM-8k-fDNO8saRWrPSxzXaE_AIJGgsxmg3OGl9m6o_TL7UXxL5XMYVaTpSMOT4aqepU0ETmpQIgU5IirxuXkbQG5T_dR3gYe7g8nZWjdW3P9wP4fuoLnG5WnZzu-UM62mPFPk_xn4paHE-O5SHYjAvziPrVwjnz19RVZnNlsyeW81FmsEhIZh0PhntGEQ89OlXjVDS5rF-ZKh6H5O9Kf01iHRDVDbCUhkB3o8obGv8FF7ZpcZYE0Xw5bfT3iPX_nB2Ecsj1xaSUQG64K0TnCkSvl_K-bnagJ2XZtDWPl6Oxoz5umEpOrzXKlHvz-4aTofyev8YlwKaMI7fNY72GD86QMdYGaUjkYX2fkGPVVAJG_qQxviz0hXgV8ijuCFwES6gTXkFTPl60kmp0B-_4V2e3442hKR0eNh4D4fYKt5qeeEFRG2TrXaPEY9wYwkKzgqfFtADJ_o6Rkjji-JPIuK60lvJvy1RyxewWRPBxVc-sOiZSGXDiMY3GIK0eoHiO1JhVtnfRmguqc-S6Y01OjUUrmT7JjgE266mP0rfT2EyH9ekwgJysJ35JM-tsj2gjElBr0jLlKNQOPD4LQuiEFf7gzPpfFQJxNrJrocza9DI3CjXLA9oDBjhbQztBkL2r8EsNjxlItL3Z6klP7nZvoEpnhbwy5qHXjduS-1lVESYpFxzmH5JuwF4pdqsgTzNbGGAzZxqq00sIrsFOEf-GPfJjLmEqtrTyLPFOt34tTm5SyLqIuiCoC5FTYwkTloC0rUKZ9H1ORzQQAQNkYvsIz5G_ish7dYajU3tXFPiuEuTzpZ8l_-2hUBneMn';
-const body2 = '_W45gnnB6opG4TUDScqgNXKjI6X9XyqPwDbV7-H15RtTR2hhdtdgJIy-ywuv1cRqha9iVVVihbLaXWrILeyyI4ejFDXpgVmjl1nXHHHLiW672Qj5cCZAHlC4Rxx48YWJ6mwXARVloJ2vFXKABgfQJeEb7nyw2EoAOY5a0N4GD_vaG8B3TgIpTHIL0gWZ90W48k2KMzAOpha15-GLWYfsNwjcEFIi2I0b0mYc5IDKWby_oUJaUF5iLGfu5KRDKvt0yYz9DQnMQ0ysIu35ixX6z7rwKdkrYt3DR6xRZCQWnzNhxTbI4gqcSP65hYw7Ano5DOtFbTNqraTBnX6ls9kCsOCAIZ7Rc4RgpLFe0Jzcn-Li-ObU3nzpwmfWZkmSG_PTYr2NqoqtUoenam7zwWBSNY-WUWz1LsXcIR3CvKkk1mtN56vQuIpanPn6OqUDz_C2vMJMBDRFTwh0qkq92KjBFxaq039ar6GQp0t4BEDTUmgq9BY6RE1cROEHjrhNylM-doVBCp6nbWXKbjMifJI56Luf35M_eeu3WuULgs12afCPFZAmR__XU9IQ-B266lZ5z38dZoOgkLhHM9VVSYjp7ZB870pB3h4loHs7A0VNrM_26nBrrTuE2YK5seV4vFfNp0RtduLsyxeDG67m6bnamJQd5u7oiU19aIGcYkBrIatUc6ItPeTGfs_o6w3BjzMZy5WzK4OLxYZjmdAPpbzBgvJXiOqvbFVWdMs73qfMhuf-tF_Vju29Il6ajetJlkI16-9WniSAMsELym8GxAH7Yc-QZaEh4pEmcCguA8OFEcgz4pOCXoMuEk2x8S0bhwAk4b5IjPFeMFR-QwKW5QtqoZ9PEzQIoM9bEPu7Zn-P1M7F8KI3BcDs1Sv_YuHU_pmOXvlg8hSuIuZchFOY03AJ30OMrC8Q0vlTgXkGOQZFxNun2NIE4ERMj-1tpC0Ba8Cl4iqetFUzZRd3XaXuWXkcmd-NG2eZ0fqVQIjJ3AtWP77yUbAuV2fuL-e_4Txhf6S0F6AAkD6g84Izz2Z9TmVNX0cfcbmnikC4r1IFyj6dCXCMDrl1APJZfm67DzWi7tyg0UtdWgp-nepEQ1W6vgR_hxQHGdGkrmGEFjNybvmjKqZOFY5qA4Z10gzJKB3TUyJR7p-9nC-hbnsW7V1xQQQxImF11i5CidrRbP5ZuHR45O0Wq4tqiwZUqbPMz9h2b5h9Au6sdlABrO5qwD5tvvZCanniwOX1yXcVf4ekEAr3at9yT5jbKFSKN4rZIWtVybKC93JkzpQ8koI6kjrCjIwUrJXYMz6JTv5D3lYUvVrxMwVjY5X-u9eSXm_X4UrUkDfSb40C3VIU1HLewCE790hTJSJZ6YzJgiJbc3lHa5ZnL6Sn6_yNZnO-uc7LgQU4zbxJccBTJKDFUhgcsPQLYe9GMw_9IdgFtqzm4HyDT-OylJdTXV38rl0c0iaFaaSklXhe2MxhVFyoz1EWB-Eo7Ku7ec-zi34jPdSGZHJnJlkAdrZdS0MyIiPb8fXIpNjPfotE0oa_6pxYFQLbqwWToS7ZjPnCgYky0VH1ZJcVG1ZNSTkl-H02Ez7ow9KQ_eEjPn1TICF_3MvaiZuI0SMAZVitnKxUPWxI8SQU7Ju7QEoy6iq0zXyNvZrVVCoXE7mwGfUALuRVMM7ONAWZZ4sV8Gt7Hok-614L5XtUBPx1eJnzzeOpLs9ocqCsTnQIJw3XxoKXlshplE-zLVH78PV8Y2DDgluDSEHd4964COxVRL3i50Rv_874hUfUfTwTQmkUpV_hO0RKLHBno3n5JxH_22nStgft65MidNke-cHnqImaMoHg7NgnLDmeelI96-DCbqfR80qqwd-fBdZT9-2itiM89fAZa05jY_ywzTyFEIlB14l-lYBvhUZclY308yLAo-EwJkJxsnr56TOaBlrMgACw3NiBM-onQUh7HlwX55lljTCdbB1ycJRL_UtpdxleVc1ITr57E1CPOjVyfrga8ywpv77JLdpFcWGzqDYdPWhOXlrgEX8EbCODkxdb7L2S6ZoGuO3UH3sqcU56UlY7PJU8piRMbX3tbtZPHthf9dNaQMEJHhXFjbH5TMt7e-bY84rPl0alON2lLy13duOSsd5txoyHQa_VcU24U_VGmI7OP7VRoOcFTThYHZyO-9kPCW9TdxTZGtS3zNqe0_UsolG624T9f-NT-ylebBiyy4G4Zf1fvw7EHKjDrZ6EoyZKQ8TDKuxWCJowH6L51LHF-FZgeBlsjm8V7VAuBGgdkTCAb6I';
-
-const nonce1 = '8421467abfc18ab5fa0c00d47ed3f751';
-const nonce2 = 'ecdd790d189cd176f698b866c52037de';
-const reqId1 = 'b85a1ce9d9b773e393985d40c51c685a';
-const reqId2 = '6a2280d772866d05051d286e1e1dd305';
-
-const b64_1 = body1.replace(/-/g, '+').replace(/_/g, '/') + '==';
-const b64_2 = body2.replace(/-/g, '+').replace(/_/g, '/') + '==';
-const raw1 = Buffer.from(b64_1, 'base64');
-const raw2 = Buffer.from(b64_2, 'base64');
-
-// ============ 精确还原 bundle.js 的 decrypt 函数 ============
-// decrypt: function (encryptText, key) {
-//     var key = CryptoJS.enc.Utf8.parse(key);
-//     var decrypt = CryptoJS.AES.decrypt(encryptText.toString(), key, {
-//       mode: CryptoJS.mode.ECB,
-//       padding: CryptoJS.pad.Pkcs7,
-//     });
-//     return CryptoJS.enc.Utf8.stringify(decrypt).toString();
-// }
-function exactDecrypt(encryptedBase64, keyStr) {
-  try {
-    const key = CryptoJS.enc.Utf8.parse(keyStr);
-    const decrypted = CryptoJS.AES.decrypt(encryptedBase64, key, {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    });
-    const result = CryptoJS.enc.Utf8.stringify(decrypted).toString();
-    return result;
-  } catch(e) {
-    return null;
+// ==================== MD5 ====================
+function md5(string) {
+  function rotateLeft(lValue, iShiftBits) {
+    return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
   }
-}
-
-function isValidDecryption(result) {
-  if (!result || result.length < 5) return false;
-  // query string pattern: key1=val1&key2=val2
-  if (result.includes('&') && result.includes('=')) return true;
-  // JSON pattern
-  if (result.startsWith('{') && result.includes(':')) return true;
-  // High ratio of printable ASCII in first 100 chars
-  const sample = result.substring(0, Math.min(100, result.length));
-  const printable = [...sample].filter(c => c.charCodeAt(0) >= 0x20 && c.charCodeAt(0) <= 0x7E).length;
-  return printable / sample.length > 0.85 && result.length > 8;
-}
-
-function tryDecryptBoth(key) {
-  const r1 = exactDecrypt(b64_1, key);
-  const r2 = exactDecrypt(b64_2, key);
-  if (isValidDecryption(r1) || isValidDecryption(r2)) {
-    console.log(`✅ KEY="${key}"`);
-    console.log(`  body1 (${r1?r1.length:0}B):`, r1 ? r1.substring(0, 150) : 'null');
-    console.log(`  body2 (${r2?r2.length:0}B):`, r2 ? r2.substring(0, 150) : 'null');
-    return true;
-  }
-  return false;
-}
-
-// ============ 大型密钥字典 ============
-const keyDict = new Set();
-
-// 1. 游戏相关
-['dldlsy', 'DLDLSY', 'Dldlsy', 'dldlsy37', '37dldlsy', 'm37dldlsy',
- 'sy37', 'SY37', 'dldlsy.sy37', 'com.m37.dldlsy',
- '37wan', '37WAN', '37Wan', '37.com', '37.com.cn',
- 'dldl', 'DLDL', 'Dldl',
- 'doulaodalu', '斗罗大陆', 'douluodalu',
-].forEach(s => {
-  // 补齐到16字节
-  if (s.length < 16) s = s.padEnd(16, '0');
-  if (s.length > 16) s = s.substring(0, 16);
-  keyDict.add(s);
-  // 变体
-  keyDict.add(s.replace(/0+$/, '1234567890').substring(0, 16));
-  keyDict.add(s.replace(/0+$/, '0123456789').substring(0, 16));
-  keyDict.add(s.replace(/0+$/, '!@#$%^&*()').substring(0, 16));
-  keyDict.add(s.toUpperCase().substring(0, 16));
-  keyDict.add(s.toLowerCase().substring(0, 16));
-});
-
-// 2. 常见SDK密钥
-['0123456789012345', '1234567890123456', 'abcdefghijklmnop',
- 'a1b2c3d4e5f6g7h8', '1q2w3e4r5t6y7u8i', '9i8u7y6t5r4e3w2q',
- 'qwertyuiopasdfgh', 'zxcvbnmasdfghjkl', 'asdfghjklqwertyui',
- 'Jp*4Y8vQOYck2*&Z'.substring(0, 16), 'Jp*4Y8vQOYck2*&Z',
- '0123456789abcdef', 'fedcba9876543210',
- '37wan0123456789', '37wan!@#$%^&*(', 
- '@37wan_dldl_sy37', '37WAN_DLDL_SY37',
- 'dldl-sy37-37wan', 'dldl_sy37_37wan',
- 'm37.dldlsy.sy37'.substring(0, 16), 'com.m37.dldlsy.',
- '37.com.cndldlsy', 'dldlsy37.com.cn',
- 'dl_dl_sy_37_wan', 'dldlsy2024!!!!',
- '2024dldlsy!!!!', 'dldlsy2024****',
-].forEach(s => {
-  if (s.length > 16) s = s.substring(0, 16);
-  if (s.length < 16) s = s.padEnd(16, '0');
-  keyDict.add(s);
-});
-
-// 3. MD5派生
-const md5Sources = [
-  '37wan', 'dldlsy', 'dldl', 'com.m37.dldlsy.sy37', '37.com.cn',
-  's-api-secure.37.com.cn', 'doulaodalu', '斗罗大陆',
-  'H5App', 'Alamofire', 'iOS',
-  'D84AP', 'iPhone16',
-];
-for (const src of md5Sources) {
-  const md5 = CryptoJS.MD5(src).toString();
-  keyDict.add(md5.substring(0, 16));
-  keyDict.add(md5.substring(16, 32));
-  // MD5(MD5)
-  const md5_2 = CryptoJS.MD5(md5).toString();
-  keyDict.add(md5_2.substring(0, 16));
-}
-
-// 4. SHA系列
-for (const src of ['37wan', 'dldlsy', 'com.m37.dldlsy.sy37']) {
-  keyDict.add(crypto.createHash('sha256').update(src).digest('hex').substring(0, 16));
-  keyDict.add(crypto.createHash('sha1').update(src).digest('hex').substring(0, 16));
-}
-
-// 5. nonce/reqId 相关
-keyDict.add(nonce1.substring(0, 16));
-keyDict.add(nonce2.substring(0, 16));
-keyDict.add(reqId1.substring(0, 16));
-keyDict.add(reqId2.substring(0, 16));
-
-// nonce/reqId 的 MD5
-for (const src of [nonce1, nonce2, reqId1, reqId2]) {
-  keyDict.add(CryptoJS.MD5(src).toString().substring(0, 16));
-}
-
-// 6. 设备标识
-['D84AP', 'iPhone16,2', 'DEFF745C2AD241D5', '5721C90E5F224673',
- 'dafb9ed848bfb382', '867e57bd062c71699',
- 'D882E598F7A5FEE7', 'com.m37.dldlsy',
-].forEach(s => {
-  if (s.length > 16) s = s.substring(0, 16);
-  if (s.length < 16) s = s.padEnd(16, '0');
-  keyDict.add(s);
-});
-
-// 7. HMAC派生
-for (const [data, key] of [
-  [nonce1, '37wan'], [nonce2, '37wan'],
-  [nonce1, 'dldlsy'], [nonce2, 'dldlsy'],
-  [nonce1, 'Jp*4Y8vQOYck2*&Z'], [nonce2, 'Jp*4Y8vQOYck2*&Z'],
-]) {
-  keyDict.add(CryptoJS.HmacMD5(data, key).toString().substring(0, 16));
-  keyDict.add(CryptoJS.HmacSHA1(data, key).toString().substring(0, 16));
-  keyDict.add(CryptoJS.HmacSHA256(data, key).toString().substring(0, 16));
-}
-
-// 8. XOR组合
-const n1 = Buffer.from(nonce1, 'hex');
-const n2 = Buffer.from(nonce2, 'hex');
-const r1 = Buffer.from(reqId1, 'hex');
-const r2 = Buffer.from(reqId2, 'hex');
-
-const xorKey1 = Buffer.alloc(16);
-const xorKey2 = Buffer.alloc(16);
-for (let i = 0; i < 16; i++) {
-  xorKey1[i] = n1[i] ^ r1[i];
-  xorKey2[i] = n2[i] ^ r2[i];
-}
-keyDict.add(xorKey1.toString('latin1'));
-keyDict.add(xorKey2.toString('latin1'));
-
-console.log(`共准备了 ${keyDict.size} 个候选密钥\n`);
-
-// 开始暴力破解
-let found = 0;
-for (const key of keyDict) {
-  if (tryDecryptBoth(key)) found++;
-}
-if (found === 0) {
-  console.log('❌ 所有候选密钥均失败');
-}
-
-// ============ 额外尝试: DES / 3DES ============
-console.log('\n=== 尝试 DES / 3DES ===');
-function tryDESDecrypt(b64, keyStr, algo) {
-  try {
-    const key = CryptoJS.enc.Utf8.parse(keyStr);
-    let d;
-    if (algo === 'DES') {
-      d = CryptoJS.DES.decrypt(b64, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
+  function addUnsigned(lX, lY) {
+    const lX4 = lX & 0x40000000;
+    const lY4 = lY & 0x40000000;
+    const lX8 = lX & 0x80000000;
+    const lY8 = lY & 0x80000000;
+    const lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+    if (lX4 & lY4) return lResult ^ 0x80000000 ^ lX8 ^ lY8;
+    if (lX4 | lY4) {
+      if (lResult & 0x40000000) return lResult ^ 0xC0000000 ^ lX8 ^ lY8;
+      else return lResult ^ 0x40000000 ^ lX8 ^ lY8;
     } else {
-      d = CryptoJS.TripleDES.decrypt(b64, key, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 });
-    }
-    return CryptoJS.enc.Utf8.stringify(d).toString();
-  } catch(e) { return null; }
-}
-
-const desKeys = ['01234567', '37wan123', 'dldlsy12', 'com.m37.'];
-for (const algo of ['DES', 'TripleDES']) {
-  for (const k of desKeys) {
-    const key3DES = algo === 'TripleDES' ? k + k + k.substring(0, 8) : k;
-    const r1 = tryDESDecrypt(b64_1, key3DES, algo);
-    if (isValidDecryption(r1)) {
-      console.log(`✅ ${algo} key="${key3DES}"`);
-      console.log('  body1:', r1.substring(0, 150));
+      return lResult ^ lX8 ^ lY8;
     }
   }
+  function F(x, y, z) { return (x & y) | ((~x) & z); }
+  function G(x, y, z) { return (x & z) | (y & (~z)); }
+  function H(x, y, z) { return x ^ y ^ z; }
+  function I(x, y, z) { return y ^ (x | (~z)); }
+  function FF(a, b, c, d, x, s, ac) {
+    a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+    return addUnsigned(rotateLeft(a, s), b);
+  }
+  function GG(a, b, c, d, x, s, ac) {
+    a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+    return addUnsigned(rotateLeft(a, s), b);
+  }
+  function HH(a, b, c, d, x, s, ac) {
+    a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+    return addUnsigned(rotateLeft(a, s), b);
+  }
+  function II(a, b, c, d, x, s, ac) {
+    a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+    return addUnsigned(rotateLeft(a, s), b);
+  }
+  function convertToWordArray(string) {
+    const utf8Bytes = new TextEncoder().encode(string);
+    const lMessageLength = utf8Bytes.length;
+    const lNumberOfWordsTemp1 = lMessageLength + 8;
+    const lNumberOfWordsTemp2 = (lNumberOfWordsTemp1 - (lNumberOfWordsTemp1 % 64)) / 64;
+    const lNumberOfWords = (lNumberOfWordsTemp2 + 1) * 16;
+    const lWordArray = new Array(lNumberOfWords - 1);
+    let lBytePosition = 0;
+    let lByteCount = 0;
+    while (lByteCount < lMessageLength) {
+      const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+      lBytePosition = (lByteCount % 4) * 8;
+      lWordArray[lWordCount] = (lWordArray[lWordCount] | (utf8Bytes[lByteCount] << lBytePosition));
+      lByteCount++;
+    }
+    const lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+    lBytePosition = (lByteCount % 4) * 8;
+    lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+    lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+    lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+    return lWordArray;
+  }
+  function wordToHex(lValue) {
+    let wordToHexValue = "", wordToHexValueTemp = "", lByte, lCount;
+    for (lCount = 0; lCount <= 3; lCount++) {
+      lByte = (lValue >>> (lCount * 8)) & 255;
+      wordToHexValueTemp = "0" + lByte.toString(16);
+      wordToHexValue = wordToHexValue + wordToHexValueTemp.substr(wordToHexValueTemp.length - 2, 2);
+    }
+    return wordToHexValue;
+  }
+  const x = convertToWordArray(string);
+  let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+  for (let k = 0; k < x.length; k += 16) {
+    const AA = a, BB = b, CC = c, DD = d;
+    a = FF(a, b, c, d, x[k + 0], 7, 0xD76AA478);
+    d = FF(d, a, b, c, x[k + 1], 12, 0xE8C7B756);
+    c = FF(c, d, a, b, x[k + 2], 17, 0x242070DB);
+    b = FF(b, c, d, a, x[k + 3], 22, 0xC1BDCEEE);
+    a = FF(a, b, c, d, x[k + 4], 7, 0xF57C0FAF);
+    d = FF(d, a, b, c, x[k + 5], 12, 0x4787C62A);
+    c = FF(c, d, a, b, x[k + 6], 17, 0xA8304613);
+    b = FF(b, c, d, a, x[k + 7], 22, 0xFD469501);
+    a = FF(a, b, c, d, x[k + 8], 7, 0x698098D8);
+    d = FF(d, a, b, c, x[k + 9], 12, 0x8B44F7AF);
+    c = FF(c, d, a, b, x[k + 10], 17, 0xFFFF5BB1);
+    b = FF(b, c, d, a, x[k + 11], 22, 0x895CD7BE);
+    a = FF(a, b, c, d, x[k + 12], 7, 0x6B901122);
+    d = FF(d, a, b, c, x[k + 13], 12, 0xFD987193);
+    c = FF(c, d, a, b, x[k + 14], 17, 0xA679438E);
+    b = FF(b, c, d, a, x[k + 15], 22, 0x49B40821);
+    a = GG(a, b, c, d, x[k + 1], 5, 0xF61E2562);
+    d = GG(d, a, b, c, x[k + 6], 9, 0xC040B340);
+    c = GG(c, d, a, b, x[k + 11], 14, 0x265E5A51);
+    b = GG(b, c, d, a, x[k + 0], 20, 0xE9B6C7AA);
+    a = GG(a, b, c, d, x[k + 5], 5, 0xD62F105D);
+    d = GG(d, a, b, c, x[k + 10], 9, 0x2441453);
+    c = GG(c, d, a, b, x[k + 15], 14, 0xD8A1E681);
+    b = GG(b, c, d, a, x[k + 4], 20, 0xE7D3FBC8);
+    a = GG(a, b, c, d, x[k + 9], 5, 0x21E1CDE6);
+    d = GG(d, a, b, c, x[k + 14], 9, 0xC33707D6);
+    c = GG(c, d, a, b, x[k + 3], 14, 0xF4D50D87);
+    b = GG(b, c, d, a, x[k + 8], 20, 0x455A14ED);
+    a = GG(a, b, c, d, x[k + 13], 5, 0xA9E3E905);
+    d = GG(d, a, b, c, x[k + 2], 9, 0xFCEFA3F8);
+    c = GG(c, d, a, b, x[k + 7], 14, 0x676F02D9);
+    b = GG(b, c, d, a, x[k + 12], 20, 0x8D2A4C8A);
+    a = HH(a, b, c, d, x[k + 5], 4, 0xFFFA3942);
+    d = HH(d, a, b, c, x[k + 8], 11, 0x8771F681);
+    c = HH(c, d, a, b, x[k + 11], 16, 0x6D9D6122);
+    b = HH(b, c, d, a, x[k + 14], 23, 0xFDE5380C);
+    a = HH(a, b, c, d, x[k + 1], 4, 0xA4BEEA44);
+    d = HH(d, a, b, c, x[k + 4], 11, 0x4BDECFA9);
+    c = HH(c, d, a, b, x[k + 7], 16, 0xF6BB4B60);
+    b = HH(b, c, d, a, x[k + 10], 23, 0xBEBFBC70);
+    a = HH(a, b, c, d, x[k + 13], 4, 0x289B7EC6);
+    d = HH(d, a, b, c, x[k + 0], 11, 0xEAA127FA);
+    c = HH(c, d, a, b, x[k + 3], 16, 0xD4EF3085);
+    b = HH(b, c, d, a, x[k + 6], 23, 0x4881D05);
+    a = HH(a, b, c, d, x[k + 9], 4, 0xD9D4D039);
+    d = HH(d, a, b, c, x[k + 12], 11, 0xE6DB99E5);
+    c = HH(c, d, a, b, x[k + 15], 16, 0x1FA27CF8);
+    b = HH(b, c, d, a, x[k + 2], 23, 0xC4AC5665);
+    a = II(a, b, c, d, x[k + 0], 6, 0xF4292244);
+    d = II(d, a, b, c, x[k + 7], 10, 0x432AFF97);
+    c = II(c, d, a, b, x[k + 14], 15, 0xAB9423A7);
+    b = II(b, c, d, a, x[k + 5], 21, 0xFC93A039);
+    a = II(a, b, c, d, x[k + 12], 6, 0x655B59C3);
+    d = II(d, a, b, c, x[k + 3], 10, 0x8F0CCC92);
+    c = II(c, d, a, b, x[k + 10], 15, 0xFFEFF47D);
+    b = II(b, c, d, a, x[k + 1], 21, 0x85845DD1);
+    a = II(a, b, c, d, x[k + 8], 6, 0x6FA87E4F);
+    d = II(d, a, b, c, x[k + 15], 10, 0xFE2CE6E0);
+    c = II(c, d, a, b, x[k + 6], 15, 0xA3014314);
+    b = II(b, c, d, a, x[k + 13], 21, 0x4E0811A1);
+    a = II(a, b, c, d, x[k + 4], 6, 0xF7537E82);
+    d = II(d, a, b, c, x[k + 11], 10, 0xBD3AF235);
+    c = II(c, d, a, b, x[k + 2], 15, 0x2AD7D2BB);
+    b = II(b, c, d, a, x[k + 9], 21, 0xEB86D391);
+    a = addUnsigned(a, AA);
+    b = addUnsigned(b, BB);
+    c = addUnsigned(c, CC);
+    d = addUnsigned(d, DD);
+  }
+  return (wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d)).toLowerCase();
 }
 
-console.log('\ndone.');
+// ==================== 工具函数 ====================
+function fromBase64Url(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return s;
+}
+
+// ==================== 真实APP抓包数据 ====================
+const realNonceStr = '191f98499f09e553cb7aaedf0b03bd8d';
+const realRequestId = 'cb47c85abba6a5ee6484a49860a8e222';
+const realEncryptedBody = 'nFKwmofGk2xJqnZyu1Zmg-xjGsJhvj576OVij6e9mHNbqRGykzPYCcg3QJ8OJ3s7E8e3KRi34ksUf9Q42kDmXWvNf9PqDF9OCYAc6L-K5BNgEvWILEac6gv0MjlPfnnxv1blC9bhinMMTS8rMNLFh60RMw6sZNWdVPc3Ur4dAOZXOP2kFK4LG1Z9nt_lSEB9u5-FHi3MO-WbiyHZ2TPQvT9TQHKORu7jcIilcmrj-innHmbSjRiCcdADDhMowb9ZQpm68H6tNTF_ysacxnSRF-EBWSvVLOWPsJTQb-gdn2px7fot3ghcAnGu2s3vliSDmlURj9nDHbiAQ8SNbS--v7PuKc_5ZJlCCHzqphghbZpuIStB3pW6iz6cKRgv-02hxzRj8wjVd4ecnj1L97f5bPnOftFn5Gw2fckoJ_03sQsaey-qIbJfmUx966R1Qg04uXBCr5hEqDKBZZVpxEI2XQGd-6646rVDB53Wx9ONBR34fCYvxKJmH6OGXAe0hwccE8csTDQLMq0dXAlauAZLQj2yV4TzJr_EUjq5JP6REiFox3sfbrVAolDd9QPyOUiNARgNLkDb_Rbcr7DiDYgmA8l_mEQw1h_V1jrTWlzrHKa3IEg5PC-N6kqUUyxNNprO1H84FQRAyQwHcXAw-kdu7HdyIE_sdJ58vcYvNsm0MLFqbmlQgG4hZ5Eqb7pMTTzY1vTPJNuyVWWRQ1N_H8xWxfEC0Shw-LfEsQlWGw-nF2w6axCFGqrlTjIRHcblX0sA7wt3Zuz5MrfdG90xCbo-Lo3AIZImG8ppXKaPFqaUxVegmI1jAe-BdCJddtQQ0FBArlOEvkzzG0BQFchsdF2Y9RJwpRZVe2ImTEFgy44s5de7qO4wdFpHphi5Boj7eM-YOwaX3zsTJqqZuSTr6fOK2D0yCHRutWjOYXqvXnOYbqHoViRh9g8Kr6oLPuYFpbcKIclMtyw43x8PItNM8A0t6EdBA8y1IIrO7FMYDTLKnBW_7qM-jzdMzMTXSiRSs7JXmRwQqdlfRpVR0Sk0emKX-cCySI3FXG6J-lfHd7s9txamIlROI7xZazVUOf64y9gTjmkQSaJrun8Sorno-BoLQ0NaqvtTwUnykaKUkrjwtIPHcXoRdHzTcSBlerarg3dXSYs7EToDK1pQ9zdh0QrgNKg4q_j2tMxOHb4fKXZKSbN7ASiw__SzHPuDbd2qXGHUQ_zyxlnshjweQLY42qOnewUmIBhFUVlT2Dg6LyUK13w30BGOpVA0xlMBa-umWUAw9sDX8GfHDP7rRINlXjUsK8FcoeE3A_FcQZgcofzJUYBVwnkcc9LI62H3O7dgmfKEey0BxzclR1hZjTpvEJKglxpfBnbUh0UaZK5Xd7040B7R2y-Xfmg_v6kStGFEpPz90aekBQ6NHQJFj9eaEcpoNUk79INX3BYMvDwgitc23wnuKlJZErMz3OdQlOXCIg--00MtErHPqJgfKMQuWLSEGCqAjvp1NAnBnU9qIdWpsryMI6h3oyHI-I-qfzEcNC7H7QEbx5impNnE5CFVRK5vwNAlh5tV1muh0U0NYHBto-NMxx4Nt7rs3IzPO4Do1EorosrSkFOmMYyfM3gi-bk-pq3i8fQHTELcbunzjVdnxENRup7RFkX4U3DArso7DpXwooPjPapq3vdifMH2Lif2ThyUxTpYHUB57rZ1s6iHkZ2OYJeXKlB1_fTUsI1A24yPIDUv-q536DbMzeTYKEn_gTXRcZqLiH_AA94UBbaTLfU9X23UL1RZHdmXo2eN1I1FzNNGRfCT9HVYBMAhbGl9zmTG2B525T-MPYhYaOQqTs60VxPmbZKYIHC_8JjtZ2D9WtQVsmNO28MnslNbTuLFwVjQA2o5iCIZ4uZqtMHkm5xwklM4OTKmqzdCCyDO6DggodeWPTMGJdVn_aWHiiJvODVfbLIzb2JtiwYBll2Yc49aCozuoc5WFAXUMw5XonE_ptByip-FBP1LOR8wtTXmK--58p2CPMOxbkdPebCdR0crrKFJunM5-Fi6njone_F5UYM2IueoeurvilBVlBt8QcS6klIQKTmApwHdqw04VReCx5vNAOfGdkO3bYoNdBPIdCQ8pfCqoRNKapNt5JSCrSxZgG9yYckzx9B7aqsbmoqVX7pNmgPDUQEeMhXYzsjKuRZnWcgB_KHCje69FdJ-FS4hgXatQl2QIzkcEfySsLdMO7qlB8EHTkogDuQsHJ7QSOPEvwPzm9fStBuKqAbAfw';
+
+console.log('=== 真实APP加密信息 ===');
+console.log('NonceStr:', realNonceStr);
+console.log('RequestId:', realRequestId);
+console.log('Nonce长度:', realNonceStr.length, '(MD5=32 hex chars)');
+
+// 尝试多种Nonce生成方式
+const method = 'POST';
+const query = '';
+const path = '/go/sdk/quick_login';
+
+// 方式1: nonce = MD5(method + query + body_plaintext + requestId) 
+//   但不知道body_plaintext，跳过
+
+// 方式2: nonce = MD5(method + query + body_ciphertext + requestId)
+const nonce2 = md5(method + query + realEncryptedBody + realRequestId);
+console.log('\n方式2 (body=ciphertext):', nonce2);
+console.log('匹配?', nonce2 === realNonceStr);
+
+// 方式3: nonce = MD5(method + path + query + body_ciphertext + requestId)
+const nonce3 = md5(method + path + query + realEncryptedBody + realRequestId);
+console.log('\n方式3 (method+path+query+body+rid):', nonce3);
+console.log('匹配?', nonce3 === realNonceStr);
+
+// 方式4: nonce = MD5(method + query + requestId) — 不包含body
+const nonce4 = md5(method + query + realRequestId);
+console.log('\n方式4 (不含body):', nonce4);
+console.log('匹配?', nonce4 === realNonceStr);
+
+// 方式5: nonce = MD5(requestId) 本身
+const nonce5 = md5(realRequestId);
+console.log('\n方式5 (仅requestId):', nonce5);
+console.log('匹配?', nonce5 === realNonceStr);
+
+// 方式6: nonce = MD5(method + path + query + requestId)
+const nonce6 = md5(method + path + query + realRequestId);
+console.log('\n方式6 (method+path+query+rid):', nonce6);
+console.log('匹配?', nonce6 === realNonceStr);
+
+// 找到匹配的nonce生成方式后再尝试解密
+// 先假设方式2是对的，尝试解密
+console.log('\n=== 尝试解密（用方式2的key） ===');
+try {
+  const encKey = GATEWAY_DEFAULT_KEY + nonce2.substring(0, 16);
+  const iv = nonce2.substring(nonce2.length - 16);
+  console.log('Key:', encKey, '(len=' + encKey.length + ')');
+  console.log('IV:', iv, '(len=' + iv.length + ')');
+  
+  const b64Body = fromBase64Url(realEncryptedBody);
+  const decipher = createDecipheriv('aes-256-cbc', Buffer.from(encKey, 'utf8'), Buffer.from(iv, 'utf8'));
+  decipher.setAutoPadding(true);
+  let decrypted = decipher.update(b64Body, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+  console.log('\n✅ 解密成功! 明文:');
+  console.log(decrypted);
+} catch (e) {
+  console.log('❌ 解密失败:', e.message);
+}
+
+// 用真实NonceStr再试
+console.log('\n=== 尝试解密（用真实NonceStr的key） ===');
+try {
+  const encKey = GATEWAY_DEFAULT_KEY + realNonceStr.substring(0, 16);
+  const iv = realNonceStr.substring(realNonceStr.length - 16);
+  console.log('Key:', encKey, '(len=' + encKey.length + ')');
+  console.log('IV:', iv, '(len=' + iv.length + ')');
+  
+  const b64Body = fromBase64Url(realEncryptedBody);
+  const decipher = createDecipheriv('aes-256-cbc', Buffer.from(encKey, 'utf8'), Buffer.from(iv, 'utf8'));
+  decipher.setAutoPadding(true);
+  let decrypted = decipher.update(b64Body, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+  console.log('\n✅ 解密成功! 明文:');
+  console.log(decrypted);
+} catch (e) {
+  console.log('❌ 解密失败:', e.message);
+}
