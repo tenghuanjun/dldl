@@ -533,36 +533,38 @@ async function handlePassCode(request) {
     const rawLt = String(sdkData.login_type || '');
     const loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
 
-    // 3. 模拟 APP 扫码（加密通道 s-api-secure）
-    const scanParams = {
-      os: 'android', code: sessionId, token: sdkToken,
-      login_type: loginType,
-      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-    };
-    scanParams.sign = signV3(scanParams, APP_KEY);
-    const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
-    if (!scanResult.json || scanResult.json.state !== 1) {
-      throw new Error('qrcode/scan 失败: ' + (scanResult.body || '').slice(0, 120));
-    }
+    // 3. 走 APP 扫码流程（加密通道优先，失败回退 h5sdk）
+    try {
+      const scanParams = {
+        os: 'android', code: sessionId, token: sdkToken, login_type: loginType,
+        gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+        version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+        dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+        gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+      };
+      scanParams.sign = signV3(scanParams, APP_KEY);
+      const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
+      if (scanResult.json && scanResult.json.state === 1) {
+        const confirmParams = { ...scanParams };
+        delete confirmParams.login_type;
+        confirmParams.sign = signV3(confirmParams, APP_KEY);
+        const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
+        if (confirmResult.json && confirmResult.json.state === 1) {
+          console.log('[pass-code] ✅ SDK扫码通道完成:', uname);
+          return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
+        }
+      }
+      console.log('[pass-code] 加密通道失败，回退h5sdk...');
+    } catch (e) { console.log('[pass-code] 加密通道异常，回退h5sdk:', e.message); }
 
-    // 4. 确认授权
-    const confirmParams = {
-      os: 'android', token: sdkToken, code: sessionId,
-      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-    };
-    confirmParams.sign = signV3(confirmParams, APP_KEY);
-    const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
-    if (!confirmResult.json || confirmResult.json.state !== 1) {
-      throw new Error('qrcode/confirm 失败: ' + (confirmResult.body || '').slice(0, 120));
-    }
-
-    console.log('[pass-code] ✅ 完成:', uname);
+    // 回退：h5sdk + postCodeInfo
+    const h5sdkInfo = await h5sdkLogin(uname, upwd);
+    await pcPostCodeInfo(sessionId, {
+      gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
+      time: h5sdkInfo.time, sign: h5sdkInfo.sign,
+      appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+    });
+    console.log('[pass-code] ✅ h5sdk通道完成:', uname);
     return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
   } catch (error) {
     console.error('[pass-code] 失败:', error.message);
@@ -612,38 +614,43 @@ async function handleAppLogin(request) {
     const sessionId = await pcGetId();
     console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
 
-    // 4. 模拟 APP 扫码（加密通道 s-api-secure）
-    const scanParams = {
-      os: 'android', code: sessionId, token: sdkToken,
-      login_type: loginType,
-      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-    };
-    scanParams.sign = signV3(scanParams, APP_KEY);
-    const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
-    if (!scanResult.json || scanResult.json.state !== 1) {
-      throw new Error('qrcode/scan 失败: ' + (scanResult.body || '').slice(0, 120));
-    }
-    console.log('[app-login] qrcode/scan ✅');
+    // 4. 走 APP 扫码流程（加密通道优先，失败回退 h5sdk）
+    let usedH5sdk = false;
+    try {
+      const scanParams = {
+        os: 'android', code: sessionId, token: sdkToken, login_type: loginType,
+        gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+        version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+        dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+        gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+      };
+      scanParams.sign = signV3(scanParams, APP_KEY);
+      const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
+      if (scanResult.json && scanResult.json.state === 1) {
+        const confirmParams = { ...scanParams };
+        delete confirmParams.login_type;
+        confirmParams.sign = signV3(confirmParams, APP_KEY);
+        const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
+        if (confirmResult.json && confirmResult.json.state === 1) {
+          console.log('[app-login] ✅ SDK扫码通道');
+        }
+      }
+      if (!scanResult.json || !scanResult.json.state || scanResult.json.state !== 1) {
+        console.log('[app-login] 加密通道失败，回退h5sdk');
+        usedH5sdk = true;
+      }
+    } catch (e) { console.log('[app-login] 加密通道异常，回退h5sdk:', e.message); usedH5sdk = true; }
 
-    // 5. 确认授权
-    const confirmParams = {
-      os: 'android', token: sdkToken, code: sessionId,
-      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
-      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
-      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
-      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
-    };
-    confirmParams.sign = signV3(confirmParams, APP_KEY);
-    const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
-    if (!confirmResult.json || confirmResult.json.state !== 1) {
-      throw new Error('qrcode/confirm 失败: ' + (confirmResult.body || '').slice(0, 120));
+    if (usedH5sdk) {
+      const h5sdkInfo = await h5sdkLogin(uname, upwd);
+      await pcPostCodeInfo(sessionId, {
+        gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
+        time: h5sdkInfo.time, sign: h5sdkInfo.sign,
+        appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+      });
     }
-    console.log('[app-login] qrcode/confirm ✅');
 
-    // 6. 取回参数
+    // 5. 取回参数
     const entryParams = await pcGetCodeInfo(sessionId);
 
     // 7. 返回结果
