@@ -27,6 +27,8 @@ const GAME_PID = '46';
 const GAME_APPVER = '134';
 const GAME_PLATCODE = '37wan';
 const GAME_IMEI = 'DCEADE00-A9B3-42F2-B4EB-8C766C0DD7A4';
+const QRCODE_SCAN_URL = 'http://s-api.37.com.cn/go/sdk/account/qrcode/scan';
+const QRCODE_CONFIRM_URL = 'http://s-api.37.com.cn/go/sdk/account/qrcode/confirm';
 
 // ==================== MD5 (Pure JS) ====================
 
@@ -322,6 +324,76 @@ async function pcGetId() {
 }
 
 /**
+ * 构建 CommonParamsV1 公共参数（用于 qrcode/scan, qrcode/confirm）
+ */
+function buildCommonParamsV1() {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  return {
+    gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+    version: '1.0.0', time: timestamp, dev: SDK_DEV, oaid: '',
+    sversion: SDK_SVERSION, gwversion: SDK_GWVERSION,
+    is_root: '0', is_simulator: '0',
+  };
+}
+
+/**
+ * 模拟 APP 扫码：通知服务端「用户扫了这个二维码」
+ */
+async function callQrcodeScan(token, sessionId, loginType) {
+  const params = {
+    os: 'android', code: sessionId, token: token,
+    login_type: loginType || 'common',
+    ...buildCommonParamsV1(),
+  };
+  params.sign = signV3(params, APP_KEY);
+
+  console.log('[qrcode/scan] code=' + (sessionId || '').slice(0, 20) + '...');
+  const formBody = Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k])))
+    .join('&');
+  const resp = await fetch(QRCODE_SCAN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: formBody,
+  });
+  const body = await resp.text();
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1) {
+    throw new Error('qrcode/scan 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
+  }
+  console.log('[qrcode/scan] ✅');
+  return json;
+}
+
+/**
+ * 模拟 APP 确认授权：通知服务端「用户确认登录」
+ */
+async function callQrcodeConfirm(token, sessionId) {
+  const params = {
+    os: 'android', token: token, code: sessionId,
+    ...buildCommonParamsV1(),
+  };
+  params.sign = signV3(params, APP_KEY);
+
+  console.log('[qrcode/confirm] code=' + (sessionId || '').slice(0, 20) + '...');
+  const formBody = Object.keys(params)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k])))
+    .join('&');
+  const resp = await fetch(QRCODE_CONFIRM_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body: formBody,
+  });
+  const body = await resp.text();
+  const json = safeJsonParse(body);
+  if (!json || json.state !== 1) {
+    throw new Error('qrcode/confirm 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
+  }
+  console.log('[qrcode/confirm] ✅');
+  return json;
+}
+
+/**
  * h5sdk/login（直连模式）：获取游戏入口 token/sign
  */
 async function h5sdkLogin(uname, upwd) {
@@ -444,22 +516,13 @@ async function handlePassCode(request) {
     if (sdkResp.state !== 1) {
       throw new Error(sdkResp.msg || 'SDK 登录失败');
     }
+    const sdkToken = (sdkResp.data || sdkResp).token;
+    const rawLt = String((sdkResp.data || sdkResp).login_type || '');
+    const loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
 
-    // 3. h5sdk/login 获取游戏入口 token
-    const h5sdkInfo = await h5sdkLogin(uname, upwd);
-
-    // 4. postCodeInfo 写入扫码的 sessionId
-    const gameParams = {
-      gid: GAME_GID,
-      pid: GAME_PID,
-      token: h5sdkInfo.token,
-      time: h5sdkInfo.time,
-      sign: h5sdkInfo.sign,
-      appVer: GAME_APPVER,
-      platCode: GAME_PLATCODE,
-      IMEI: GAME_IMEI,
-    };
-    await pcPostCodeInfo(sessionId, gameParams);
+    // 3. 模拟 APP 扫码 + 确认授权
+    await callQrcodeScan(sdkToken, sessionId, loginType);
+    await callQrcodeConfirm(sdkToken, sessionId);
 
     console.log('[pass-code] ✅ 完成:', uname);
     return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
@@ -511,26 +574,14 @@ async function handleAppLogin(request) {
     const sessionId = await pcGetId();
     console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
 
-    // 4. h5sdk/login 获取游戏入口 token
-    const h5sdkInfo = await h5sdkLogin(uname, upwd);
+    // 4. 模拟 APP 扫码 + 确认授权（替代 h5sdk + postCodeInfo）
+    await callQrcodeScan(sdkToken, sessionId, loginType);
+    await callQrcodeConfirm(sdkToken, sessionId);
 
-    // 5. 构造游戏入口参数并写入
-    const gameParams = {
-      gid: GAME_GID,
-      pid: GAME_PID,
-      token: h5sdkInfo.token,
-      time: h5sdkInfo.time,
-      sign: h5sdkInfo.sign,
-      appVer: GAME_APPVER,
-      platCode: GAME_PLATCODE,
-      IMEI: GAME_IMEI,
-    };
-    await pcPostCodeInfo(sessionId, gameParams);
-
-    // 6. 取回参数
+    // 5. 取回游戏入口参数
     const entryParams = await pcGetCodeInfo(sessionId);
 
-    // 7. 返回结果
+    // 6. 返回结果
     const result = {
       ok: true,
       state: 1,
