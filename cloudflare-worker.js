@@ -529,11 +529,11 @@ async function handleAppLogin(request) {
     }
     console.log('[app-login] loginType:', loginType);
 
-    // 3. 获取 PC 扫码会话 ID
-    const sessionId = await pcGetId();
-    console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
+    // 3. 使用已展示的通行证码（来自 PC 端真实二维码）
+    const sessionId = 'f1bdee07';
+    console.log('[app-login] sessionId:', sessionId);
 
-    // 4. 模拟 APP 扫码 + 确认授权（延时2秒模拟真机扫码时间）
+    // 4. 模拟 APP 扫码 + 确认授权
     await new Promise(r => setTimeout(r, 2000));
     await callQrcodeScan(sdkToken, sessionId, loginType);
     await callQrcodeConfirm(sdkToken, sessionId);
