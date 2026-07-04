@@ -652,7 +652,7 @@ createApp({
 
             try {
                 var ctrl = new AbortController();
-                var t = setTimeout(function() { ctrl.abort(); }, 30000);
+                var t = setTimeout(function() { ctrl.abort(); }, 60000);
                 var resp = await fetch(WORKER + '/api/pass-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -899,7 +899,7 @@ createApp({
             actionLoading.value = true; globalLoading.value = true; globalLoadingText.value = '刷新 ' + uname + ' 的token…';
             try {
                 var ctrl = new AbortController();
-                var t = setTimeout(function() { ctrl.abort(); }, 30000);
+                var t = setTimeout(function() { ctrl.abort(); }, 60000);
                 var resp = await fetch(WORKER + '/api/app-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
