@@ -241,12 +241,15 @@ async function securePost(path, params, bodyObj) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Accept': '*/*',
       'x-request-id': xRequestId,
       'X-Request-Nonce-Str': nonce,
-      'x-request-version': GATEWAY_XVERSION,
+      'X-Request-Version': GATEWAY_XVERSION,
     },
     body: encBody,
   });
+
+  console.log('[secure]', path, 'HTTP', resp.status, 'respNonce:', (resp.headers.get('x-response-nonce-str')||'').slice(0,10)+'...');
 
   // 解密响应
   const respBody = await resp.text();
