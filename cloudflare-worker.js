@@ -1,7 +1,7 @@
 // Cloudflare Worker - DLDL API Proxy
 // 处理 /api/app-login（SDK 登录 + PC 扫码流程），以及通用代理
 
-import { createCipheriv } from 'node:crypto';
+import { createCipheriv, randomBytes } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
 // ==================== 配置常量 ====================
@@ -193,6 +193,93 @@ function aes128EcbEncrypt(plaintext, keyStr) {
   return encrypted;
 }
 
+// ==================== SDK Gateway 请求体加密 ====================
+// 反编译自 sq_plugin → GateWayEncryptInterceptor + GateWayUtils
+
+const GATEWAY_DEFAULT_KEY = 'soC2GAr8jN2fsbry'; // GateWayManager 硬编码默认密钥
+const GATEWAY_XVERSION = '1';
+const SECURE_BASE = 'http://s-api-secure.37.com.cn';
+
+/** 生成随机 hex 字符串 */
+function randomHex(len) { return randomBytes(Math.ceil(len/2)).toString('hex').slice(0, len); }
+
+/** 模拟 Request-Id 生成 */
+function generateSecRequestId() { return 'android-9999-' + Date.now() + '-' + randomHex(16); }
+
+/** MD5 URL-safe Base64 编解码 */
+function toBase64Url(b64) { return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, ''); }
+function fromBase64Url(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return s;
+}
+
+/** AES-CBC 加密 → URL-safe Base64 */
+function gatewayEncrypt(plaintext, key, iv) {
+  const cipher = createCipheriv('aes-128-cbc', Buffer.from(key, 'utf8'), Buffer.from(iv, 'utf8'));
+  let enc = cipher.update(plaintext, 'utf8', 'base64');
+  enc += cipher.final('base64');
+  return toBase64Url(enc);
+}
+
+/** 生成 Nonce-Str: MD5(method + query + body + cookie + auth + xRequestId) */
+function buildNonceStr(method, query, body, xRequestId) {
+  return md5((method || '') + (query || '') + (body || '') + xRequestId);
+}
+
+/** 发加密请求到 s-api-secure 的端点 */
+async function securePost(path, params, bodyObj) {
+  const reqId = generateSecRequestId();
+  const xRequestId = md5(reqId);
+  const formBody = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k]))).join('&');
+  const nonce = buildNonceStr('POST', '', formBody, xRequestId);
+  const encKey = GATEWAY_DEFAULT_KEY + nonce.substring(0, 16);
+  const iv = nonce.substring(nonce.length - 16);
+  const encBody = gatewayEncrypt(formBody, encKey, iv);
+
+  const resp = await fetch(SECURE_BASE + path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'x-request-id': xRequestId,
+      'X-Request-Nonce-Str': nonce,
+      'x-request-version': GATEWAY_XVERSION,
+    },
+    body: encBody,
+  });
+
+  // 解密响应
+  const respBody = await resp.text();
+  const respNonce = resp.headers.get('x-response-nonce-str') || '';
+  if (respNonce) {
+    const dKey = GATEWAY_DEFAULT_KEY + nonce.substring(0, 8) + respNonce.substring(0, 8);
+    const dIv = respNonce.substring(8, 24);
+    const b64Body = fromBase64Url(respBody);
+    const decipher = crypto.createDecipheriv ? 
+      // Workers with nodejs_compat
+      (() => { const d = createCipheriv('aes-128-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8')); 
+        d.setAutoPadding(true); let r = d.update(b64Body, 'base64', 'utf8'); r += d.final('utf8'); return r; })() :
+      respBody; // fallback
+    // 简化：尝试直接解密，失败则返回原始body
+    try {
+      const decipher = createCipheriv('aes-128-cbc', Buffer.from(dKey, 'utf8'), Buffer.from(dIv, 'utf8'));
+      decipher.setAutoPadding(true);
+      let decrypted = decipher.update(b64Body, 'base64', 'utf8');
+      decrypted += decipher.final('utf8');
+      return { status: resp.status, body: decrypted };
+    } catch (_) {
+      return { status: resp.status, body: respBody };
+    }
+  }
+  return { status: resp.status, body: respBody };
+}
+
+/** 发加密 POST 请求并解析 JSON */
+async function securePostJson(path, params) {
+  const result = await securePost(path, params);
+  return { status: result.status, json: safeJsonParse(result.body) };
+}
+
 // ==================== 签名算法 ====================
 
 /**
@@ -322,36 +409,6 @@ async function pcGetId() {
 }
 
 /**
- * 构建 CommonParamsV1（用于 qrcode/scan, qrcode/confirm）
- */
-function buildCommonParamsV1() {
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  return { gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER, version: '1.0.0', time: timestamp, dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION, gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0' };
-}
-
-async function callQrcodeScan(token, sessionId, loginType) {
-  const params = { os: 'android', code: sessionId, token, login_type: loginType || 'common', ...buildCommonParamsV1() };
-  params.sign = signV3(params, APP_KEY);
-  console.log('[qrcode/scan] code=' + (sessionId || '').slice(0, 20) + '...');
-  const formBody = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k]))).join('&');
-  const resp = await fetch('http://s-api.37.com.cn/go/sdk/account/qrcode/scan', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: formBody });
-  const body = await resp.text(); const json = safeJsonParse(body);
-  if (!json || json.state !== 1) throw new Error('qrcode/scan 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
-  console.log('[qrcode/scan] ✅'); return json;
-}
-
-async function callQrcodeConfirm(token, sessionId) {
-  const params = { os: 'android', token, code: sessionId, ...buildCommonParamsV1() };
-  params.sign = signV3(params, APP_KEY);
-  console.log('[qrcode/confirm] code=' + (sessionId || '').slice(0, 20) + '...');
-  const formBody = Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k]))).join('&');
-  const resp = await fetch('http://s-api.37.com.cn/go/sdk/account/qrcode/confirm', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: formBody });
-  const body = await resp.text(); const json = safeJsonParse(body);
-  if (!json || json.state !== 1) throw new Error('qrcode/confirm 失败(state=' + (json && json.state) + '): ' + (body || '').slice(0, 200));
-  console.log('[qrcode/confirm] ✅'); return json;
-}
-
-/**
  * h5sdk/login（直连模式）：获取游戏入口 token/sign
  */
 async function h5sdkLogin(uname, upwd) {
@@ -474,14 +531,39 @@ async function handlePassCode(request) {
     if (sdkResp.state !== 1) {
       throw new Error(sdkResp.msg || 'SDK 登录失败');
     }
-    const sdkToken = (sdkResp.data || sdkResp).token;
-    const rawLt = String((sdkResp.data || sdkResp).login_type || '');
+    const sdkData = sdkResp.data || sdkResp;
+    const sdkToken = sdkData.token;
+    const rawLt = String(sdkData.login_type || '');
     const loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
 
-    // 3. 模拟 APP 扫码 + 确认授权（延时2秒模拟真机扫码时间）
-    await new Promise(r => setTimeout(r, 2000));
-    await callQrcodeScan(sdkToken, sessionId, loginType);
-    await callQrcodeConfirm(sdkToken, sessionId);
+    // 3. 模拟 APP 扫码（加密通道 s-api-secure）
+    const scanParams = {
+      os: 'android', code: sessionId, token: sdkToken,
+      login_type: loginType,
+      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+    };
+    scanParams.sign = signV3(scanParams, APP_KEY);
+    const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
+    if (!scanResult.json || scanResult.json.state !== 1) {
+      throw new Error('qrcode/scan 失败: ' + (scanResult.body || '').slice(0, 120));
+    }
+
+    // 4. 确认授权
+    const confirmParams = {
+      os: 'android', token: sdkToken, code: sessionId,
+      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+    };
+    confirmParams.sign = signV3(confirmParams, APP_KEY);
+    const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
+    if (!confirmResult.json || confirmResult.json.state !== 1) {
+      throw new Error('qrcode/confirm 失败: ' + (confirmResult.body || '').slice(0, 120));
+    }
 
     console.log('[pass-code] ✅ 完成:', uname);
     return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
@@ -529,19 +611,45 @@ async function handleAppLogin(request) {
     }
     console.log('[app-login] loginType:', loginType);
 
-    // 3. 使用已展示的通行证码（来自 PC 端真实二维码）
-    const sessionId = 'f1bdee07';
-    console.log('[app-login] sessionId:', sessionId);
+    // 3. 获取 PC 扫码会话 ID
+    const sessionId = await pcGetId();
+    console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
 
-    // 4. 模拟 APP 扫码 + 确认授权
-    await new Promise(r => setTimeout(r, 2000));
-    await callQrcodeScan(sdkToken, sessionId, loginType);
-    await callQrcodeConfirm(sdkToken, sessionId);
+    // 4. 模拟 APP 扫码（加密通道 s-api-secure）
+    const scanParams = {
+      os: 'android', code: sessionId, token: sdkToken,
+      login_type: loginType,
+      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+    };
+    scanParams.sign = signV3(scanParams, APP_KEY);
+    const scanResult = await securePostJson('/go/sdk/account/qrcode/scan', scanParams);
+    if (!scanResult.json || scanResult.json.state !== 1) {
+      throw new Error('qrcode/scan 失败: ' + (scanResult.body || '').slice(0, 120));
+    }
+    console.log('[app-login] qrcode/scan ✅');
 
-    // 5. 取回游戏入口参数
+    // 5. 确认授权
+    const confirmParams = {
+      os: 'android', token: sdkToken, code: sessionId,
+      gid: SDK_GID, pid: SDK_PID, refer: SDK_REFER,
+      version: '1.0.0', time: String(Math.floor(Date.now() / 1000)),
+      dev: SDK_DEV, oaid: '', sversion: SDK_SVERSION,
+      gwversion: SDK_GWVERSION, is_root: '0', is_simulator: '0',
+    };
+    confirmParams.sign = signV3(confirmParams, APP_KEY);
+    const confirmResult = await securePostJson('/go/sdk/account/qrcode/confirm', confirmParams);
+    if (!confirmResult.json || confirmResult.json.state !== 1) {
+      throw new Error('qrcode/confirm 失败: ' + (confirmResult.body || '').slice(0, 120));
+    }
+    console.log('[app-login] qrcode/confirm ✅');
+
+    // 6. 取回参数
     const entryParams = await pcGetCodeInfo(sessionId);
 
-    // 6. 返回结果
+    // 7. 返回结果
     const result = {
       ok: true,
       state: 1,
