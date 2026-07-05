@@ -801,10 +801,20 @@ createApp({
                 return;
             }
 
+            // 与桌面端 account.html sendPassCode 逻辑一致：
+            // 优先使用已存储的 app_token/app_sign，没有则用 token/sign
+            var passToken = String(account.app_token || account.token || '');
+            var passSign = String(account.app_sign || account.sign || '');
             var uname = String(account.uname || '').trim();
             var upwd = String(account.upwd || '').trim();
-            if (!uname || !upwd) {
-                scanError.value = '该账号缺少用户名或密码';
+
+            if (!passToken || !passSign) {
+                // 无有效 token，提示先刷新
+                if (uname && upwd) {
+                    scanError.value = '请先点击「刷新」获取 APP token 后再扫码';
+                } else {
+                    scanError.value = '该账号缺少用户名或密码';
+                }
                 scanLoading.value = false;
                 scanPaused = false;
                 return;
@@ -813,10 +823,11 @@ createApp({
             try {
                 var ctrl = new AbortController();
                 var t = setTimeout(function() { ctrl.abort(); }, 60000);
+                // 桌面端同等逻辑：直接用已存储的 token/sign 发送通行证
                 var resp = await fetch(getWorker() + '/api/pass-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: sessionId, uname: uname, upwd: upwd }),
+                    body: JSON.stringify({ sessionId: sessionId, token: passToken, sign: passSign, uname: uname, upwd: upwd }),
                     signal: ctrl.signal
                 });
                 clearTimeout(t);
