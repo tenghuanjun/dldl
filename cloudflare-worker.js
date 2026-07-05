@@ -614,6 +614,30 @@ async function pcPostCodeInfo(sessionId, gameParams) {
 }
 
 /**
+ * 桌面端完全等价的 postCodeInfo（用桌面端的原始拼装方式，不做 token 二次编码）
+ */
+async function pcPostCodeInfoRaw(sessionId, dataObj) {
+  const dataStr = JSON.stringify(dataObj);
+  const timestamp = Date.now();
+  const sign = md5(String(sessionId) + String(timestamp) + PC_SIGN_KEY);
+  const body = 'id=' + encodeURIComponent(sessionId) +
+    '&data=' + encodeURIComponent(dataStr) +
+    '&time=' + timestamp +
+    '&sign=' + sign;
+  const url = 'https://' + PC_HOST + '/pc/postCodeInfo';
+  const resp = await safeFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
+  });
+  const json = safeJsonParse(resp);
+  if (!json || json.code !== undefined && json.code !== 0) {
+    throw new Error('pc/postCodeInfo 失败: ' + resp.slice(0, 200));
+  }
+  return true;
+}
+
+/**
  * PC getCodeInfo：取回游戏入口参数
  */
 async function pcGetCodeInfo(sessionId) {
@@ -687,25 +711,28 @@ async function handlePassCode(request) {
       } catch (_) { /* SDK登录非必须 */ }
     }
 
-    // 2. 写入通行证（与桌面端 sendPassCode 逻辑一致）
+    // 2. 写入通行证（与桌面端 sendPassCode 逻辑完全一致）
+    let dataObj;
     if (passToken && passSign) {
-      // 直接使用已有的 token/sign（桌面端逻辑）
-      await pcPostCodeInfo(sessionId, {
+      // 直接使用已有的 token/sign（桌面端逻辑：毫秒时间戳、token 已 encodeURIComponent）
+      dataObj = {
         gid: GAME_GID, pid: GAME_PID, token: passToken,
-        time: Math.floor(Date.now() / 1000), sign: passSign,
+        time: Date.now(), sign: passSign,
         appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
-      });
+      };
     } else if (uname && upwd) {
       // 兜底：重新登录获取 token/sign
       const h5sdkInfo = await h5sdkLogin(uname, upwd);
-      await pcPostCodeInfo(sessionId, {
+      dataObj = {
         gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
         time: h5sdkInfo.time, sign: h5sdkInfo.sign,
         appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
-      });
+      };
     } else {
       return jsonResponse({ ok: false, message: '缺少 token/sign 或账号密码' }, 400);
     }
+    // 直接用桌面端原版签名逻辑（避免双重 encodeURIComponent）
+    await pcPostCodeInfoRaw(sessionId, dataObj);
 
     console.log('[pass-code] ✅ 完成:', uname || '(token)', 'uid:', sdkUid);
     return jsonResponse({ ok: true, state: 1, uid: sdkUid, message: '通行证验证成功' });
