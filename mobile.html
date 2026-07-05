@@ -141,14 +141,15 @@
         .btn-edit   { background: #f5f0e8 !important; color: #8a7560 !important; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
         .back-top {
-            position: fixed; right: 20px; bottom: 30px; z-index: 200;
-            width: 44px; height: 44px; border-radius: 50%;
-            background: #6366f1; color: #fff; border: none;
-            font-size: 20px; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 10000;
+            width: 44px; height: 44px; border-radius: 12px;
+            background: #C3702A; color: #fff; border: none;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 2px 12px rgba(195, 112, 42, 0.35);
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.2s; opacity: 0.85;
+            transition: all 0.2s; opacity: 0.9;
         }
-        .back-top:active { opacity: 1; transform: scale(0.95); }
+        .back-top:active { opacity: 1; transform: translateX(-50%) scale(0.93); }
         .url-age {
             font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
         }
