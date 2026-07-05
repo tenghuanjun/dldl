@@ -6,7 +6,7 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>new VConsole().setSwitchPosition(20, window.innerHeight - 80);</script>
     <style>
@@ -193,8 +193,19 @@
             background: none; border: none; color: #8a7560; font-size: 20px;
             cursor: pointer; padding: 4px 8px;
         }
-        .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; }
-        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; overflow: hidden; }
+        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .scan-line {
+            position: absolute; left: 8%; width: 84%; height: 2px;
+            background: linear-gradient(90deg, transparent, #C3702A, transparent);
+            box-shadow: 0 0 8px rgba(195,112,42,0.6);
+            animation: scanLine 2s ease-in-out infinite; pointer-events: none;
+        }
+        @keyframes scanLine {
+            0% { top: 10%; }
+            50% { top: 85%; }
+            100% { top: 10%; }
+        }
         .scan-tip {
             padding: 14px 16px; font-size: 13px; color: #8a7560; text-align: center;
             line-height: 1.5;
@@ -339,7 +350,11 @@
                 <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
                 <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
                 <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
-                <div class="scan-viewport" id="qr-reader"></div>
+                <div class="scan-viewport" id="scan-viewport">
+                    <video id="scan-video" autoplay playsinline muted></video>
+                    <div class="scan-line" id="scan-line"></div>
+                    <canvas id="scan-canvas" style="display:none"></canvas>
+                </div>
                 <div class="scan-upload" v-if="!scanResult && !scanLoading">
                     <label class="btn btn-upload">
                         <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
@@ -560,91 +575,207 @@ createApp({
 
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
-        let html5QrCode = null;
-        let cameraStarted = false; // 标记摄像头是否已启动
+        let scanStream = null;        // getUserMedia stream
+        let scanRafId = null;         // requestAnimationFrame id
+        let scanPaused = false;       // 扫码暂停标记
+        let jsQrAvailable = false;    // jsQR 库是否加载
+        let barcodeDetectorAvailable = false; // BarcodeDetector API 是否可用
+        let scanLastFrame = 0;        // 帧率控制
 
         function openScanner(area, account) {
             scanVisible.value = true;
             scanError.value = '';
             scanResult.value = '';
             scanLoading.value = false;
+            scanPaused = false;
             scanCurrentArea.value = area;
             scanCurrentAccount.value = account;
 
-            // 如果之前已经启动过摄像头，直接 resume
-            if (cameraStarted && html5QrCode) {
-                html5QrCode.resume();
-                console.log('[scan] camera resumed');
-                return;
-            }
+            // 检测可用能力
+            barcodeDetectorAvailable = typeof BarcodeDetector !== 'undefined';
+            jsQrAvailable = typeof jsQR !== 'undefined';
+            console.log('[scan] open - BarcodeDetector:', barcodeDetectorAvailable, 'jsQR:', jsQrAvailable);
 
-            // 延迟初始化，等 DOM 渲染
+            // 等 DOM 渲染后启动
             setTimeout(function () {
                 if (!scanVisible.value) return;
-                var el = document.getElementById('qr-reader');
-                if (!el) { console.error('[scan] qr-reader element not found'); return; }
+                startCamera();
+            }, 200);
+        }
 
-                // 确保旧实例已清理
-                if (html5QrCode) {
-                    cameraStarted = false;
-                    html5QrCode.stop().then(function () {
-                        html5QrCode.clear();
-                    }).catch(function () {});
-                    html5QrCode = null;
-                }
-
-                html5QrCode = new Html5Qrcode('qr-reader');
-
-                html5QrCode.start(
-                    { facingMode: 'environment' },
-                    { fps: 10, aspectRatio: 1, qrbox: function(vw, vh) { var s = Math.min(vw, vh) * 0.7; return { width: s, height: s }; } },
-                    function (decodedText) {
-                        if (scanLoading.value) return;
-                        console.log('[scan] detected:', decodedText.slice(0, 50));
-                        onScanSuccess(decodedText);
-                    },
-                    function (errMsg) {
-                        console.debug('[scan] no detection:', errMsg);
-                    }
-                ).then(function () {
-                    cameraStarted = true;
-                    console.log('[scan] camera started successfully');
-                }).catch(function (err) {
-                    console.error('[scan] camera start failed:', err);
-                    scanError.value = '无法打开摄像头：' + (err.message || '请授予相机权限');
+        async function startCamera() {
+            stopCamera();
+            try {
+                scanStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
                 });
-            }, 300);
+                var video = document.getElementById('scan-video');
+                video.srcObject = scanStream;
+                // 等待视频就绪后开始解码
+                video.onloadedmetadata = function () {
+                    video.play();
+                    startScanLoop();
+                };
+                console.log('[scan] camera opened');
+            } catch (err) {
+                console.error('[scan] camera error:', err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    scanError.value = '请授予相机权限后重试';
+                } else if (err.name === 'NotFoundError') {
+                    scanError.value = '未找到可用摄像头';
+                } else {
+                    scanError.value = '摄像头启动失败: ' + (err.message || '未知错误');
+                }
+            }
+        }
+
+        function startScanLoop() {
+            var video = document.getElementById('scan-video');
+            var canvas = document.getElementById('scan-canvas');
+            var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            // 创建一个 BarcodeDetector 实例复用
+            var detector = null;
+            if (barcodeDetectorAvailable) {
+                try { detector = new BarcodeDetector({ formats: ['qr_code'] }); }
+                catch (e) { barcodeDetectorAvailable = false; }
+            }
+
+            function loop() {
+                if (!scanVisible.value || !scanStream || scanPaused) {
+                    scanRafId = null;
+                    return;
+                }
+                // 帧率控制 ~15fps
+                var now = Date.now();
+                if (now - scanLastFrame < 66) {
+                    scanRafId = requestAnimationFrame(loop);
+                    return;
+                }
+                scanLastFrame = now;
+                decodeFrame(video, canvas, ctx, detector);
+                scanRafId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        async function decodeFrame(video, canvas, ctx, detector) {
+            if (scanLoading.value || scanPaused) return;
+            if (video.videoWidth === 0) return;
+
+            try {
+                if (barcodeDetectorAvailable && detector) {
+                    var codes = await detector.detect(video);
+                    if (codes && codes.length > 0) {
+                        console.log('[scan] detected:', codes[0].rawValue.slice(0, 50));
+                        scanPaused = true;
+                        onScanSuccess(codes[0].rawValue);
+                        return;
+                    }
+                }
+                // jsQR fallback（不做双重检测，只在 BarcodeDetector 不可用时启用）
+                if (!barcodeDetectorAvailable && jsQrAvailable) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0);
+                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                    if (code) {
+                        console.log('[scan] jsQR detected:', code.data.slice(0, 50));
+                        scanPaused = true;
+                        onScanSuccess(code.data);
+                    }
+                }
+            } catch (e) {
+                // noop - 继续尝试下一帧
+            }
+        }
+
+        function stopCamera() {
+            if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
+            if (scanStream) {
+                scanStream.getTracks().forEach(function (t) { t.stop(); });
+                scanStream = null;
+            }
         }
 
         function closeScanner() {
             scanVisible.value = false;
-            if (html5QrCode && cameraStarted) {
-                html5QrCode.pause(true);
-            }
+            stopCamera();
         }
 
         async function handleFileUpload(event) {
             var file = event.target.files && event.target.files[0];
             if (!file) return;
-            event.target.value = ''; // 清空以便重复选择
+            event.target.value = '';
 
             scanLoading.value = true;
             scanError.value = '';
             scanResult.value = '';
 
             try {
-                if (!html5QrCode) {
-                    html5QrCode = new Html5Qrcode('qr-reader');
+                var decodedText = null;
+
+                // 方案1: BarcodeDetector API（最快最准）
+                if (typeof BarcodeDetector !== 'undefined') {
+                    try {
+                        var bitmap = await createImageBitmap(file);
+                        var detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        var codes = await detector.detect(bitmap);
+                        bitmap.close();
+                        if (codes && codes.length > 0) {
+                            decodedText = codes[0].rawValue;
+                            console.log('[upload] BarcodeDetector:', decodedText.slice(0, 50));
+                        }
+                    } catch (e) { console.debug('[upload] BarcodeDetector failed, fallback to jsQR:', e); }
                 }
-                var decodedText = await html5QrCode.scanFile(file, true);
-                console.log('[upload] detected:', decodedText.slice(0, 50));
+
+                // 方案2: jsQR fallback（图像解析）
+                if (!decodedText && typeof jsQR !== 'undefined') {
+                    var img = await loadImage(file);
+                    var canvas = document.getElementById('scan-canvas');
+                    if (!canvas) throw new Error('canvas not found');
+                    var ctx = canvas.getContext('2d');
+                    // 限制图片尺寸避免性能问题
+                    var maxDim = 1920;
+                    var w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        var scale = maxDim / Math.max(w, h);
+                        w = Math.round(w * scale);
+                        h = Math.round(h * scale);
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    var imageData = ctx.getImageData(0, 0, w, h);
+                    // 两种反色模式都尝试
+                    var code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+                    if (code) {
+                        decodedText = code.data;
+                        console.log('[upload] jsQR:', decodedText.slice(0, 50));
+                    }
+                    URL.revokeObjectURL(img.src);
+                }
+
+                if (!decodedText) {
+                    throw new Error('no qr found');
+                }
                 onScanSuccess(decodedText);
             } catch (e) {
                 console.error('[upload] scan failed:', e);
-                scanError.value = '未识别到二维码，请确保图片清晰';
-            } finally {
+                scanError.value = '未识别到二维码，请确保图片清晰且包含完整二维码';
                 scanLoading.value = false;
             }
+        }
+
+        function loadImage(file) {
+            return new Promise(function (resolve, reject) {
+                var img = new Image();
+                img.onload = function () { resolve(img); };
+                img.onerror = function () { reject(new Error('image load failed')); };
+                img.src = URL.createObjectURL(file);
+            });
         }
 
         async function onScanSuccess(decodedText) {
@@ -652,18 +783,13 @@ createApp({
             scanResult.value = '';
             scanError.value = '';
 
-            // 暂停扫描
-            if (html5QrCode) {
-                html5QrCode.pause(true);
-            }
-
             var sessionId = String(decodedText || '').trim();
             console.log('[scan] QR decoded:', sessionId);
 
             if (!sessionId) {
                 scanError.value = '二维码内容为空';
                 scanLoading.value = false;
-                if (html5QrCode) html5QrCode.resume();
+                scanPaused = false;
                 return;
             }
 
@@ -671,6 +797,7 @@ createApp({
             if (!account) {
                 scanError.value = '账号信息丢失，请重新打开';
                 scanLoading.value = false;
+                scanPaused = false;
                 return;
             }
 
@@ -679,6 +806,7 @@ createApp({
             if (!uname || !upwd) {
                 scanError.value = '该账号缺少用户名或密码';
                 scanLoading.value = false;
+                scanPaused = false;
                 return;
             }
 
@@ -697,7 +825,6 @@ createApp({
                     throw new Error(result.message || result.msg || '通行证验证失败');
                 }
                 scanResult.value = '通行证验证成功！PC端将自动登录';
-                // 2秒后自动关闭
                 setTimeout(function () {
                     if (scanVisible.value && scanResult.value) {
                         closeScanner();
@@ -709,7 +836,7 @@ createApp({
                 if (e.name === 'AbortError') msg = '请求超时，请检查网络';
                 else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
                 scanError.value = '验证失败：' + msg;
-                if (html5QrCode) html5QrCode.resume();
+                scanPaused = false; // 失败后恢复扫描
             } finally {
                 scanLoading.value = false;
             }
