@@ -180,10 +180,7 @@ function md5(string) {
 // ==================== AES-128-ECB ====================
 
 /**
- * AES-128-ECB 加密（使用 node:crypto，与 proxy.js 完全一致）
- * @param {string} plaintext - 明文
- * @param {string} keyStr - 16字节密钥
- * @returns {string} base64 密文
+ * AES-128-ECB 加密
  */
 function aes128EcbEncrypt(plaintext, keyStr) {
   const cipher = createCipheriv('aes-128-ecb', Buffer.from(keyStr, 'utf8'), Buffer.alloc(0));
@@ -678,104 +675,81 @@ async function handlePassCode(request) {
   try {
     console.log('[pass-code] 开始处理:', uname, 'sessionId:', sessionId.slice(0, 10) + '...');
 
-    // 1. AES 加密密码
-    const encryptedPwd = aes128EcbEncrypt(upwd, AES_KEY);
+    // 1. SDK 登录（尝试获取 uid，失败不影响主流程）
+    let sdkUid = '';
+    try {
+      const pwd = aes128EcbEncrypt(upwd, AES_KEY);
+      const r = await sdkLogin(uname, pwd);
+      if (r.state === 1 && r.data) sdkUid = r.data.uid || '';
+    } catch (_) { /* SDK登录非必须 */ }
 
-    // 2. SDK 登录
-    const sdkResp = await sdkLogin(uname, encryptedPwd);
-    if (sdkResp.state !== 1) {
-      throw new Error(sdkResp.msg || 'SDK 登录失败');
-    }
-    const sdkData = sdkResp.data || sdkResp;
-    const sdkToken = sdkData.token;
-    const rawLt = String(sdkData.login_type || '');
-    const loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
-
-    // 3. h5sdk 写入通行证（APP加密通道因服务器IP限制不可用）
+    // 2. h5sdk 写入通行证
     const h5sdkInfo = await h5sdkLogin(uname, upwd);
     await pcPostCodeInfo(sessionId, {
       gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
       time: h5sdkInfo.time, sign: h5sdkInfo.sign,
       appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
     });
-    console.log('[pass-code] ✅ 完成:', uname);
-    return jsonResponse({ ok: true, state: 1, message: '通行证验证成功' });
+    console.log('[pass-code] ✅ 完成:', uname, 'uid:', sdkUid);
+    return jsonResponse({ ok: true, state: 1, uid: sdkUid, message: '通行证验证成功' });
   } catch (error) {
     console.error('[pass-code] 失败:', error.message);
     return jsonResponse({ ok: false, message: error.message }, 500);
   }
 }
 
-// ==================== /api/app-login 完整流程 ====================
+// ==================== 登录核心（Cron 和 HTTP handler 共用） ====================
+
+async function doLoginCore(uname, upwd) {
+  console.log('[login] 开始:', uname);
+  let sdkUid = '', sdkUname = '';
+  try {
+    const pwd = aes128EcbEncrypt(upwd, AES_KEY);
+    const r = await sdkLogin(uname, pwd);
+    if (r.state === 1 && r.data) {
+      sdkUid = r.data.uid || '';
+      sdkUname = r.data.uname || '';
+    }
+  } catch (_) { /* SDK登录非必须 */ }
+
+  const sessionId = await pcGetId();
+  console.log('[login] sessionId:', sessionId.slice(0, 10) + '...');
+
+  const h5sdkInfo = await h5sdkLogin(uname, upwd);
+  await pcPostCodeInfo(sessionId, {
+    gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
+    time: h5sdkInfo.time, sign: h5sdkInfo.sign,
+    appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+  });
+
+  const entryParams = await pcGetCodeInfo(sessionId);
+
+  return {
+    ok: true, state: 1,
+    uid: sdkUid || '', uname: sdkUname || uname,
+    token: entryParams.token, sign: entryParams.sign,
+    entryTime: entryParams.time,
+    appVer: entryParams.appVer || GAME_APPVER,
+    platCode: entryParams.platCode || GAME_PLATCODE,
+    IMEI: entryParams.IMEI || GAME_IMEI,
+    entryGid: entryParams.gid || GAME_GID,
+    entryPid: entryParams.pid || GAME_PID,
+    _debug: { flow: 'h5sdk' },
+  };
+}
+
+// ==================== /api/app-login ====================
 
 async function handleAppLogin(request) {
   let body;
-  try {
-    body = await request.json();
-  } catch (_) {
-    return jsonResponse({ ok: false, message: '请求体必须是 JSON' }, 400);
-  }
+  try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, message: '请求体必须是 JSON' }, 400); }
 
   const uname = String(body.uname || '').trim();
   const upwd = String(body.upwd || '').trim();
-  if (!uname || !upwd) {
-    return jsonResponse({ ok: false, message: '缺少 uname 或 upwd' }, 400);
-  }
+  if (!uname || !upwd) return jsonResponse({ ok: false, message: '缺少 uname 或 upwd' }, 400);
 
   try {
-    // 1. AES 加密密码
-    console.log('[app-login] 开始处理:', uname);
-    const encryptedPwd = aes128EcbEncrypt(upwd, AES_KEY);
-
-    // 2. SDK 登录
-    const sdkResp = await sdkLogin(uname, encryptedPwd);
-    if (sdkResp.state !== 1) {
-      throw new Error(sdkResp.msg || 'SDK 登录失败');
-    }
-    const sdkData = sdkResp.data || sdkResp;
-    const sdkToken = sdkData.token;
-    if (!sdkToken) throw new Error('SDK 登录未返回 token');
-
-    // 判断 loginType
-    const rawLt = String(sdkData.login_type || '');
-    let loginType = rawLt === '2' ? 'phone' : rawLt === '3' ? 'wx' : 'common';
-    if (!rawLt) {
-      loginType = /^1[3-9]\d{9}$/.test(uname) ? 'phone' : 'common';
-    }
-    console.log('[app-login] loginType:', loginType);
-
-    // 3. 获取 PC 扫码会话 ID
-    const sessionId = await pcGetId();
-    console.log('[app-login] sessionId:', sessionId.slice(0, 10) + '...');
-
-    // 4. h5sdk 登录 + PC 写入参数（APP加密通道因服务器IP限制不可用）
-    const h5sdkInfo = await h5sdkLogin(uname, upwd);
-    await pcPostCodeInfo(sessionId, {
-      gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
-      time: h5sdkInfo.time, sign: h5sdkInfo.sign,
-      appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
-    });
-
-    // 5. 取回参数
-    const entryParams = await pcGetCodeInfo(sessionId);
-
-    // 7. 返回结果
-    const result = {
-      ok: true,
-      state: 1,
-      uid: sdkData.uid,
-      uname: sdkData.uname || uname,
-      token: entryParams.token,
-      sign: entryParams.sign,
-      entryTime: entryParams.time,
-      appVer: entryParams.appVer || GAME_APPVER,
-      platCode: entryParams.platCode || GAME_PLATCODE,
-      IMEI: entryParams.IMEI || GAME_IMEI,
-      entryGid: entryParams.gid || GAME_GID,
-      entryPid: entryParams.pid || GAME_PID,
-      _debug: { flow: 'h5sdk' },
-    };
-
+    const result = await doLoginCore(uname, upwd);
     console.log('[app-login] ✅ 完成:', uname);
     return jsonResponse(result);
   } catch (error) {
@@ -784,9 +758,141 @@ async function handleAppLogin(request) {
   }
 }
 
+// ==================== 定时刷新过期账号 ====================
+
+const SUPABASE_URL = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+
+async function refreshExpiredAccounts(env) {
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+  console.log('[cron] 开始扫描过期账号...');
+  const results = { scanned: 0, refreshed: 0, errors: 0, detail: [] };
+
+  try {
+    // 验证连接：先查前3条看数据结构（含upwd检验RLS）
+    let resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url&limit=3', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const sample = await resp.json();
+    console.log('[cron] 样本:', JSON.stringify(sample).slice(0, 500));
+    results.detail.push({ sample });
+    
+    if (!Array.isArray(sample) || sample.length === 0) {
+      console.log('[cron] 查不到任何账号');
+      return results;
+    }
+    
+    // 查有url的（url不为空字符串且不为null）
+    const withUrl = sample.filter(a => a.url && String(a.url).trim());
+    console.log('[cron] 前3条中有URL的:', withUrl.length);
+    if (withUrl.length === 0) { results.detail.push({ error: 'sample_no_url' }); return results; }
+    
+    // 实际操作：查全量在代码里过滤
+    // 查全量有URL的账号，按创建时间升序
+    resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url,url_created_at&url=not.is.null&order=url_created_at.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!resp.ok) { console.log('[cron] 查询失败:', resp.status); return results; }
+    
+    const accounts = await resp.json();
+    
+    results.scanned = accounts.length;
+    console.log('[cron] 有URL的账号总数:', accounts.length);
+    results.detail.push({ totalWithUrl: accounts.length });
+    
+    // 统计过期情况
+    let expiredCount = 0, missingCreds = 0, hasBothCount = 0;
+    for (const a of accounts) {
+      const t = a.url_created_at ? new Date(a.url_created_at) : null;
+      const ageH = t && !isNaN(t.getTime()) ? (Date.now() - t.getTime()) / 3600000 : -1;
+      if (ageH >= 65) expiredCount++;
+      if (!a.upwd) missingCreds++;
+      if (a.upwd && a.uname) hasBothCount++;
+    }
+    console.log('[cron] 过期>=65h:', expiredCount, '缺密码:', missingCreds, '有完整凭据:', hasBothCount);
+    results.detail.push({ expiredCount, missingCreds, hasBothCount });
+    
+    for (const acc of accounts) {
+      // Debug: 记录账号信息
+      const urlTime = acc.url_created_at ? new Date(acc.url_created_at) : null;
+      const ageHours = urlTime && !isNaN(urlTime.getTime()) ? (Date.now() - urlTime.getTime()) / 3600000 : -1;
+      
+      if (ageHours < 65) {
+        console.log('[cron] 跳过(未过期):', acc.uname || '?', ageHours.toFixed(1) + 'h');
+        continue;
+      }
+      
+      if (!acc.uname || !acc.upwd) {
+        console.log('[cron] 跳过(缺账号密码):', acc.id, 'uname:', acc.uname ? 'YES' : 'NO', 'upwd:', acc.upwd ? 'YES' : 'NO');
+        results.errors++;
+        results.detail.push({ id: acc.id, error: 'missing_credentials' });
+        continue;
+      }
+      
+      try {
+        console.log('[cron] 刷新:', acc.uname, '过期:', ageHours.toFixed(1) + 'h');
+        const result = await doLoginCore(acc.uname, acc.upwd);
+        
+        if (result.ok && result.token) {
+          // 更新 Supabase
+          const patchUrl = SUPABASE_URL + '/rest/v1/accounts?id=eq.' + acc.id;
+          await fetch(patchUrl, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              url: 'https://dldl.50pk.com/login.php?' + new URLSearchParams({
+                gid: result.entryGid || '1003279',
+                pid: result.entryPid || '46',
+                token: result.token,
+                time: result.entryTime || '',
+                sign: result.sign,
+                appVer: result.appVer || '134',
+                platCode: result.platCode || '37wan',
+                IMEI: result.IMEI || '',
+                isPcLauncher: 'true'
+              }).toString(),
+              app_token: result.token,
+              app_sign: result.sign,
+              url_created_at: new Date().toISOString()
+            })
+          });
+          results.refreshed++;
+        } else {
+          const errMsg = result.message || '未知错误';
+          console.log('[cron] 刷新失败:', acc.uname, errMsg);
+          results.errors++;
+          results.detail.push({ uname: acc.uname, error: errMsg });
+        }
+      } catch (e) {
+        console.log('[cron] 异常:', acc.uname, e.message);
+        results.errors++;
+        results.detail.push({ uname: acc.uname, error: e.message });
+      }
+      
+      // 每次刷新间隔5秒
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  } catch (e) {
+    console.log('[cron] 异常:', e.message);
+  }
+  
+  console.log('[cron] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误');
+  results.detail = results.detail.slice(0, 30);  // 限制日志大小
+  return results;
+}
+
 // ==================== 主入口 ====================
 
 export default {
+  // Cron Trigger: 每6小时自动刷新过期账号
+  async scheduled(event, env, ctx) {
+    console.log('[cron] Cron Trigger fired:', new Date().toISOString());
+    ctx.waitUntil(refreshExpiredAccounts(env));
+  },
+
   async fetch(request, env) {
     // CORS 预检
     if (request.method === 'OPTIONS') {
@@ -804,6 +910,12 @@ export default {
       // 测试
       if (url.pathname === '/test') {
         return jsonResponse({ status: 'ok', timestamp: Date.now() });
+      }
+
+      // 手动触发定时刷新
+      if (url.pathname === '/api/cron-refresh') {
+        const result = await refreshExpiredAccounts(env);
+        return jsonResponse(result);
       }
 
       // 获取 IP

@@ -1,0 +1,49 @@
+package com.sqwan.bugless.core;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes2.dex */
+public class Constant {
+    public static final String ACTION_TYPE = "actionType";
+    public static final String APP_NAME = "gname";
+    public static final String BUGLESS_APP_ID = "BUGLESS_APP_ID";
+    public static final String BUGLESS_APP_SECRET = "BUGLESS_APP_SECRET";
+    public static final String CRASH_MESSAGE = "message";
+    public static final String CRASH_STACK = "stack";
+    public static final String CRASH_TITLE = "title";
+    public static final String DEVICE_ID = "deviceId";
+    public static final String DEV_BRAND = "brand";
+    public static final String DEV_CPU = "cpu";
+    public static final String DEV_HPI = "hpi";
+    public static final String DEV_IMEI = "imei";
+    public static final String DEV_MAC = "mac";
+    public static final String DEV_MODEL = "model";
+    public static final String DEV_NETWORK = "network";
+    public static final String DEV_OS = "os";
+    public static final String DEV_ROM = "rom";
+    public static final String DEV_SYS_VERSION = "sysVersion";
+    public static final String DEV_WPI = "wpi";
+    public static final String INFO_BUSINESS_DATA = "businessData";
+    public static final String INFO_BUSINESS_MSG = "businessMsg";
+    public static final String INFO_CONTENT = "content";
+    public static final String INFO_DURATION = "duration";
+    public static final String INFO_HAPPEN_TIME = "htime";
+    public static final String INFO_REPORT_TIME = "rtime";
+    public static final String LOG_CACHE = "log_cache";
+    public static final String LOG_FILE_NAME = "log_file_name";
+    public static final String PKG_APP_ID = "appid";
+    public static final String PKG_CHANNEL = "channel";
+    public static final String PKG_GID = "gid";
+    public static final String PKG_NAME = "pname";
+    public static final String PKG_PID = "pid";
+    public static final String PKG_REFER = "refer";
+    public static final String PKG_SDK_VERSION = "sversion";
+    public static final String PKG_TAG = "eTag";
+    public static final String PKG_VERSION_CODE = "versionCode";
+    public static final String PKG_VERSION_NAME = "versionName";
+    public static final String PROCESS_ID = "process_id";
+    public static final String THREAD_ID = "thread_id";
+    public static final int TYPE_CATCHED = 2;
+    public static final int TYPE_EVENT = 3;
+    public static final int TYPE_UNCATCH = 1;
+    public static final String USER_ID = "uid";
+    public static final String USER_NAME = "uname";
+}

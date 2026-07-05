@@ -1,0 +1,34 @@
+package com.duowan.taf.jce.dynamic;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes.dex */
+public abstract class NumberField extends JceField {
+    public abstract Number getNumber();
+
+    NumberField(int i) {
+        super(i);
+    }
+
+    public byte byteValue() {
+        return getNumber().byteValue();
+    }
+
+    public double doubleValue() {
+        return getNumber().doubleValue();
+    }
+
+    public float floatValue() {
+        return getNumber().floatValue();
+    }
+
+    public int intValue() {
+        return getNumber().intValue();
+    }
+
+    public long longValue() {
+        return getNumber().longValue();
+    }
+
+    public short shortValue() {
+        return getNumber().shortValue();
+    }
+}

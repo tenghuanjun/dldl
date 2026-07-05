@@ -5,7 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 account_id = "7160279964fc33ef7afdc22ac2bd7c66"
 
-# 如果你使用自定义域名，可以配置 routes
-# routes = [
-#   { pattern = "your-domain.com/*", zone_name = "your-domain.com" }
-# ]
+# 定时刷新过期账号（每6小时，仅主Worker）
+[triggers]
+crons = ["0 */6 * * *"]

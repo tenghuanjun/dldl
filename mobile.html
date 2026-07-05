@@ -271,6 +271,7 @@
                     <option value="expired">地址过期</option>
                     <option value="none">无地址</option>
                 </select>
+                <button v-if="currentUser && currentUser.username === 'tenghuanjun'" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
@@ -412,6 +413,7 @@ createApp({
         const loadError = ref('');
         const launchedMap = reactive({});
         const refreshLoading = ref(false);
+        const cronRefreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
         const urlFilter = ref('all');
@@ -823,6 +825,23 @@ createApp({
             return grouped;
         }
 
+        // ===== 定时刷新按钮（仅管理员） =====
+        async function handleCronRefresh() {
+            if (cronRefreshLoading.value) return;
+            cronRefreshLoading.value = true;
+            try {
+                var resp = await fetch('https://red-moon-ff95.tenghuanjun.workers.dev/api/cron-refresh');
+                var result = await resp.json();
+                alert('定时刷新完成：扫描 ' + result.scanned + ' 个，刷新 ' + result.refreshed + ' 个，错误 ' + result.errors + ' 个');
+                // 刷新列表
+                areas.value = await fetchAccounts();
+            } catch (e) {
+                alert('定时刷新失败：' + (e.message || '网络错误'));
+            } finally {
+                cronRefreshLoading.value = false;
+            }
+        }
+
         // ===== 刷新按钮（强制从服务端拉取） =====
         async function handleRefresh() {
             refreshLoading.value = true; loadError.value = ''; globalLoading.value = true; globalLoadingText.value = '加载中…';
@@ -1033,7 +1052,8 @@ createApp({
             loginLoading: loginLoading, loginError: loginError,
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
-            refreshLoading: refreshLoading, lastRefresh: lastRefresh,
+            refreshLoading: refreshLoading, cronRefreshLoading: cronRefreshLoading,
+            handleCronRefresh: handleCronRefresh, lastRefresh: lastRefresh,
             actionLoading: actionLoading, urlFilter: urlFilter,
             filteredAccounts: filteredAccounts,
             hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,

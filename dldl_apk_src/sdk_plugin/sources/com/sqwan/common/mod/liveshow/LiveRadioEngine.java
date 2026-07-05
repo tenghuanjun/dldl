@@ -1,0 +1,167 @@
+package com.sqwan.common.mod.liveshow;
+
+import android.content.Context;
+import com.sqwan.common.mod.IModBase;
+import com.sqwan.common.mod.ModHelper;
+import com.sqwan.common.mod.liveshow.LiveShowCallbackConfig;
+import com.sqwan.msdk.api.SQResultListener;
+import com.sqwan.msdk.api.tool.ILiveRadio;
+import java.util.HashMap;
+import java.util.Map;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes2.dex */
+public class LiveRadioEngine implements ILiveRadio, IModBase {
+    private static final LiveRadioEngine ourInstance = new LiveRadioEngine();
+    private boolean hasInited;
+    private ILiveshowManager iLiveshowManager;
+    private ILiveshowTrackManager iLiveshowTrackManager;
+    private Context mContext;
+    private Map<LiveShowCallbackConfig.LiveShowCallbackType, LiveShowCallbackConfig> map = new HashMap();
+
+    private boolean isLiveShowTypeNone() {
+        return false;
+    }
+
+    public boolean isLiveshowTypeAudio() {
+        return true;
+    }
+
+    public static LiveRadioEngine getInstance() {
+        return ourInstance;
+    }
+
+    public void init(Context context) {
+        if (isLiveShowTypeNone() || this.mContext != null) {
+            return;
+        }
+        this.mContext = context;
+        initLiveshowManager();
+        initLiveshowTrackManager();
+        ILiveshowManager iLiveshowManager = this.iLiveshowManager;
+        if (iLiveshowManager != null) {
+            iLiveshowManager.initSkin(context);
+        }
+    }
+
+    private void initLiveshowTrackManager() {
+        Context context;
+        if (this.iLiveshowTrackManager == null) {
+            if (isLiveshowTypeAudio()) {
+                this.iLiveshowTrackManager = (ILiveshowTrackManager) ModHelper.get(IAudioLiveshowTrackManager.class);
+            }
+            ILiveshowTrackManager iLiveshowTrackManager = this.iLiveshowTrackManager;
+            if (iLiveshowTrackManager == null || (context = this.mContext) == null) {
+                return;
+            }
+            iLiveshowTrackManager.initContext(context);
+        }
+    }
+
+    private void initLiveshowManager() {
+        Context context;
+        if (this.iLiveshowManager == null) {
+            if (isLiveshowTypeAudio()) {
+                this.iLiveshowManager = (ILiveshowManager) ModHelper.get(IAudioLiveshowManager.class);
+            }
+            ILiveshowManager iLiveshowManager = this.iLiveshowManager;
+            if (iLiveshowManager == null || (context = this.mContext) == null) {
+                return;
+            }
+            iLiveshowManager.initContext(context);
+        }
+    }
+
+    public ILiveshowTrackManager getLiveshowTrackManager() {
+        return this.iLiveshowTrackManager;
+    }
+
+    public ILiveshowManager getLiveshowManager() {
+        return this.iLiveshowManager;
+    }
+
+    public void setHasInited(boolean z) {
+        if (isLiveShowTypeNone()) {
+            return;
+        }
+        this.hasInited = z;
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public boolean isSupportLiveRadio() {
+        return isLiveshowTypeAudio();
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public void joinLiveRadioRoom(Map<String, String> map, SQResultListener sQResultListener) {
+        ILiveshowManager iLiveshowManager;
+        if (isLiveShowTypeNone() || !this.hasInited || (iLiveshowManager = this.iLiveshowManager) == null) {
+            return;
+        }
+        iLiveshowManager.joinLiveshowRoom(map, sQResultListener);
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public void leaveLiveRadioRoom(Map<String, String> map, SQResultListener sQResultListener) {
+        ILiveshowManager iLiveshowManager;
+        if (isLiveShowTypeNone() || !this.hasInited || (iLiveshowManager = this.iLiveshowManager) == null) {
+            return;
+        }
+        iLiveshowManager.leaveLiveshowRoom(map, sQResultListener);
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public void setLiveRadioDestroyCallback(SQResultListener sQResultListener) {
+        if (isLiveShowTypeNone()) {
+            return;
+        }
+        if (this.hasInited) {
+            ILiveshowManager iLiveshowManager = this.iLiveshowManager;
+            if (iLiveshowManager != null) {
+                iLiveshowManager.setLiveshowDestroyCallback(sQResultListener);
+                return;
+            }
+            return;
+        }
+        this.map.put(LiveShowCallbackConfig.LiveShowCallbackType.destroy, new LiveShowCallbackConfig(null, sQResultListener));
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public void setLiveRadioVoiceChangeCallback(SQResultListener sQResultListener) {
+        if (isLiveShowTypeNone()) {
+            return;
+        }
+        if (this.hasInited) {
+            ILiveshowManager iLiveshowManager = this.iLiveshowManager;
+            if (iLiveshowManager != null) {
+                iLiveshowManager.setLiveshowVoiceChangeCallback(sQResultListener);
+                return;
+            }
+            return;
+        }
+        this.map.put(LiveShowCallbackConfig.LiveShowCallbackType.changeVoice, new LiveShowCallbackConfig(null, sQResultListener));
+    }
+
+    @Override // com.sqwan.msdk.api.tool.ILiveRadio
+    public void performLiveRadioFeature(Map<String, String> map, SQResultListener sQResultListener) {
+        ILiveshowManager iLiveshowManager;
+        if (isLiveShowTypeNone() || !this.hasInited || (iLiveshowManager = this.iLiveshowManager) == null) {
+            return;
+        }
+        iLiveshowManager.performLiveshowFeature(map, sQResultListener);
+    }
+
+    public void handleCallback() {
+        if (isLiveShowTypeNone()) {
+            return;
+        }
+        for (LiveShowCallbackConfig.LiveShowCallbackType liveShowCallbackType : this.map.keySet()) {
+            LiveShowCallbackConfig liveShowCallbackConfig = this.map.get(liveShowCallbackType);
+            if (liveShowCallbackType == LiveShowCallbackConfig.LiveShowCallbackType.changeVoice) {
+                setLiveRadioVoiceChangeCallback(liveShowCallbackConfig.sqResultListener);
+            } else if (liveShowCallbackType == LiveShowCallbackConfig.LiveShowCallbackType.destroy) {
+                setLiveRadioDestroyCallback(liveShowCallbackConfig.sqResultListener);
+            }
+        }
+        this.map.clear();
+    }
+}

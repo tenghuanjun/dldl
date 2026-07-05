@@ -1,0 +1,53 @@
+package com.igexin.push.config;
+
+/* JADX INFO: loaded from: D:\dldl\dldl_apk_extract\classes7.dex */
+public final class d {
+    public static String A = "";
+    public static int B = 3;
+    public static long C = 600000;
+    public static int D = 3;
+    public static int E = 200;
+    public static String F = "oppo r9,oppo A59,oppo a37";
+    public static String G = "none";
+    public static boolean H = false;
+    public static boolean I = true;
+    public static String J = "applk.cn";
+    public static String K = "huawei,honor";
+    public static boolean L = true;
+    public static boolean M = true;
+    public static boolean N = true;
+    public static boolean O = true;
+    public static boolean P = true;
+    public static String Q = "";
+    public static int R = 10;
+    public static long S = 2048;
+    public static String T = "vivo|26~100";
+    public static String U = "xiaomi:0:v12:false&false,redmi:0:v12:false&false,blackshark:0:v12:false&false";
+    public static int V = 2;
+    public static int a = 0;
+    public static int b = 0;
+    public static long c = 0;
+    public static int d = 0;
+    public static int e = 0;
+    public static boolean f = true;
+    public static boolean g = true;
+    public static boolean h = true;
+    public static boolean i = true;
+    public static boolean j = true;
+    public static boolean k = true;
+    public static boolean l = true;
+    public static boolean m = true;
+    public static boolean n = true;
+    public static boolean o = true;
+    public static boolean p = true;
+    public static String q = "none";
+    public static String r = "none";
+    public static boolean s = false;
+    public static boolean t = true;
+    public static boolean u = true;
+    public static long v = 72000000;
+    public static int w = 150;
+    public static int x = 80;
+    public static long y = 7200000;
+    public static long z = 7200000;
+}

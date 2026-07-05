@@ -1,0 +1,6 @@
+package com.huya.ciku.apm.tracker;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes2.dex */
+public interface ITracker {
+    String getTag();
+}

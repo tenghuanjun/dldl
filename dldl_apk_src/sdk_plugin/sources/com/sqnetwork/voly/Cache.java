@@ -1,0 +1,39 @@
+package com.sqnetwork.voly;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes2.dex */
+public interface Cache {
+    void clear();
+
+    Entry get(String key);
+
+    void initialize();
+
+    void invalidate(String key, boolean fullExpire);
+
+    void put(String key, Entry entry);
+
+    void remove(String key);
+
+    public static class Entry {
+        public List<Header> allResponseHeaders;
+        public byte[] data;
+        public String etag;
+        public long lastModified;
+        public Map<String, String> responseHeaders = Collections.emptyMap();
+        public long serverDate;
+        public long softTtl;
+        public long ttl;
+
+        public boolean isExpired() {
+            return this.ttl < System.currentTimeMillis();
+        }
+
+        public boolean refreshNeeded() {
+            return this.softTtl < System.currentTimeMillis();
+        }
+    }
+}

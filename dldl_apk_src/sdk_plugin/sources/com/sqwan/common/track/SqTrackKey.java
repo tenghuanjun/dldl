@@ -1,0 +1,55 @@
+package com.sqwan.common.track;
+
+/* JADX INFO: loaded from: D:\dldl\sq_plugin_extract\classes3.dex */
+public interface SqTrackKey {
+    public static final String PLUG_CONSUMING_TIME = "plug_consuming_time";
+    public static final String ball_id = "ball_id";
+    public static final String ball_name = "ball_name";
+    public static final String ball_red_dot = "ball_red_dot";
+    public static final String ball_url = "ball_url";
+    public static final String btn_ext = "btn_ext";
+    public static final String btn_id = "btn_id";
+    public static final String certification_url = "certification_link";
+    public static final String cp_order_id = "cp_order_id";
+    public static final String deprecated_class_name = "deprecated_class_name";
+    public static final String deprecated_stack_trace = "deprecated_stack_trace";
+    public static final String entry_red_dot = "entry_red_dot";
+    public static final String error_class_name = "error_class_name";
+    public static final String error_stack_trace = "error_stack_trace";
+    public static final String error_type = "error_type";
+    public static final String face_verify_id = "face_verify_id";
+    public static final String fail_code = "fail_code";
+    public static final String is_game_binding = "is_game_binding";
+    public static final String is_vouchers = "is_vouchers";
+    public static final String login_type = "login_type";
+    public static final String login_way = "login_way";
+    public static final String logout_type = "logout_type";
+    public static final String order_amount = "order_amount";
+    public static final String order_id = "order_id";
+    public static final String order_type = "order_type";
+    public static final String pay_amount = "pay_amount";
+    public static final String pay_channels = "pay_channels";
+    public static final String pay_method = "pay_method";
+    public static final String pay_method_name = "pay_method_name";
+    public static final String pay_session = "pay_session";
+    public static final String pay_version = "pay_version";
+    public static final String plug_current_version = "plug_current_version";
+    public static final String plug_hash = "plug_hash";
+    public static final String plug_id = "plug_id";
+    public static final String plug_latest_version = "plug_latest_version";
+    public static final String plug_link = "plug_link";
+    public static final String plug_type = "plug_type";
+    public static final String plug_version = "plug_version";
+    public static final String push_id = "push_id";
+    public static final String push_link = "push_link";
+    public static final String push_scene_id = "push_scene_id";
+    public static final String reason_fail = "reason_fail";
+    public static final String sub_error_code = "sub_err_code";
+    public static final String sub_error_msg = "sub_err_msg";
+    public static final String third_order_id = "third_order_id";
+    public static final String uid = "uid";
+    public static final String update_uurl = "update_uurl";
+    public static final String view_id = "view_id";
+    public static final String view_name = "view_name";
+    public static final String vouchers_id = "vouchers_id";
+}
