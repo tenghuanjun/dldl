@@ -666,31 +666,48 @@ async function handlePassCode(request) {
   }
 
   const sessionId = String(body.sessionId || body.code || '').trim();
+  // 桌面端逻辑：优先使用已存储的 token/sign
+  const passToken = String(body.token || '').trim();
+  const passSign = String(body.sign || '').trim();
   const uname = String(body.uname || '').trim();
   const upwd = String(body.upwd || '').trim();
 
   if (!sessionId) return jsonResponse({ ok: false, message: '缺少通行证码(sessionId)' }, 400);
-  if (!uname || !upwd) return jsonResponse({ ok: false, message: '缺少账号密码' }, 400);
 
   try {
-    console.log('[pass-code] 开始处理:', uname, 'sessionId:', sessionId.slice(0, 10) + '...');
+    console.log('[pass-code] 开始处理:', uname || '(token mode)', 'sessionId:', sessionId.slice(0, 10) + '...');
 
     // 1. SDK 登录（尝试获取 uid，失败不影响主流程）
     let sdkUid = '';
-    try {
-      const pwd = aes128EcbEncrypt(upwd, AES_KEY);
-      const r = await sdkLogin(uname, pwd);
-      if (r.state === 1 && r.data) sdkUid = r.data.uid || '';
-    } catch (_) { /* SDK登录非必须 */ }
+    if (uname && upwd) {
+      try {
+        const pwd = aes128EcbEncrypt(upwd, AES_KEY);
+        const r = await sdkLogin(uname, pwd);
+        if (r.state === 1 && r.data) sdkUid = r.data.uid || '';
+      } catch (_) { /* SDK登录非必须 */ }
+    }
 
-    // 2. h5sdk 写入通行证
-    const h5sdkInfo = await h5sdkLogin(uname, upwd);
-    await pcPostCodeInfo(sessionId, {
-      gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
-      time: h5sdkInfo.time, sign: h5sdkInfo.sign,
-      appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
-    });
-    console.log('[pass-code] ✅ 完成:', uname, 'uid:', sdkUid);
+    // 2. 写入通行证（与桌面端 sendPassCode 逻辑一致）
+    if (passToken && passSign) {
+      // 直接使用已有的 token/sign（桌面端逻辑）
+      await pcPostCodeInfo(sessionId, {
+        gid: GAME_GID, pid: GAME_PID, token: passToken,
+        time: Math.floor(Date.now() / 1000), sign: passSign,
+        appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+      });
+    } else if (uname && upwd) {
+      // 兜底：重新登录获取 token/sign
+      const h5sdkInfo = await h5sdkLogin(uname, upwd);
+      await pcPostCodeInfo(sessionId, {
+        gid: GAME_GID, pid: GAME_PID, token: h5sdkInfo.token,
+        time: h5sdkInfo.time, sign: h5sdkInfo.sign,
+        appVer: GAME_APPVER, platCode: GAME_PLATCODE, IMEI: GAME_IMEI,
+      });
+    } else {
+      return jsonResponse({ ok: false, message: '缺少 token/sign 或账号密码' }, 400);
+    }
+
+    console.log('[pass-code] ✅ 完成:', uname || '(token)', 'uid:', sdkUid);
     return jsonResponse({ ok: true, state: 1, uid: sdkUid, message: '通行证验证成功' });
   } catch (error) {
     console.error('[pass-code] 失败:', error.message);
