@@ -1,0 +1,2901 @@
+<html class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>账号列表页</title>
+    <script src="vue.global.js"></script>
+    <link rel="stylesheet" href="lib/element-plus.css" />
+    <link rel="stylesheet" href="lib/element-plus-dark.css" />
+    <script src="lib/element-plus.min.js"></script>
+    <script src="lib/Sortable.min.js"></script>
+    <script src="lib/supabase.min.js"></script>
+    <script src="lib/crypto-js.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <div v-if="!isLoggedIn" class="login-container">
+            <div class="login-box">
+                <h2 class="login-title">用户登录</h2>
+                <div class="login-form">
+                    <div class="login-field">
+                        <label class="login-label">用户名</label>
+                        <input class="login-input" v-model="loginForm.username" placeholder="请输入用户名" @keyup.enter="handleLogin">
+                    </div>
+                    <div class="login-field">
+                        <label class="login-label">密码</label>
+                        <input class="login-input" type="password" v-model="loginForm.password" placeholder="请输入密码" @keyup.enter="handleLogin">
+                    </div>
+                    <div class="login-actions">
+                        <button class="btn login-btn" type="button" @click="handleLogin" :disabled="loginLoading" :class="{ 'btn-loading': loginLoading }">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                        <button class="btn btn-secondary login-btn" type="button" @click="handleRegister" :disabled="loginLoading" :class="{ 'btn-loading': loginLoading }">{{ loginLoading ? '注册中...' : '注册' }}</button>
+                    </div>
+                    <div v-if="loginError" class="login-error">{{ loginError }}</div>
+                </div>
+            </div>
+        </div>
+        <template v-if="isLoggedIn">
+        <header class="account-controls-sticky">
+            <div class="sticky-row sticky-row-top">
+                <h1 class="sticky-page-title">多账号扫码入口</h1>
+                <div class="user-info">
+                    <span class="username">{{ currentUser?.username }}</span>
+                    <button v-if="isAdmin" class="btn btn-secondary btn-compact" type="button" @click="openUserManageModal">用户管理</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
+                </div>
+                <div class="sticky-tools">
+                    <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '强制刷新' }}</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
+                    <button
+                        class="btn btn-compact"
+                        type="button"
+                        :disabled="selectedAccountCount === 0"
+                        @click="batchLaunchSelected"
+                    >批量启动（{{ selectedAccountCount }}）</button>
+                    <button
+                        class="btn btn-compact"
+                        :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
+                        type="button"
+                        @click="toggleProxyAndRefreshIP"
+                    >{{ proxyIP === '切换中...' ? '代理IP: 切换中...' : (useProxy ? proxyIP : '代理IP: 未启用（点击启用并切换IP）') }}</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="openAreaSortModal">区服排序</button>
+                </div>
+            </div>
+            <div class="sticky-row sticky-row-batch">
+                <span class="batch-row-head">
+                    同区批次
+                    <span class="batch-info-icon" title="按该区下列表顺序分批启动，与下方勾选无关">ⓘ</span>
+                </span>
+                <el-select
+                    v-model="batchPanelArea"
+                    class="batch-area-select batch-select-ep"
+                    size="default"
+                    filterable
+                    clearable
+                    placeholder="区服"
+                >
+                    <el-option
+                        v-for="g in areas"
+                        :key="'batch-opt-' + g.area"
+                        :label="g.area"
+                        :value="g.area"
+                    />
+                </el-select>
+                <label class="batch-inline-label">每批</label>
+                <input
+                    v-model.number="batchPanelSize"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="form-input batch-num-input"
+                >
+                <label class="batch-inline-label">第</label>
+                <input
+                    v-model.number="batchPanelBatchNo"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="form-input batch-num-input"
+                >
+                <label class="batch-inline-label">批</label>
+                <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
+            </div>
+        </header>
+
+        <section class="area" v-for="group in areas" :key="group.area">
+            <div class="area-head">
+                <div class="area-title">{{ group.area }}</div>
+                <div class="area-sub">
+                    {{ group.accounts.length }} 个账号
+                    <button type="button" class="btn-link" @click="selectAllInArea(group, true)">全选</button>
+                    <button type="button" class="btn-link" @click="selectAllInArea(group, false)">取消全选</button>
+                    <button class="btn btn-danger btn-mini" type="button" @click="deleteArea(group)">删除区服</button>
+                </div>
+            </div>
+
+            <div class="cards" v-account-cards-sortable="group">
+                <div class="card sortable-account-card" v-for="account in group.accounts" :key="`${group.area}-${account.uname}`">
+                    <label class="card-check-wrap" @mousedown.stop @click.stop>
+                        <input
+                            type="checkbox"
+                            :checked="isAccountSelected(group.area, account)"
+                            @change="onAccountCheckboxChange($event, group.area, account)"
+                        >
+                    </label>
+                    <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序">⋮⋮</button>
+                    <div class="card-main">
+                        <div class="card-top">
+                            <div class="card-name">
+                                <div class="nick white-space-nowrap">{{ account.name || '-' }}</div>
+                                <div class="uname white-space-nowrap" v-if="showPwd">{{ account.uname }}</div>
+                                <div class="uname white-space-nowrap" v-if="showPwd">{{ account.upwd }}</div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
+                                <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新APPtoken</button>
+                                <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
+                                <button class="btn" type="button" @click="appLogin(group.area, account)">APP登录</button>
+                                <span v-if="getAppLoginStatus(group.area, account) === 'launched'" class="pass-code-status ok">已启动</span>
+                                <!-- <button class="btn" type="button" @click="openLogin(account)">网页登录</button> -->
+                                <!-- <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button> -->
+                            </div>
+                            <div class="card-pass-row">
+                                <div class="pass-code-input-wrap">
+                                    <input
+                                        ref="passCodeInputs"
+                                        class="pass-code-input"
+                                        type="text"
+                                        placeholder="通行证码"
+                                        :value="getPassCodeValue(group.area, account)"
+                                        @input="onPassCodeInput($event, group.area, account)"
+                                        @blur="onPassCodeBlur($event, group.area, account)"
+                                        @keyup.enter="($event) => { $event.target.blur(); }"
+                                    >
+                                    <button
+                                        v-if="getPassCodeValue(group.area, account)"
+                                        class="pass-code-clear"
+                                        type="button"
+                                        tabindex="-1"
+                                        title="清除"
+                                        @mousedown.prevent="clearPassCode(group.area, account)"
+                                    >✕</button>
+                                </div>
+                                <span v-if="isPassCodeSending(group.area, account)" class="pass-code-status sending">发送中…</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'expired'" class="pass-code-status expired">已失效</span>
+                                <span v-else-if="getPassCodeStatus(group.area, account) === 'fail'" class="pass-code-status fail">失败</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span v-if="account.url && getUrlAge(account)" class="card-url-age">{{ getUrlAge(account) }}</span>
+                    <span
+                        class="card-url-dot"
+                        :class="(account.url && String(account.url).trim()) ? 'has-url' : 'no-url'"
+                        :title="(account.url && String(account.url).trim()) ? '有URL' : '无URL'"
+                    ></span>
+                </div>
+            </div>
+        </section>
+        <!-- <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动」会按 APP 登录方式依次打开窗口（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号点击「APP登录」按钮。</div>
+        <div class="tip tip-secondary">点击「打开扫码页」会经本地代理打开 login.php：若当前账号已缓存 token，则直接使用；仅在没有 token 时会请求 h5sdk/login 并写入 Supabase。账号页或扫码页内「刷新 token」成功后，会将新 token/time/sign 更新到 Supabase 对应账号行（按 id 匹配）。</div>
+        <div class="tip tip-secondary">「快捷登录」携带该账号的 uname、upwd、uinfo 打开新窗口，在 <code>37.com.cn/h5game/public/?pid=46&amp;gid=1005176</code> 注入 UINFO/HISTORY cookie 完成登录。无 uinfo 时按 uname/upwd 自动生成。需使用 DLDL-Proxy 桌面客户端。</div>
+        <div class="tip tip-secondary">「代理IP」使用 GitHub Actions Runner 的 Azure IP 轮换：点击按钮查看当前可用 IP。每个账号的「刷新 token」优先使用 Actions 缓存的 token（5 分钟内有效），缓存未命中时走代理池直连。如需强制从全新 IP 获取 token，请在项目目录启动 proxy 后调用 <code>POST /gh-relay/request-token</code>（最多等待 2 分钟，Actions 定时任务每 5 分钟执行一次）。</div> -->
+
+        <div v-if="accountModalVisible" class="modal-mask" @click.self="closeAccountModal()">
+            <div class="modal">
+                <div class="modal-title">{{ accountModalMode === 'create' ? '新增账号' : '编辑账号' }}</div>
+                <div class="modal-actions modal-actions-top">
+                    <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
+                    <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
+                    <button class="btn" type="button" @click="submitAccountModal()">保存</button>
+                </div>
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label class="form-label">区服</label>
+                        <el-select
+                            v-model="accountForm.area"
+                            class="area-select"
+                            filterable
+                            allow-create
+                            default-first-option
+                            clearable
+                            placeholder="搜索或选择区服，也可输入新名称后回车创建"
+                        >
+                            <el-option
+                                v-for="group in areas"
+                                :key="group.area"
+                                :label="group.area"
+                                :value="group.area"
+                            />
+                        </el-select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">昵称 name</label>
+                        <input class="form-input" v-model="accountForm.name" placeholder="请输入昵称">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">账号 uname</label>
+                        <input class="form-input" v-model="accountForm.uname" placeholder="请输入账号">
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">密码 upwd</label>
+                        <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
+                    </div>
+                    <div class="form-field full form-section-label">快捷登录 Cookie</div>
+                    <div class="form-field full">
+                        <label class="form-label">uinfo</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.uinfo" rows="2" placeholder="可选；快捷登录优先使用该值注入 UINFO，留空则按 uname/upwd 自动生成"></textarea>
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">history</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.history" rows="2" placeholder='可选；建议为 JSON 数组，如 [{"uname":"xxx","upwd":"yyy"}]'></textarea>
+                    </div>
+                    <div class="form-field full form-section-label">扫码登录 token</div>
+                    <div class="form-field full">
+                        <label class="form-label">完整登录地址</label>
+                        <div class="url-extract-row">
+                            <textarea
+                                v-model="loginUrlPaste"
+                                class="form-input form-textarea url-paste-input"
+                                rows="2"
+                                placeholder="粘贴浏览器地址栏中的 login.php?... 整段链接，点击右侧「提取」自动填入下方三项"
+                            ></textarea>
+                            <button type="button" class="btn url-extract-btn" @click="extractLoginParamsFromUrl">提取</button>
+                        </div>
+                    </div>
+                    <div class="form-field full">
+                        <label class="form-label">token</label>
+                        <textarea class="form-input form-textarea form-mono" v-model="accountForm.token" rows="3" placeholder="可选；留空则打开扫码页时会自动拉取"></textarea>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">time</label>
+                        <input class="form-input" v-model="accountForm.time" placeholder="可选，与 sign 配套">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">sign</label>
+                        <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
+                    </div>
+                    <div class="form-field full form-section-label">APP登录地址</div>
+                    <div class="form-field full">
+                        <label class="form-label">url</label>
+                        <div class="pass-code-input-wrap">
+                            <textarea
+                                class="form-input form-textarea form-mono"
+                                v-model="accountForm.url"
+                                rows="2"
+                                placeholder="点击「APP登录」后自动生成，可手动编辑"
+                            ></textarea>
+                            <button
+                                v-if="accountForm.url"
+                                class="pass-code-clear"
+                                type="button"
+                                tabindex="-1"
+                                title="清除"
+                                @mousedown.prevent="accountForm.url = ''"
+                            >✕</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
+                <div class="modal-actions">
+                    <button v-if="accountModalMode === 'edit'" class="btn btn-danger" type="button" @click="deleteEditingAccount()">删除账号</button>
+                    <button class="btn btn-secondary" type="button" @click="closeAccountModal()">取消</button>
+                    <button class="btn" type="button" @click="submitAccountModal()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="areaSortModalVisible" class="modal-mask" @click.self="closeAreaSortModal">
+            <div class="modal">
+                <div class="modal-title">区服排序</div>
+                <div class="area-sort-tip">拖拽下方区服调整顺序，松手后自动保存</div>
+                <div class="area-sort-list" ref="areaSortList">
+                    <div class="area-sort-item" v-for="group in areaSortList" :key="group.area" :data-area="group.area">
+                        <span class="area-sort-handle">⋮⋮</span>
+                        <span class="area-sort-name">{{ group.area }}</span>
+                        <span class="area-sort-count">{{ group.accounts.length }} 个账号</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeAreaSortModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="userManageModalVisible" class="modal-mask" @click.self="closeUserManageModal">
+            <div class="modal" style="max-width: 600px;">
+                <div class="modal-title">用户管理</div>
+                <div class="user-manage-tip">tenghuanjun 为管理员，不可禁用和删除</div>
+                <div class="user-manage-list">
+                    <div class="user-manage-item" v-for="user in allUsers" :key="user.id">
+                        <span class="user-manage-name">{{ user.username }}</span>
+                        <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
+                        <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
+                        <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
+                        <button class="btn btn-secondary btn-mini" type="button" @click="openChangePwdModal(user)">改密码</button>
+                        <button class="btn btn-secondary btn-mini" type="button" @click="showUserPassword(user)" :disabled="showPwdLoading">看密码</button>
+                        <button class="btn btn-danger btn-mini" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeUserManageModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="changePwdModalVisible" class="modal-mask" @click.self="closeChangePwdModal">
+            <div class="modal" style="max-width: 360px;">
+                <div class="modal-title">修改密码 - {{ changePwdUser?.username }}</div>
+                <div class="login-field">
+                    <label class="login-label">新密码</label>
+                    <input class="login-input" type="password" v-model="newPassword" placeholder="请输入新密码" @keyup.enter="submitChangePwd">
+                </div>
+                <div class="modal-actions" style="margin-top: 16px;">
+                    <button class="btn btn-secondary" type="button" @click="closeChangePwdModal">取消</button>
+                    <button class="btn" type="button" @click="submitChangePwd">确认修改</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showPwdVisible" class="modal-mask" @click.self="closeShowPwd">
+            <div class="modal" style="max-width: 360px;">
+                <div class="modal-title">查看密码 - {{ showPwdUser?.username }}</div>
+                <div style="padding: 16px 0; text-align: center;">
+                    <div style="font-size: 13px; color: #a0a0c0; margin-bottom: 8px;">用户密码为：</div>
+                    <div style="font-size: 22px; font-weight: 700; color: #ef4444; font-family: monospace; letter-spacing: 2px; word-break: break-all;">{{ showPwdText }}</div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeShowPwd">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="loadingVisible" class="loading-mask">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ loadingText || '加载中...' }}</div>
+        </div>
+        </template>
+    </div>
+    <script src="md5.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const ElMessage = window.ElementPlus?.ElMessage;
+        const ElMessageBox = window.ElementPlus?.ElMessageBox;
+
+        function destroyAccountCardsSortable(el) {
+            if (el._accountCardsSortable) {
+                el._accountCardsSortable.destroy();
+                el._accountCardsSortable = null;
+            }
+        }
+
+        const accountCardsSortableDirective = {
+            mounted(el, binding) {
+                el._sortableGroupRef = binding.value;
+                const SortableCtor = window.Sortable;
+                if (typeof SortableCtor !== 'function' || !binding.value || !Array.isArray(binding.value.accounts)) {
+                    return;
+                }
+                el._accountCardsSortable = SortableCtor.create(el, {
+                    animation: 180,
+                    handle: '.card-drag-handle',
+                    draggable: '.sortable-account-card',
+                    ghostClass: 'card-sortable-ghost',
+                    chosenClass: 'card-sortable-chosen',
+                    dragClass: 'card-sortable-drag',
+                    forceFallback: true,
+                    fallbackTolerance: 5,
+                    onEnd(evt) {
+                        const g = el._sortableGroupRef;
+                        if (!g || !Array.isArray(g.accounts)) return;
+                        const oldIndex = evt.oldIndex;
+                        const newIndex = evt.newIndex;
+                        if (oldIndex === newIndex || oldIndex == null || newIndex == null) return;
+                        const list = g.accounts;
+                        const moved = list.splice(oldIndex, 1)[0];
+                        list.splice(newIndex, 0, moved);
+                        const vm = binding.instance;
+                        if (vm && typeof vm.onAccountCardsSorted === 'function') {
+                            void vm.onAccountCardsSorted();
+                        }
+                    }
+                });
+            },
+            updated(el, binding) {
+                el._sortableGroupRef = binding.value;
+            },
+            unmounted(el) {
+                destroyAccountCardsSortable(el);
+            }
+        };
+
+        const supabaseUrl = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+        const db = supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase initialized OK');
+
+        // 与 bundle.js SQUtil.encode 一致的 UINFO 编码函数
+        function encodeUinfoPlain(plain) {
+            const code = String(plain);
+            if (!code) return '';
+            let c = String.fromCharCode(code.charCodeAt(0) + code.length);
+            for (let i = 1; i < code.length; i++) {
+                c += String.fromCharCode(code.charCodeAt(i) + code.charCodeAt(i - 1));
+            }
+            return encodeURIComponent(c);
+        }
+
+        // 按 bundle.js 登录成功后的写法生成 UINFO、HISTORY cookie 值
+        function build37CookieValues(account) {
+            const uname = String(account.uname || '').trim();
+            const upwd = String(account.upwd || '').trim();
+            const uinfoObj = { uname, upwd, autoLogin: account.autoLogin !== false };
+            const uinfo = encodeUinfoPlain(JSON.stringify(uinfoObj));
+            const history = JSON.stringify([{ uname, upwd }]);
+            return { uinfo, history };
+        }
+
+        const app = createApp({
+            data() {
+                return {
+                    isLoggedIn: false,
+                    currentUser: null,
+                    loginForm: { username: '', password: '' },
+                    loginLoading: false,
+                    loginError: '',
+                    showPwd: false,
+                    areas: [],
+                    accountModalVisible: false,
+                    accountModalMode: 'create',
+                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '', uinfo: '', history: '', url: '' },
+                    loginUrlPaste: '',
+                    editingAccountRef: null,
+                    /** 勾选批量启动：key = accountSelectKey(area, account) */
+                    accountSelectMap: {},
+                    /** 批量启动方式：quick=快捷登录, scan=扫码页 */
+                    batchLaunchMode: 'quick',
+                    /** 同区服按批次：区服、每批个数、第几批（从 1 开始） */
+                    batchPanelArea: '',
+                    batchPanelSize: 5,
+                    batchPanelBatchNo: 1,
+                    /** 通行证登录 */
+                    passCodeMap: {},
+                    /** APP登录状态：已启动等 */
+                    appLoginStatusMap: {},
+                    /** 代理IP配置 */
+                    useProxy: false,
+                    proxyWorkerUrl: 'https://red-moon-ff95.tenghuanjun.workers.dev',
+                    proxyIP: '直连',
+                    areaSortModalVisible: false,
+                    areaSortList: [],
+                    userManageModalVisible: false,
+                    allUsers: [],
+                    changePwdModalVisible: false,
+                    changePwdUser: null,
+                    newPassword: '',
+                    showPwdVisible: false,
+                    showPwdUser: null,
+                    showPwdText: '',
+                    showPwdLoading: false,
+                    loadingVisible: false,
+                    loadingText: '',
+                    accountsRefreshing: false,
+                    submitting: false,
+                };
+            },
+            computed: {
+                selectedAccountCount() {
+                    const m = this.accountSelectMap;
+                    return Object.keys(m).filter((k) => m[k]).length;
+                },
+                isAdmin() {
+                    return this.currentUser?.username === 'tenghuanjun';
+                }
+            },
+            mounted() {
+                this.checkLoginState();
+                this.fixAndLoadProxyConfig();
+                this._onLoginPageTokenMessage = (event) => {
+                    if (event.origin !== window.location.origin) return;
+                    const payload = event.data;
+                    if (!payload || payload.type !== 'dldl_token_refreshed') return;
+                    void this.handleTokenRefreshedFromLoginPage(payload);
+                };
+                window.addEventListener('message', this._onLoginPageTokenMessage);
+            },
+            beforeUnmount() {
+                if (this._onLoginPageTokenMessage) {
+                    window.removeEventListener('message', this._onLoginPageTokenMessage);
+                }
+            },
+            methods: {
+                hashPassword(password) {
+                    const hash = CryptoJS.PBKDF2(password, 'salt', { keySize: 64 / 4, iterations: 100000, hasher: CryptoJS.algo.SHA512 });
+                    return hash.toString(CryptoJS.enc.Hex);
+                },
+                encryptPassword(password) {
+                    return CryptoJS.AES.encrypt(password, 'dldl_aes_key_2024').toString();
+                },
+                decryptPassword(encrypted) {
+                    if (!encrypted) return '';
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(encrypted, 'dldl_aes_key_2024');
+                        return bytes.toString(CryptoJS.enc.Utf8);
+                    } catch (e) { return ''; }
+                },
+                checkLoginState() {
+                    const savedUser = localStorage.getItem('dldl_user');
+                    if (savedUser) {
+                        try {
+                            this.currentUser = JSON.parse(savedUser);
+                            this.isLoggedIn = true;
+                            // 先展示缓存数据，同时后台拉取最新数据
+                            this.loadAccountsFromCache();
+                            this.loadAccounts();
+                        } catch (e) {
+                            localStorage.removeItem('dldl_user');
+                        }
+                    }
+                },
+                async handleLogin() {
+                    const username = String(this.loginForm.username || '').trim();
+                    const password = String(this.loginForm.password || '').trim();
+                    if (!username || !password) { this.loginError = '请输入用户名和密码'; return; }
+                    this.loginLoading = true; this.loginError = '';
+                    try {
+                        const { data, error } = await db.from('users').select('*').eq('username', username).single();
+                        if (error || !data) throw new Error('用户不存在');
+                        const hash = this.hashPassword(password);
+                        if (hash !== data.password_hash) throw new Error('密码错误');
+                        if (data.enabled === false) throw new Error('账号已被禁用，请联系管理员');
+                        const { password_hash, ...userInfo } = data;
+                        this.currentUser = userInfo; this.isLoggedIn = true;
+                        localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                        this.loginForm = { username: '', password: '' };
+                        // 先展示缓存数据，同时后台拉取最新
+                        this.loadAccountsFromCache();
+                        this.loadAccounts();
+                    } catch (e) { this.loginError = e.message || '登录失败'; }
+                    finally { this.loginLoading = false; }
+                },
+                async handleRegister() {
+                    const username = String(this.loginForm.username || '').trim();
+                    const password = String(this.loginForm.password || '').trim();
+                    if (!username || !password) { this.loginError = '请输入用户名和密码'; return; }
+                    if (password.length < 6) { this.loginError = '密码至少6位'; return; }
+                    this.loginLoading = true; this.loginError = '';
+                    try {
+                        const password_hash = this.hashPassword(password);
+                        const encrypted_pwd = this.encryptPassword(password);
+                        const { data, error } = await db.from('users').insert({ username, password_hash, encrypted_pwd }).select().single();
+                        if (error) { if (error.code === '23505') throw new Error('用户名已存在'); throw error; }
+                        const { password_hash: _, encrypted_pwd: __, ...userInfo } = data;
+                        this.currentUser = userInfo; this.isLoggedIn = true;
+                        localStorage.setItem('dldl_user', JSON.stringify(userInfo));
+                        this.loginForm = { username: '', password: '' };
+                        this.showSuccess('注册成功');
+                    } catch (e) { this.loginError = e.message || '注册失败'; }
+                    finally { this.loginLoading = false; }
+                },
+                handleLogout() {
+                    // 清除当前用户的缓存再重置状态
+                    if (this.currentUser) {
+                        localStorage.removeItem('dldl_accounts_' + this.currentUser.id);
+                    }
+                    this.isLoggedIn = false; this.currentUser = null; this.areas = [];
+                    localStorage.removeItem('dldl_user');
+                },
+                openAreaSortModal() {
+                    this.areaSortList = this.areas.map(g => ({ area: g.area, accounts: g.accounts }));
+                    this.areaSortModalVisible = true;
+                    this.$nextTick(() => this.initAreaSort());
+                },
+                closeAreaSortModal() {
+                    this.areaSortModalVisible = false;
+                },
+                initAreaSort() {
+                    const el = this.$refs.areaSortList;
+                    if (!el || el._areaSortable) return;
+                    el._areaSortable = new Sortable(el, {
+                        animation: 180,
+                        handle: '.area-sort-handle',
+                        draggable: '.area-sort-item',
+                        ghostClass: 'area-sort-ghost',
+                        chosenClass: 'area-sort-chosen',
+                        onEnd: (evt) => {
+                            const list = this.areaSortList;
+                            const moved = list.splice(evt.oldIndex, 1)[0];
+                            list.splice(evt.newIndex, 0, moved);
+                            this.saveAreaSort();
+                        }
+                    });
+                },
+                async saveAreaSort() {
+                    if (!this.currentUser) return;
+                    if (this.loadingVisible) return;
+                    this.loadingText = '正在保存区服排序...';
+                    this.loadingVisible = true;
+                    try {
+                        for (let i = 0; i < this.areaSortList.length; i++) {
+                            const { error } = await db.from('areas').update({ sort_order: i })
+                                .eq('user_id', this.currentUser.id)
+                                .eq('name', this.areaSortList[i].area);
+                            if (error) throw error;
+                        }
+                        this.areas = this.areaSortList.map(g => ({ area: g.area, accounts: g.accounts }));
+                        this.showSuccess('区服排序已保存');
+                    } catch (e) {
+                        this.showError(`保存排序失败：${e.message}`);
+                        await this.loadAccounts();
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                },
+                async openUserManageModal() {
+                    this.userManageModalVisible = true;
+                    await this.loadAllUsers();
+                },
+                closeUserManageModal() {
+                    this.userManageModalVisible = false;
+                },
+                async loadAllUsers() {
+                    try {
+                        const { data, error } = await db.from('users').select('id, username, enabled').order('id');
+                        if (error) throw error;
+                        this.allUsers = data || [];
+                    } catch (e) {
+                        this.showError(`加载用户失败：${e.message}`);
+                    }
+                },
+                async toggleUserEnabled(user) {
+                    if (user.username === 'tenghuanjun') return;
+                    try {
+                        const newStatus = !user.enabled;
+                        const { error } = await db.from('users').update({ enabled: newStatus }).eq('id', user.id);
+                        if (error) throw error;
+                        user.enabled = newStatus;
+                        this.showSuccess(`已${newStatus ? '启用' : '禁用'}用户 ${user.username}`);
+                    } catch (e) {
+                        this.showError(`操作失败：${e.message}`);
+                    }
+                },
+                async deleteUser(user) {
+                    if (user.username === 'tenghuanjun') return;
+                    if (this.loadingVisible) return;
+                    const confirmed = await this.confirmAction(`确认删除用户 ${user.username} 吗？该用户下的所有区服和账号将一并删除，不可恢复。`, '删除用户');
+                    if (!confirmed) return;
+                    this.loadingText = '正在删除用户...';
+                    this.loadingVisible = true;
+                    try {
+                        await db.from('accounts').delete().eq('user_id', user.id);
+                        await db.from('areas').delete().eq('user_id', user.id);
+                        const { error } = await db.from('users').delete().eq('id', user.id);
+                        if (error) throw error;
+                        this.allUsers = this.allUsers.filter(u => u.id !== user.id);
+                        this.showSuccess(`已删除用户 ${user.username}`);
+                    } catch (e) {
+                        this.showError(`删除失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                },
+                openChangePwdModal(user) {
+                    this.changePwdUser = user;
+                    this.newPassword = '';
+                    this.changePwdModalVisible = true;
+                },
+                closeChangePwdModal() {
+                    this.changePwdModalVisible = false;
+                    this.changePwdUser = null;
+                },
+                async submitChangePwd() {
+                    const pwd = String(this.newPassword || '').trim();
+                    if (!pwd) { this.showError('请输入新密码'); return; }
+                    if (pwd.length < 6) { this.showError('密码至少6位'); return; }
+                    try {
+                        const password_hash = this.hashPassword(pwd);
+                        const encrypted_pwd = this.encryptPassword(pwd);
+                        const { error } = await db.from('users').update({ password_hash, encrypted_pwd }).eq('id', this.changePwdUser.id);
+                        if (error) throw error;
+                        this.showSuccess(`已修改用户 ${this.changePwdUser.username} 的密码`);
+                        this.closeChangePwdModal();
+                    } catch (e) {
+                        this.showError(`修改密码失败：${e.message}`);
+                    }
+                },
+                async showUserPassword(user) {
+                    this.showPwdLoading = true;
+                    try {
+                        const { data, error } = await db.from('users').select('encrypted_pwd').eq('id', user.id).single();
+                        if (error) throw error;
+                        const pwd = this.decryptPassword(data?.encrypted_pwd);
+                        this.showPwdText = pwd || '(未设置或无法解密)';
+                        this.showPwdUser = user;
+                        this.showPwdVisible = true;
+                    } catch (e) {
+                        this.showError('获取密码失败：' + (e.message || '未知错误'));
+                    } finally { this.showPwdLoading = false; }
+                },
+                closeShowPwd() {
+                    this.showPwdVisible = false;
+                    this.showPwdUser = null;
+                    this.showPwdText = '';
+                },
+                showMessage(type, message) {
+                    if (typeof ElMessage === 'function') {
+                        ElMessage({
+                            type,
+                            message: String(message || ''),
+                            duration: 2200,
+                            showClose: true
+                        });
+                        return;
+                    }
+                    alert(String(message || ''));
+                },
+                showError(message) {
+                    this.showMessage('error', message);
+                },
+                showSuccess(message) {
+                    this.showMessage('success', message);
+                },
+                failWithMessage(message) {
+                    this.showError(message);
+                    return null;
+                },
+                async confirmAction(message, title = '提示') {
+                    if (!ElMessageBox || typeof ElMessageBox.confirm !== 'function') {
+                        return window.confirm(String(message || title));
+                    }
+                    try {
+                        await ElMessageBox.confirm(String(message || ''), title, {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning',
+                            closeOnClickModal: false,
+                            appendTo: document.body
+                        });
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                },
+                CACHE_KEY_ACCOUNTS() {
+                    return 'dldl_accounts_' + (this.currentUser?.id || '');
+                },
+                saveAccountsToCache() {
+                    if (this.areas.length > 0 && this.currentUser) {
+                        try { localStorage.setItem(this.CACHE_KEY_ACCOUNTS(), JSON.stringify(this.areas)); } catch (e) {}
+                    }
+                },
+                loadAccountsFromCache() {
+                    if (!this.currentUser) return false;
+                    try {
+                        const cached = localStorage.getItem(this.CACHE_KEY_ACCOUNTS());
+                        if (cached) {
+                            this.areas = JSON.parse(cached);
+                            const names = this.areas.map(g => g.area);
+                            if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
+                            return true;
+                        }
+                    } catch (e) {}
+                    return false;
+                },
+                async refreshAccounts() {
+                    this.accountsRefreshing = true;
+                    try {
+                        await this.loadAccounts();
+                    } finally {
+                        this.accountsRefreshing = false;
+                    }
+                },
+                async loadAccounts() {
+                    if (!this.currentUser) return;
+                    try {
+                        const { data: areasData, error: areasError } = await db
+                            .from('areas').select('*').eq('user_id', this.currentUser.id).order('sort_order');
+                        if (areasError) throw areasError;
+                        const { data: accountsData, error: accountsError } = await db
+                            .from('accounts').select('*').eq('user_id', this.currentUser.id).order('id');
+                        if (accountsError) throw accountsError;
+                        const accountsByArea = {};
+                        for (const account of (accountsData || [])) {
+                            if (!accountsByArea[account.area_name]) accountsByArea[account.area_name] = [];
+                            accountsByArea[account.area_name].push({
+                                id: account.id,
+                                uname: account.uname,
+                                upwd: account.upwd,
+                                name: account.name,
+                                token: account.token,
+                                time: account.time,
+                                sign: account.sign,
+                                uinfo: account.uinfo || '',
+                                history: account.history || '',
+                                url: account.url || '',
+                                app_token: account.app_token || '',
+                                app_sign: account.app_sign || '',
+                                created_at: account.created_at || '',
+                                url_created_at: account.url_created_at || ''
+                            });
+                        }
+                        this.areas = (areasData || []).map(area => ({
+                            area: area.name,
+                            accounts: accountsByArea[area.name] || []
+                        }));
+                        this.pruneStaleSelections();
+                        const names = this.areas.map(g => g.area);
+                        if (!this.batchPanelArea || !names.includes(this.batchPanelArea)) this.batchPanelArea = names[0] || '';
+                        this.saveAccountsToCache();
+                        // 自动回填缺失的 url_created_at（从 URL 的 time 参数解析）
+                        this.backfillUrlCreatedAt(accountsData);
+                    } catch (e) {
+                        console.error('load accounts failed', e);
+                        this.showError(`加载数据失败：${e.message}`);
+                    }
+                },
+                /** 从账号 URL 的 time 参数解析 Unix 秒时间戳，回填缺失的 url_created_at */
+                async backfillUrlCreatedAt(accountsData) {
+                    if (!this.currentUser || !Array.isArray(accountsData) || accountsData.length === 0) return;
+                    const pending = [];
+                    for (const account of accountsData) {
+                        if (account.url_created_at) continue; // 已有，跳过
+                        if (!account.url) continue;           // 无 URL，跳过
+                        try {
+                            const u = new URL(account.url);
+                            const timeParam = u.searchParams.get('time');
+                            if (!timeParam) continue;
+                            const unixSeconds = parseInt(timeParam, 10);
+                            if (isNaN(unixSeconds) || unixSeconds <= 0) continue;
+                            const isoStr = new Date(unixSeconds * 1000).toISOString();
+                            pending.push({ id: account.id, url_created_at: isoStr });
+                        } catch (_) {
+                            // URL 解析失败，静默跳过
+                        }
+                    }
+                    if (pending.length === 0) return;
+                    let done = 0;
+                    for (const item of pending) {
+                        try {
+                            const { error } = await db.from('accounts')
+                                .update({ url_created_at: item.url_created_at })
+                                .eq('id', item.id)
+                                .eq('user_id', this.currentUser.id);
+                            if (!error) done++;
+                            else console.warn('backfill url_created_at update failed:', item.id, error.message);
+                        } catch (e) {
+                            console.warn('backfill url_created_at error:', item.id, e?.message || e);
+                        }
+                    }
+                    if (done > 0) {
+                        console.log(`已回填 ${done} 条账号的 url_created_at`);
+                        // 回填后刷新数据，确保界面展示最新的 url_created_at
+                        await this.loadAccounts();
+                    }
+                },
+                async saveAccounts() {
+                    if (!this.currentUser) return false;
+                    try {
+                        const userId = this.currentUser.id;
+                        const { data: existingAreas } = await db.from('areas').select('name').eq('user_id', userId);
+                        const { data: existingAccounts } = await db.from('accounts').select('id, area_name, uname').eq('user_id', userId);
+                        const currentAreaNames = new Set(this.areas.map(g => g.area));
+                        const currentAccountKeys = new Set();
+                        for (const group of this.areas) for (const acc of group.accounts) currentAccountKeys.add(`${group.area}|${acc.uname}`);
+                        const areasToDelete = (existingAreas || []).filter(a => !currentAreaNames.has(a.name)).map(a => a.name);
+                        if (areasToDelete.length > 0) await db.from('areas').delete().eq('user_id', userId).in('name', areasToDelete);
+                        for (const areaName of currentAreaNames) {
+                            if (!(existingAreas || []).some(a => a.name === areaName)) await db.from('areas').insert({ name: areaName, user_id: userId, sort_order: 0 });
+                        }
+                        const accountsToDelete = (existingAccounts || []).filter(a => !currentAccountKeys.has(`${a.area_name}|${a.uname}`)).map(a => a.id);
+                        if (accountsToDelete.length > 0) await db.from('accounts').delete().eq('user_id', userId).in('id', accountsToDelete);
+                        for (const group of this.areas) {
+                            for (const acc of group.accounts) {
+                                const existing = (existingAccounts || []).find(a => a.area_name === group.area && a.uname === acc.uname);
+                                const accountData = {
+                                    area_name: group.area,
+                                    uname: acc.uname,
+                                    upwd: acc.upwd,
+                                    name: acc.name,
+                                    token: acc.token,
+                                    time: acc.time,
+                                    sign: acc.sign,
+                                    uinfo: acc.uinfo || '',
+                                    history: acc.history || '',
+                                    app_token: acc.app_token || '',
+                                    app_sign: acc.app_sign || ''
+                                };
+                                if (existing) await db.from('accounts').update(accountData).eq('id', existing.id).eq('user_id', userId);
+                                else await db.from('accounts').insert({ ...accountData, user_id: userId });
+                            }
+                        }
+                        return true;
+                    } catch (e) {
+                        console.error('save accounts failed', e);
+                        this.showError(`保存失败：${e.message}`);
+                        return false;
+                    }
+                },
+            async onAccountCardsSorted() {
+                const saved = await this.saveAccounts();
+                if (!saved) {
+                    await this.loadAccounts();
+                    return;
+                }
+                this.showSuccess('排序已保存');
+            },
+            findAccountLocation(account) {
+                for (const group of this.areas) {
+                    const index = group.accounts.findIndex(item => item.uname === account.uname && item.upwd === account.upwd);
+                    if (index >= 0) {
+                        return { group, index };
+                    }
+                }
+                return null;
+            },
+            findAccountByUname(uname) {
+                for (const group of this.areas) {
+                    const index = group.accounts.findIndex(item => item.uname === uname);
+                    if (index >= 0) {
+                        return { group, index, account: group.accounts[index] };
+                    }
+                }
+                return null;
+            },
+            normalizeAreaName(area) {
+                return String(area || '').trim();
+            },
+            ensureArea(areaName) {
+                const targetArea = this.normalizeAreaName(areaName);
+                if (!targetArea) return this.failWithMessage('区服不能为空');
+                let group = this.areas.find(item => item.area === targetArea);
+                if (!group) {
+                    group = { area: targetArea, accounts: [] };
+                    this.areas.push(group);
+                }
+                return group;
+            },
+            parseLoginUrlToParams(raw) {
+                const s = String(raw || '').trim();
+                if (!s) return { error: 'empty' };
+                let u;
+                try {
+                    u = new URL(s);
+                } catch {
+                    try {
+                        u = new URL(s, 'https://dldl.50pk.com');
+                    } catch {
+                        return { error: 'invalid' };
+                    }
+                }
+                const q = u.searchParams;
+                return {
+                    token: (q.get('token') || '').trim(),
+                    time: (q.get('time') || '').trim(),
+                    sign: (q.get('sign') || '').trim()
+                };
+            },
+            extractLoginParamsFromUrl() {
+                const raw = this.loginUrlPaste;
+                if (!String(raw || '').trim()) {
+                    this.showError('请先粘贴完整登录地址');
+                    return;
+                }
+                const parsed = this.parseLoginUrlToParams(raw);
+                if (parsed.error === 'invalid') {
+                    this.showError('地址格式无效，请粘贴以 http(s):// 开头的完整链接，或从 ? 开始的查询串');
+                    return;
+                }
+                const { token, time, sign } = parsed;
+                if (!token && !time && !sign) {
+                    this.showError('链接中未找到 token、time、sign 参数，请确认是 login.php 带参地址');
+                    return;
+                }
+                this.accountForm.token = token;
+                this.accountForm.time = time;
+                this.accountForm.sign = sign;
+                if (token && time && sign) {
+                    this.showSuccess('已从地址中提取 token、time、sign');
+                } else {
+                    const missing = [];
+                    if (!token) missing.push('token');
+                    if (!time) missing.push('time');
+                    if (!sign) missing.push('sign');
+                    this.showMessage('warning', `已填入能解析到的项，仍缺少：${missing.join('、')}，请检查链接或手动补全`);
+                }
+            },
+            openAccountModal(account = null) {
+                this.loginUrlPaste = '';
+                if (account) {
+                    this.accountModalMode = 'edit';
+                    this.accountForm = {
+                        area: this.findAccountLocation(account)?.group.area || '',
+                        name: account.name || '',
+                        uname: account.uname || '',
+                        upwd: account.upwd || '',
+                        token: account.token != null ? String(account.token) : '',
+                        time: account.time != null ? String(account.time) : '',
+                        sign: account.sign != null ? String(account.sign) : '',
+                        uinfo: account.uinfo != null ? String(account.uinfo) : '',
+                        history: account.history != null ? String(account.history) : '',
+                        url: account.url != null ? String(account.url) : ''
+                    };
+                    this.editingAccountRef = account;
+                } else {
+                    this.accountModalMode = 'create';
+                    this.accountForm = {
+                        area: this.areas[0]?.area || '',
+                        name: '',
+                        uname: '',
+                        upwd: '',
+                        token: '',
+                        time: '',
+                        sign: '',
+                        uinfo: '',
+                        history: '',
+                        url: ''
+                    };
+                    this.editingAccountRef = null;
+                }
+                this.accountModalVisible = true;
+            },
+            closeAccountModal() {
+                this.accountModalVisible = false;
+                this.loginUrlPaste = '';
+                this.editingAccountRef = null;
+            },
+            async submitAccountModal() {
+                const area = this.normalizeAreaName(this.accountForm.area);
+                const name = String(this.accountForm.name || '').trim();
+                const uname = String(this.accountForm.uname || '').trim();
+                const upwd = String(this.accountForm.upwd || '').trim();
+                const token = String(this.accountForm.token || '').trim();
+                const time = String(this.accountForm.time || '').trim();
+                const sign = String(this.accountForm.sign || '').trim();
+                const uinfo = String(this.accountForm.uinfo || '').trim();
+                const history = String(this.accountForm.history || '').trim();
+                const url = String(this.accountForm.url || '').trim();
+                if (!area) return this.failWithMessage('请选择或填写区服');
+                if (!uname) return this.failWithMessage('请输入账号 uname');
+                if (!upwd) return this.failWithMessage('请输入密码 upwd');
+                const targetGroup = this.ensureArea(area);
+                if (!targetGroup) return;
+                if (this.accountModalMode === 'create') {
+                    if (this.findAccountByUname(uname)) return this.failWithMessage('该 uname 已存在');
+                    if (this.loadingVisible) return;
+                    this.loadingText = '正在添加账号...';
+                    this.loadingVisible = true;
+                    try {
+                        const { data, error } = await db.from('accounts').insert({
+                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url
+                        }).select().single();
+                        if (error) {
+                            if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
+                            throw error;
+                        }
+                        targetGroup.accounts.push({ id: data.id, name, uname, upwd, token, time, sign, uinfo, history, url, created_at: data.created_at || '', url_created_at: data.url_created_at || '' });
+                        this.saveAccountsToCache();
+                        this.showSuccess('账号已添加');
+                        this.closeAccountModal();
+                    } catch (e) {
+                        this.showError(`添加失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                } else {
+                    if (this.loadingVisible) return;
+                    const location = this.findAccountLocation(this.editingAccountRef || {});
+                    if (!location) return this.failWithMessage('未找到要编辑的账号');
+                    const target = location.group.accounts[location.index];
+                    const existing = this.findAccountByUname(uname);
+                    if (existing && existing.account !== target) return this.failWithMessage('该 uname 已存在');
+                    this.loadingText = '正在保存账号...';
+                    this.loadingVisible = true;
+                    try {
+                        const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
+                        const { error } = await db.from('accounts').update(updateData)
+                            .eq('id', target.id).eq('user_id', this.currentUser.id);
+                        if (error) {
+                            if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
+                            throw error;
+                        }
+                        if (location.group.area !== area) {
+                            if (!this.areas.find(g => g.area === area)) {
+                                await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 999 });
+                            }
+                            location.group.accounts.splice(location.index, 1);
+                            targetGroup.accounts.push(target);
+                        }
+                        target.name = name;
+                        target.uname = uname;
+                        target.upwd = upwd;
+                        target.token = token;
+                        target.time = time;
+                        target.sign = sign;
+                        target.uinfo = uinfo;
+                        target.history = history;
+                        target.url = url;
+                        this.saveAccountsToCache();
+                        this.showSuccess('账号已更新');
+                        this.closeAccountModal();
+                    } catch (e) {
+                        this.showError(`保存失败：${e.message}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                }
+            },
+            editAccount(account) {
+                this.openAccountModal(account);
+            },
+            async deleteEditingAccount() {
+                if (this.loadingVisible) return;
+                try {
+                    if (this.accountModalMode !== 'edit' || !this.editingAccountRef) {
+                        this.showError('未找到要删除的账号');
+                        return;
+                    }
+                    const location = this.findAccountLocation(this.editingAccountRef);
+                    if (!location) {
+                        this.showError('未找到要删除的账号');
+                        return;
+                    }
+                    const target = location.group.accounts[location.index];
+                    const confirmed = await this.confirmAction(`确认删除账号 ${target.uname} 吗？该操作不可恢复。`, '删除账号');
+                    if (!confirmed) return;
+                    this.loadingText = '正在删除账号...';
+                    this.loadingVisible = true;
+                    const { error } = await db.from('accounts').delete()
+                        .eq('id', target.id).eq('user_id', this.currentUser.id);
+                    if (error) throw error;
+                    location.group.accounts.splice(location.index, 1);
+                    if (!location.group.accounts.length) {
+                        this.areas = this.areas.filter(item => item.area !== location.group.area);
+                    }
+                    this.saveAccountsToCache();
+                    this.showSuccess('账号已删除');
+                    this.closeAccountModal();
+                } catch (e) {
+                    this.showError(`删除账号失败：${e?.message || e}`);
+                } finally {
+                    this.loadingVisible = false;
+                    this.loadingText = '';
+                }
+            },
+            async deleteArea(group) {
+                if (this.loadingVisible) return;
+                try {
+                    const areaName = this.normalizeAreaName(group?.area);
+                    if (!areaName) {
+                        this.showError('区服名称无效');
+                        return;
+                    }
+                    const target = this.areas.find(item => item.area === areaName);
+                    if (!target) {
+                        this.showError('未找到要删除的区服');
+                        return;
+                    }
+                    const confirmed = await this.confirmAction(`确认删除区服 ${areaName} 吗？将同时删除该区服下 ${target.accounts.length} 个账号，且不可恢复。`, '删除区服');
+                    if (!confirmed) return;
+                    this.loadingText = '正在删除区服...';
+                    this.loadingVisible = true;
+                    await db.from('accounts').delete().eq('user_id', this.currentUser.id).eq('area_name', areaName);
+                    await db.from('areas').delete().eq('user_id', this.currentUser.id).eq('name', areaName);
+                    this.areas = this.areas.filter(item => item.area !== areaName);
+                    this.saveAccountsToCache();
+                    if (this.accountModalVisible && this.accountModalMode === 'edit') {
+                        const editingArea = this.findAccountLocation(this.editingAccountRef || {})?.group?.area;
+                        if (editingArea === areaName) {
+                            this.closeAccountModal();
+                        }
+                    }
+                    this.showSuccess(`已删除区服 ${areaName}`);
+                } catch (e) {
+                    this.showError(`删除区服失败：${e?.message || e}`);
+                } finally {
+                    this.loadingVisible = false;
+                    this.loadingText = '';
+                }
+            },
+                async persistToken(account, tokenInfo) {
+                    if (!account || !account.id || !this.currentUser) {
+                        this.showError('无法保存 token：缺少账号 ID 或未登录');
+                        return false;
+                    }
+                    const location = this.findAccountLocation(account);
+                    const target = location ? location.group.accounts[location.index] : account;
+                    target.token = String(tokenInfo.token || '');
+                    target.time = String(tokenInfo.time || '');
+                    target.sign = String(tokenInfo.sign || '');
+                    try {
+                        const { error } = await db.from('accounts')
+                            .update({
+                                token: target.token,
+                                time: target.time,
+                                sign: target.sign
+                            })
+                            .eq('id', account.id)
+                            .eq('user_id', this.currentUser.id);
+                        if (error) throw error;
+                        return true;
+                    } catch (e) {
+                        console.error('save token failed', e);
+                        this.showError(`token 已获取，但写回 Supabase 失败：${e?.message || e}`);
+                        return false;
+                    }
+                },
+                /** 扫码页（login.php）内刷新 token 后，通过 postMessage 回写 Supabase */
+                async handleTokenRefreshedFromLoginPage(payload) {
+                    let account = null;
+                    const accountId = payload && payload.accountId;
+                    if (accountId != null && accountId !== '') {
+                        for (const group of this.areas) {
+                            account = group.accounts.find((a) => String(a.id) === String(accountId));
+                            if (account) break;
+                        }
+                    }
+                    if (!account && payload && payload.uname) {
+                        const found = this.findAccountByUname(payload.uname);
+                        account = found && found.account;
+                    }
+                    if (!account) {
+                        console.warn('login page token refresh: account not found', payload);
+                        return;
+                    }
+                    const ok = await this.persistToken(account, {
+                        token: payload.token,
+                        time: payload.time,
+                        sign: payload.sign
+                    });
+                    if (ok) this.showSuccess(`已从扫码页刷新并保存 ${account.uname} 的 token`);
+                },
+                jsonp(url, callbackParam = "callback", timeoutMs = 15000) {
+                    return new Promise((resolve, reject) => {
+                        const cbName = `__dldl_jsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                        const u = new URL(url);
+                        u.searchParams.set(callbackParam, cbName);
+
+                        let done = false;
+                        const cleanup = () => {
+                            if (script && script.parentNode) script.parentNode.removeChild(script);
+                            try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+                        };
+
+                        const timer = setTimeout(() => {
+                            if (done) return;
+                            done = true;
+                            cleanup();
+                            reject(new Error("jsonp timeout"));
+                        }, timeoutMs);
+
+                        window[cbName] = (payload) => {
+                            if (done) return;
+                            done = true;
+                            clearTimeout(timer);
+                            cleanup();
+                            resolve(payload);
+                        };
+
+                        const script = document.createElement("script");
+                        script.src = u.toString();
+                        script.onerror = () => {
+                            if (done) return;
+                            done = true;
+                            clearTimeout(timer);
+                            cleanup();
+                            reject(new Error("jsonp network error"));
+                        };
+                        document.head.appendChild(script);
+                    });
+                },
+                sortObject(o) {
+                    const keys = [];
+                    for (const k in o) {
+                        if (Object.prototype.hasOwnProperty.call(o, k)) keys.push(k);
+                    }
+                    keys.sort();
+                    const sorted = {};
+                    for (const k of keys) sorted[k] = o[k];
+                    return sorted;
+                },
+                getSign(params, key) {
+                    let str = "";
+                    const sorted = this.sortObject(params);
+                    for (const k in sorted) {
+                        if (!Object.prototype.hasOwnProperty.call(sorted, k)) continue;
+                        str += `${k}=${sorted[k]}`;
+                    }
+                    str += key;
+                    return hex_md5(str);
+                },
+                 async fetchToken(account, opts = {}) {
+                    const forceApi = opts.forceApi === true;
+                    const existing = String(account.token || "").trim();
+                    if (!forceApi && existing) {
+                        return {
+                            token: existing,
+                            time: String(account.time || ""),
+                            sign: String(account.sign || ""),
+                            fromCache: true
+                        };
+                    }
+                    const API_KEY = "Jp*4Y8vQOYck2*&Z";
+                    const time = String(Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60);
+                    const signParams = {
+                        uname: account.uname,
+                        upwd: account.upwd,
+                        autoLogin: "true",
+                        pid: "46",
+                        gid: "1003279",
+                        sversion: "undefined",
+                        version: "1.0.4",
+                        time: 4129596000,
+                        dev: "9c71cbfa62ecfd4f5a1125d9c6c51367",
+                        os: "iOS",
+                        over: "18.5"
+                    };
+                    const sign = this.getSign(signParams, API_KEY);
+                    const params = new URLSearchParams({ ...signParams, sign }).toString();
+                    
+                    // 根据是否使用代理选择不同的请求方式
+                    let payload;
+                    if (this.useProxy && this.proxyWorkerUrl) {
+                        // 使用代理请求
+                        try {
+                            const proxyUrl = `${this.proxyWorkerUrl}/h5sdk/login?${params}`;
+                            const resp = await fetch(proxyUrl);
+                            const text = await resp.text();
+                            // 解析 JSONP 响应
+                            const match = text.match(/^callback\(([\s\S]+)\);?$/);
+                            if (match) {
+                                payload = JSON.parse(match[1]);
+                            } else {
+                                // 尝试直接解析 JSON
+                                payload = JSON.parse(text);
+                            }
+                        } catch (e) {
+                            console.error('proxy fetch failed', e);
+                            this.showError(`代理请求失败：${e?.message || e}，尝试直连...`);
+                            // 降级到直连
+                            const url = `https://s-api.37.com.cn/h5sdk/login?${params}`;
+                            payload = await this.jsonp(url, "callback", 15000);
+                        }
+                    } else {
+                        // 直连请求
+                        const url = `https://s-api.37.com.cn/h5sdk/login?${params}`;
+                        payload = await this.jsonp(url, "callback", 15000);
+                    }
+                    
+                    if (!payload || payload.state !== 1 || !payload.data || !payload.data.token) {
+                        this.showError(payload?.msg || "login api failed");
+                        return null;
+                    }
+                    return {
+                        token: String(payload.data.token),
+                        // time: String(payload.data.time || time),
+                        time: String(4129596000),
+                        // sign: String(payload.data.sign || ""),
+                        sign: String(sign),
+                        fromCache: false
+                    };
+                },
+                buildLoginUrl(account) {
+                    const params = new URLSearchParams({
+                        gid: "1003279",
+                        pid: "46",
+                        token: account.token || "",
+                        time: account.time || "",
+                        sign: account.sign || "",
+                        appVer: "",
+                        platCode: "37wan",
+                        IMEI: "",
+                        isPcLauncher: "true"
+                    });
+                    if (account.id != null) params.set('dldl_account_id', String(account.id));
+                    return `https://dldl.50pk.com/login.php?${params.toString()}`;
+                },
+                /**
+                 * 快捷登录：携带 uname、upwd、uinfo 打开新窗口，在 37 公开门户注入 cookie。
+                 * - 如果 uinfo 不存在或为空，调用 encodeUinfoPlain 自动生成
+                 * - 打开 https://37.com.cn/h5game/public/?pid=46&gid=1005176&token=&channelToken=&rand=
+                 * - 在页面加载前注入 UINFO cookie（domain: 37.com.cn, expirationDate: 99999999999）
+                 * @param {string} area
+                 * @param {{ id?: number|string, uname?: string, upwd?: string, uinfo?: string, history?: string }} account
+                 */
+                async openQuickLogin(area, account) {
+                    const uname = String(account && account.uname || "").trim();
+                    const upwd = String(account && account.upwd || "").trim();
+                    let uinfo = String(account && account.uinfo || "").trim();
+                    let history = String(account && account.history || "").trim();
+                    if (!uname || !upwd) {
+                        this.showError("快捷登录需要账号与密码，请先编辑账号填写 uname、upwd");
+                        return;
+                    }
+                    const electron = window.__ELECTRON__;
+                    if (!electron) {
+                        this.showError("快捷登录需要在 DLDL-Proxy 桌面客户端中使用（需注入 37.com.cn cookie）");
+                        return;
+                    }
+                    try {
+                        // 如果 uinfo 不存在或为空，调用本地方法生成
+                        if (!uinfo) {
+                            const cookies = build37CookieValues({ uname, upwd, autoLogin: true });
+                            uinfo = cookies.uinfo;
+                            history = cookies.history;
+                        } else if (!history) {
+                            // uinfo 存在但 history 为空时，自动生成 history
+                            history = JSON.stringify([{ uname, upwd }]);
+                        }
+                        if (!uinfo) {
+                            this.showError("快捷登录失败：无法生成 UINFO");
+                            return;
+                        }
+
+                        // 门户地址
+                        const portalUrl = "https://37.com.cn/h5game/public/?pid=46&gid=1005176&token=&channelToken=&rand=";
+
+                        // 同步写入数据库（如果 uinfo/history 是新生成的）
+                        const syncQuickLoginProfile = async () => {
+                            if (!account) return;
+                            const oldUinfo = String(account.uinfo || "").trim();
+                            const oldHistory = String(account.history || "").trim();
+                            if (oldUinfo === uinfo && oldHistory === history) return;
+                            account.uinfo = uinfo;
+                            account.history = history;
+                            if (this.currentUser && account.id != null) {
+                                const { error } = await db
+                                    .from('accounts')
+                                    .update({ uinfo, history })
+                                    .eq('id', account.id)
+                                    .eq('user_id', this.currentUser.id);
+                                if (error) {
+                                    console.warn('quick login writeback failed', error?.message || error);
+                                }
+                            }
+                        };
+
+                        // 使用 Electron IPC（invoke 模式，有返回值）
+                        const result = await electron.openQuickLogin({
+                            url: portalUrl,
+                            uname,
+                            upwd,
+                            uinfo,
+                            history
+                        });
+                        if (!result.ok) {
+                            this.showError(result.message || "快捷登录失败");
+                            return;
+                        }
+                        await syncQuickLoginProfile();
+                    } catch (e) {
+                        console.error("openQuickLogin failed", e);
+                        this.showError(`快捷登录失败：${e?.message || e}`);
+                    }
+                },
+                async openLogin(account) {
+                    // 使用唯一窗口名，保证每次点击都新开窗口，不复用旧窗口
+                    const windowName = `dldl_login_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                    const winOpts = "width=360,height=660";
+                    // 已有 token 时在同一用户手势内直接打开 login.php，避免 about:blank 再跳转（少一次文档加载，多窗口时更顺）
+                    const cachedTok = String(account.token || "").trim();
+                    if (cachedTok) {
+                        const url = this.buildLoginUrl({
+                            ...account,
+                            token: cachedTok,
+                            time: String(account.time || ""),
+                            sign: String(account.sign || "")
+                        });
+                        const w = window.open(url, windowName, winOpts);
+                        if (!w) {
+                            this.showError("弹窗被拦截，请允许本应用打开新窗口");
+                        }
+                        return;
+                    }
+                    const win = window.open("about:blank", windowName, winOpts);
+                    try {
+                        const tokenInfo = await this.fetchToken(account);
+                        if (!tokenInfo) {
+                            // token 获取失败时保留已打开窗口，避免误关用户已打开页面
+                            return;
+                        }
+                        if (!tokenInfo.fromCache) {
+                            await this.persistToken(account, {
+                                token: tokenInfo.token,
+                                time: tokenInfo.time,
+                                sign: tokenInfo.sign
+                            });
+                        }
+                        const url = this.buildLoginUrl({
+                            ...account,
+                            token: tokenInfo.token,
+                            time: tokenInfo.time,
+                            sign: tokenInfo.sign
+                        });
+                        if (win && !win.closed) {
+                            try {
+                                win.location.href = url;
+                            } catch (e) {
+                                console.warn("openLogin: location.href 失败，改用 window.open", e);
+                                window.open(url, windowName, winOpts);
+                            }
+                        } else {
+                            // 弹窗被拦截时，尽量保持"新开窗口"行为
+                            window.open(url, windowName, "width=400,height=600");
+                        }
+                    } catch (e) {
+                        console.error("openLogin token failed", e);
+                        this.showError(`获取 token 失败：${e?.message || e}`);
+                    }
+                },
+                async copyLoginUrl(account) {
+                    try {
+                        const cachedTok = String(account.token || "").trim();
+                        let url;
+                        if (cachedTok) {
+                            url = this.buildLoginUrl({
+                                ...account,
+                                token: cachedTok,
+                                time: String(account.time || ""),
+                                sign: String(account.sign || "")
+                            });
+                        } else {
+                            const tokenInfo = await this.fetchToken(account);
+                            if (!tokenInfo) return;
+                            if (!tokenInfo.fromCache) {
+                                await this.persistToken(account, {
+                                    token: tokenInfo.token,
+                                    time: tokenInfo.time,
+                                    sign: tokenInfo.sign
+                                });
+                            }
+                            url = this.buildLoginUrl({
+                                ...account,
+                                token: tokenInfo.token,
+                                time: tokenInfo.time,
+                                sign: tokenInfo.sign
+                            });
+                        }
+                        await navigator.clipboard.writeText(url);
+                        this.showSuccess("网址已复制到剪贴板");
+                    } catch (e) {
+                        console.error("copyLoginUrl failed", e);
+                        this.showError(`复制失败：${e?.message || e}`);
+                    }
+                },
+                async appLogin(area, account) {
+                    const uname = String(account && account.uname || '').trim();
+                    const upwd = String(account && account.upwd || '').trim();
+                    // 标记已启动状态
+                    this._setAppLoginStatus(area, account, 'launched');
+                    if (!uname || !upwd) {
+                        this.showError('APP 登录需要账号与密码');
+                        return;
+                    }
+                    const windowName = `dldl_app_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                    const left = Math.round((screen.width - 360) / 2);
+                    const top = Math.round((screen.height - 660) / 2);
+                    const winOpts = `width=360,height=660,left=${left},top=${top}`;
+                    // 已有缓存 url：直接打开
+                    const cachedUrl = String(account.url || '').trim();
+                    if (cachedUrl) {
+                        const w = window.open(cachedUrl, windowName, winOpts);
+                        if (!w) {
+                            this.showError("弹窗被拦截，请允许本应用打开新窗口");
+                        }
+                        return;
+                    }
+                    // 无缓存 url：先开 about:blank，走 APP SDK 获取后再跳转
+                    const win = window.open("about:blank", windowName, winOpts);
+                    try {
+                        const resp = await fetch('/api/app-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uname, upwd })
+                        });
+                        const result = await resp.json();
+                        if (!result.ok || result.state !== 1) {
+                            throw new Error(result.msg || result.message || 'APP 登录失败');
+                        }
+                        const url = this.buildAppLoginUrl(result, account);
+                        const appToken = String(result.token || '');
+                        const appSign = String(result.sign || '');
+                        const now = new Date().toISOString();
+                        // 同步更新本地 account 对象，供后续 sendPassCode 使用
+                        account.app_token = appToken;
+                        account.app_sign = appSign;
+                        account.url = url;
+                        account.url_created_at = now;
+                        if (this.currentUser && account.id != null) {
+                            try {
+                                const { error: urlErr } = await db.from('accounts')
+                                    .update({ url, app_token: appToken, app_sign: appSign, url_created_at: now })
+                                    .eq('id', account.id)
+                                    .eq('user_id', this.currentUser.id);
+                                if (urlErr) console.warn('写入 url/app_token/app_sign 失败:', urlErr.message);
+                            } catch (e) {
+                                console.warn('写入 url/app_token/app_sign 异常:', e);
+                            }
+                        }
+                        // 导航已打开的 about:blank 到目标 url
+                        if (win && !win.closed) {
+                            win.location.href = url;
+                        } else {
+                            window.open(url, windowName, winOpts);
+                        }
+                    } catch (e) {
+                        console.error('appLogin failed', e);
+                        this.showError(`APP 登录失败：${e?.message || e}`);
+                    }
+                },
+                buildAppLoginUrl(loginResult, account) {
+                    // APP 登录流程：完整模拟 APP 扫码授权
+                    // SDK登录 → qrcode/scan → qrcode/confirm → /pc/getCodeInfo → 获取游戏入口参数
+                    // 使用当前代理地址作为 base URL，确保走本地代理的 mock 拦截和注入
+                    const token = loginResult.token || "";
+                    const gid = loginResult.entryGid || "1003279";
+                    const pid = loginResult.entryPid || "46";
+                    const platCode = loginResult.platCode || "37wan";
+                    const appVer = loginResult.appVer || "134";
+                    const sign = loginResult.sign || "";
+                    const time = loginResult.entryTime || String(Math.floor(Date.now() / 1000));
+                    const imei = loginResult.IMEI ||
+                        (crypto.randomUUID ? crypto.randomUUID() :
+                        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c =>
+                            (c === 'x' ? Math.random() * 16 | 0 : (Math.random() * 4 | 8)).toString(16)));
+
+                    const rawParams = {
+                        gid: gid,
+                        pid: pid,
+                        token: token,
+                        time: time,
+                        sign: sign,
+                        appVer: appVer,
+                        platCode: platCode,
+                        IMEI: imei,
+                        isPcLauncher: "true"
+                    };
+                    if (account.id != null) rawParams['dldl_account_id'] = String(account.id);
+                    const params = new URLSearchParams(rawParams);
+                    // 使用线上域名，不依赖本地代理
+                    const base = 'https://dldl.50pk.com';
+                    return `${base}/login.php?${params.toString()}`;
+                },
+                accountSelectKey(area, account) {
+                    return `${String(area || '')}\t${String(account && account.uname || '')}\t${String(account && account.upwd || '')}`;
+                },
+                isAccountSelected(area, account) {
+                    return !!this.accountSelectMap[this.accountSelectKey(area, account)];
+                },
+                onAccountCheckboxChange(ev, area, account) {
+                    const k = this.accountSelectKey(area, account);
+                    const next = { ...this.accountSelectMap };
+                    if (ev.target.checked) next[k] = true;
+                    else delete next[k];
+                    this.accountSelectMap = next;
+                },
+                selectAllInArea(group, on) {
+                    if (!group || !Array.isArray(group.accounts)) return;
+                    const next = { ...this.accountSelectMap };
+                    for (const account of group.accounts) {
+                        const k = this.accountSelectKey(group.area, account);
+                        if (on) next[k] = true;
+                        else delete next[k];
+                    }
+                    this.accountSelectMap = next;
+                },
+                pruneStaleSelections() {
+                    const valid = new Set();
+                    for (const g of this.areas) {
+                        for (const a of g.accounts) {
+                            valid.add(this.accountSelectKey(g.area, a));
+                        }
+                    }
+                    const next = {};
+                    for (const k of Object.keys(this.accountSelectMap)) {
+                        if (valid.has(k) && this.accountSelectMap[k]) next[k] = true;
+                    }
+                    this.accountSelectMap = next;
+                },
+                delay(ms) {
+                    return new Promise((resolve) => setTimeout(resolve, ms));
+                },
+                getSelectedAccountsOrdered() {
+                    const out = [];
+                    const m = this.accountSelectMap;
+                    for (const group of this.areas) {
+                        for (const account of group.accounts) {
+                            if (m[this.accountSelectKey(group.area, account)]) out.push(account);
+                        }
+                    }
+                    return out;
+                },
+                async batchLaunchAccounts(accounts, opts = {}) {
+                    const list = Array.isArray(accounts) ? accounts : [];
+                    if (!list.length) return;
+                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : 1500;
+                    
+                    this.showSuccess(`开始打开 ${list.length} 个 APP 登录窗口（间隔 ${gapMs/1000} 秒）`);
+                    
+                    for (let i = 0; i < list.length; i++) {
+                        if (i > 0) await this.delay(gapMs);
+                        try {
+                            const area = this.findAccountArea(list[i]);
+                            await this.appLogin(area, list[i]);
+                        } catch (e) {
+                            console.error('batchLaunchAccounts item failed', e);
+                        }
+                    }
+                    if (opts.silentSuccess) return;
+                    this.showSuccess(`已完成打开 ${list.length} 个 APP 登录窗口`);
+                },
+                /** 在 areas 中查找账号所属区服名 */
+                findAccountArea(account) {
+                    for (const g of this.areas) {
+                        if (g.accounts.some(a => a === account || (a.id != null && account.id != null && a.id === account.id))) {
+                            return g.area;
+                        }
+                    }
+                    return '';
+                },
+                /** 计算 URL 生成时间距今的时长，格式：x天x小时；无 URL 或时间返回空 */
+                getUrlAge(account) {
+                    if (!account) return '';
+                    const timeStr = account.url_created_at || account.created_at || '';
+                    if (!timeStr) return '';
+                    const urlTime = new Date(timeStr);
+                    if (isNaN(urlTime.getTime())) return '';
+                    const now = new Date();
+                    const diffMs = now - urlTime;
+                    if (diffMs < 0) return '';
+                    const totalHours = Math.floor(diffMs / 3600000);
+                    const days = Math.floor(totalHours / 24);
+                    const hours = totalHours % 24;
+                    if (days > 0 && hours > 0) return `${days}天${hours}小时`;
+                    if (days > 0) return `${days}天`;
+                    if (hours > 0) return `${hours}小时`;
+                    const minutes = Math.floor(diffMs / 60000);
+                    if (minutes > 0) return `${minutes}分钟`;
+                    return '刚刚';
+                },
+                async batchLaunchSelected() {
+                    if (this.loadingVisible) return;
+                    const list = this.getSelectedAccountsOrdered();
+                    if (!list.length) {
+                        this.showError('请先勾选要启动的账号');
+                        return;
+                    }
+                    this.loadingText = `正在批量启动 ${list.length} 个账号...`;
+                    this.loadingVisible = true;
+                    try {
+                        await this.batchLaunchAccounts(list);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                },
+                async batchLaunchByAreaSlice() {
+                    if (this.loadingVisible) return;
+                    const area = String(this.batchPanelArea || '').trim();
+                    if (!area) {
+                        this.showError('请选择区服');
+                        return;
+                    }
+                    const group = this.areas.find((g) => g.area === area);
+                    if (!group || !group.accounts.length) {
+                        this.showError('该区服下没有账号');
+                        return;
+                    }
+                    const size = Math.max(1, Math.floor(Number(this.batchPanelSize)) || 5);
+                    const batchNo = Math.max(1, Math.floor(Number(this.batchPanelBatchNo)) || 1);
+                    const start = (batchNo - 1) * size;
+                    const slice = group.accounts.slice(start, start + size);
+                    if (!slice.length) {
+                        this.showError(
+                            `第 ${batchNo} 批没有账号（当前区服共 ${group.accounts.length} 个，每批 ${size} 个，有效批次为 1～${Math.max(1, Math.ceil(group.accounts.length / size))}）`
+                        );
+                        return;
+                    }
+                    this.loadingText = `正在批量启动第 ${batchNo} 批（${slice.length} 个账号）...`;
+                    this.loadingVisible = true;
+                    try {
+                        await this.batchLaunchAccounts(slice);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                },
+                // --- 通行证登录 ---
+                /** 通行证状态 key，用于 passCodeMap */
+                _passCodeKey(area, account) {
+                    return this.accountSelectKey(area, account);
+                },
+                _setPassCodeState(area, account, updates) {
+                    const key = this._passCodeKey(area, account);
+                    this.passCodeMap = {
+                        ...this.passCodeMap,
+                        [key]: {
+                            ...(this.passCodeMap[key] || {}),
+                            ...updates
+                        }
+                    };
+                },
+                _appLoginStatusKey(area, account) {
+                    return this.accountSelectKey(area, account);
+                },
+                _setAppLoginStatus(area, account, status) {
+                    const key = this._appLoginStatusKey(area, account);
+                    this.appLoginStatusMap = {
+                        ...this.appLoginStatusMap,
+                        [key]: status
+                    };
+                },
+                getAppLoginStatus(area, account) {
+                    return this.appLoginStatusMap[this._appLoginStatusKey(area, account)] || '';
+                },
+                getPassCodeValue(area, account) {
+                    const key = this._passCodeKey(area, account);
+                    return (this.passCodeMap[key] && this.passCodeMap[key].value) || '';
+                },
+                getPassCodeStatus(area, account) {
+                    const key = this._passCodeKey(area, account);
+                    return (this.passCodeMap[key] && this.passCodeMap[key].status) || '';
+                },
+                isPassCodeSending(area, account) {
+                    return this.getPassCodeStatus(area, account) === 'sending';
+                },
+                onPassCodeInput(ev, area, account) {
+                    const val = ev.target.value;
+                    if (val === '' || val == null) {
+                        // 清空值时，同时清除已发送状态，允许下次重新发送
+                        this._setPassCodeState(area, account, { value: '', status: '' });
+                    } else {
+                        // 有值时只更新 value，不改变 status（保持 ok/fail 等状态）
+                        this._setPassCodeState(area, account, { value: val });
+                    }
+                },
+                onPassCodeBlur(ev, area, account) {
+                    const code = String(ev.target.value || '').trim();
+                    // 值为空，不发请求
+                    if (!code) return;
+                    // 已发送 / 已失效状态下不重复发请求
+                    const curStatus = this.getPassCodeStatus(area, account);
+                    if (curStatus === 'ok' || curStatus === 'expired') return;
+                    this.sendPassCode(code, area, account);
+                },
+                clearPassCode(area, account) {
+                    this._setPassCodeState(area, account, { value: '', status: '' });
+                },
+                async sendPassCode(code, area, account) {
+                    if (!window.hex_md5) {
+                        this.showError('md5.js 未加载，无法发送通行证');
+                        return;
+                    }
+                    this._setPassCodeState(area, account, { status: 'sending' });
+                    try {
+                        // 优先使用 APP 登录的 token/sign，没有则回退到 h5sdk 的
+                        const passToken = String(account.app_token || account.token || '');
+                        const passSign = String(account.app_sign || account.sign || '');
+                        const dataObj = {
+                            gid: '1003279',
+                            pid: '46',
+                            token: encodeURIComponent(passToken),
+                            time: Date.now(),
+                            sign: passSign,
+                            appVer: '',
+                            platCode: '37wan',
+                            IMEI: ''
+                        };
+                        const dataStr = JSON.stringify(dataObj);
+                        const timestamp = Date.now();
+                        const sign = window.hex_md5(code + String(timestamp) + 'pcjgv587!?');
+                        const body = 'id=' + encodeURIComponent(code) +
+                            '&data=' + encodeURIComponent(dataStr) +
+                            '&time=' + timestamp +
+                            '&sign=' + sign;
+                        const url = 'http://app.xxh5.z7xz.com/pc/postCodeInfo';
+                        const resp = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: body
+                        });
+                        if (resp.ok) {
+                            let tokenValid = true;
+                            try {
+                                const bodyText = await resp.text();
+                                if (bodyText) {
+                                    const json = JSON.parse(bodyText);
+                                    // code !== 0 表示失败（37 系 API 中 code: 0 = 成功）
+                                    if (json && json.code !== undefined && json.code !== 0) {
+                                        tokenValid = false;
+                                    }
+                                    // 服务端明确返回 token 为空字符串，说明 token 已失效
+                                    if (json && json.hasOwnProperty('token') && json.token === '') {
+                                        tokenValid = false;
+                                    }
+                                }
+                            } catch (_) {
+                                // 响应不是 JSON 或为空，忽略
+                            }
+                            if (tokenValid) {
+                                this._setPassCodeState(area, account, { status: 'ok' });
+                                this.showSuccess('通行证已发送');
+                            } else {
+                                this._setPassCodeState(area, account, { status: 'expired' });
+                                this.showError('通行证已发送，但 token 已失效，请刷新 token');
+                            }
+                        } else {
+                            throw new Error('HTTP ' + resp.status);
+                        }
+                    } catch (e) {
+                        console.error('sendPassCode failed', e);
+                        this._setPassCodeState(area, account, { status: 'fail' });
+                        this.showError('通行证发送失败：' + (e?.message || e));
+                    }
+                },
+                // --- 通行证登录 end ---
+                async refreshToken(account) {
+                    const uname = String(account && account.uname || '').trim();
+                    const upwd = String(account && account.upwd || '').trim();
+                    if (!uname || !upwd) {
+                        this.showError('刷新 token 需要账号与密码');
+                        return;
+                    }
+                    this.loadingText = `正在通过 APP SDK 刷新 ${uname} 的 token...`;
+                    this.loadingVisible = true;
+                    try {
+                        const resp = await fetch('/api/app-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uname, upwd })
+                        });
+                        const result = await resp.json();
+                        if (!result.ok || result.state !== 1) {
+                            throw new Error(result.msg || result.message || 'APP 登录刷新失败');
+                        }
+                        const url = this.buildAppLoginUrl(result, account);
+                        const appToken = String(result.token || '');
+                        const appSign = String(result.sign || '');
+                        const now = new Date().toISOString();
+                        // 同步更新本地 account 对象
+                        account.app_token = appToken;
+                        account.app_sign = appSign;
+                        account.url = url;
+                        account.url_created_at = now;
+                        if (this.currentUser && account.id != null) {
+                            const { error: updateErr } = await db.from('accounts')
+                                .update({ url, app_token: appToken, app_sign: appSign, url_created_at: now })
+                                .eq('id', account.id)
+                                .eq('user_id', this.currentUser.id);
+                            if (updateErr) throw updateErr;
+                        }
+                        this.showSuccess(`已通过 APP SDK 刷新并保存 ${uname} 的凭据`);
+                    } catch (e) {
+                        console.error("refreshToken failed", e);
+                        this.showError(`刷新 token 失败：${e?.message || e}`);
+                    } finally {
+                        this.loadingVisible = false;
+                        this.loadingText = '';
+                    }
+                },
+                /** 代理IP相关方法 */
+                loadProxyConfig() {
+                    try {
+                        this.useProxy = localStorage.getItem('dldl_useProxy') === 'true';
+                        const savedUrl = localStorage.getItem('dldl_proxyWorkerUrl');
+                        // 如果没有保存过 URL，或保存的是空值，使用默认值
+                        if (!savedUrl || savedUrl.trim() === '') {
+                            this.proxyWorkerUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                            localStorage.setItem('dldl_proxyWorkerUrl', this.proxyWorkerUrl);
+                        } else {
+                            this.proxyWorkerUrl = savedUrl;
+                        }
+                        if (this.useProxy && this.proxyWorkerUrl) {
+                            this.proxyIP = '代理中';
+                        }
+                    } catch (e) {
+                        console.error('loadProxyConfig failed', e);
+                        this.proxyWorkerUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                    }
+                },
+                fixAndLoadProxyConfig() {
+                    const defaultUrl = 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                    try {
+                        // 强制修复：如果 URL 为空，设置默认值
+                        const savedUrl = localStorage.getItem('dldl_proxyWorkerUrl');
+                        if (!savedUrl || savedUrl.trim() === '') {
+                            localStorage.setItem('dldl_proxyWorkerUrl', defaultUrl);
+                        }
+                        this.loadProxyConfig();
+                    } catch (e) {
+                        console.error('fixAndLoadProxyConfig failed', e);
+                        this.proxyWorkerUrl = defaultUrl;
+                    }
+                },
+                saveProxyConfig() {
+                    try {
+                        localStorage.setItem('dldl_useProxy', String(this.useProxy));
+                        localStorage.setItem('dldl_proxyWorkerUrl', this.proxyWorkerUrl);
+                    } catch (e) {
+                        console.error('saveProxyConfig failed', e);
+                    }
+                },
+                async toggleProxyAndRefreshIP() {
+                    this.proxyIP = '切换中...';
+                    
+                    if (!this.useProxy) {
+                        // 首次点击，启用代理
+                        this.useProxy = true;
+                    }
+                    
+                    try {
+                        // 统一切换入口：后端优先 GH-Relay，兜底代理池
+                        // 客户端 50 秒超时（后端 45 秒，留余量）
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 50000);
+                        const switchResp = await fetch('/proxy-pool/switch', {
+                            method: 'POST',
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        const switchData = await switchResp.json();
+                        
+                        if (!switchData.ok) {
+                            throw new Error(switchData.message || '切换失败');
+                        }
+                        
+                        // 根据来源显示不同信息
+                        if (switchData.source === 'gh-relay') {
+                            // GitHub Actions relay：显示 Azure runner 的真实出口 IP
+                            const switchedText = switchData.switched ? '已切换' : '最新';
+                            const timeAgo = this._formatTimeAgo(switchData.updatedAt);
+                            this.proxyIP = `Azure IP: ${switchData.ip} (${switchedText}, ${timeAgo})`;
+                            this.saveProxyConfig();
+                            this.showSuccess(`${switchedText} IP: ${switchData.ip}`);
+                        } else if (switchData.source === 'proxy-pool') {
+                            // 免费代理池
+                            const newProxy = switchData.currentProxy;
+                            if (newProxy) {
+                                this.proxyIP = `代理: ${newProxy}`;
+                                this.showSuccess(`已切换代理: ${newProxy}`);
+                            } else {
+                                this.proxyIP = '代理: 无可用（走直连）';
+                                this.showSuccess('无可用代理，当前走直连');
+                            }
+                            this.saveProxyConfig();
+                        } else {
+                            // 直连
+                            this.proxyIP = '直连 (无可用代理)';
+                            this.saveProxyConfig();
+                            this.showSuccess(switchData.message || '当前走直连');
+                        }
+                    } catch (e) {
+                        console.error('toggleProxyAndRefreshIP failed', e);
+                        this.proxyIP = '切换失败（走直连）';
+                        const errMsg = e.name === 'AbortError' ? '切换IP超时' : (e?.message || e);
+                        this.showError(`切换IP失败：${errMsg}`);
+                    }
+                },
+
+                /** 格式化时间差为 "x秒前/x分钟前" */
+                _formatTimeAgo(isoString) {
+                    if (!isoString) return '';
+                    const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+                    if (diff < 60) return diff + '秒前';
+                    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+                    return Math.floor(diff / 3600) + '小时前';
+                },
+                
+                // 获取当前代理IP
+                async getProxyIP() {
+                    try {
+                        const timestamp = Date.now();
+                        const response = await fetch(`${this.proxyWorkerUrl}/get-ip?t=${timestamp}`);
+                        const data = await response.json();
+                        return data.ip;
+                    } catch (e) {
+                        console.error('getProxyIP failed, trying fallback', e);
+                        // 备用方案：直接调用 ipify API
+                        try {
+                            const timestamp = Date.now();
+                            const fallbackResponse = await fetch(`https://api.ipify.org?format=json&t=${timestamp}`);
+                            const fallbackData = await fallbackResponse.json();
+                            return fallbackData.ip;
+                        } catch (fallbackError) {
+                            console.error('Fallback getIP failed', fallbackError);
+                            return null;
+                        }
+                    }
+                },
+
+            }
+        });
+        app.directive('account-cards-sortable', accountCardsSortableDirective);
+        app.use(ElementPlus);
+        app.mount("#app");
+    </script>
+    <style>
+        body {
+            margin: 0;
+            background: #0f1115;
+            color: #e6e8eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        }
+        .login-container { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+        .login-box { width: 100%; max-width: 400px; background: linear-gradient(180deg, #171a21 0%, #141821 100%); border: 1px solid #242936; border-radius: 16px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+        .login-title { margin: 0 0 24px; font-size: 24px; font-weight: 700; text-align: center; color: #e6e8eb; }
+        .login-form { display: flex; flex-direction: column; gap: 16px; }
+        .login-field { display: flex; flex-direction: column; gap: 6px; }
+        .login-label { font-size: 14px; color: #94a0b8; }
+        .login-input { width: 100%; box-sizing: border-box; background: #0f1115; border: 1px solid #242936; border-radius: 8px; color: #e6e8eb; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .login-input:focus { border-color: #2f81f7; }
+        .login-input::placeholder { color: #4a5568; }
+        .login-actions { display: flex; gap: 12px; margin-top: 8px; }
+        .login-btn { flex: 1; padding: 12px; font-size: 15px; }
+        .login-error { color: #d14343; font-size: 13px; text-align: center; margin-top: 4px; }
+        .btn-loading { opacity: 0.7; cursor: not-allowed; }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .username { font-size: 14px; color: #94a0b8; }
+        .area-sort-tip { font-size: 12px; color: #94a0b8; margin-bottom: 8px; }
+        .area-sort-list { max-height: 70vh; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+        .area-sort-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; cursor: default; font-size: 12px; }
+        .area-sort-handle { flex-shrink: 0; color: #7a869f; font-size: 11px; cursor: grab; user-select: none; letter-spacing: -1px; }
+        .area-sort-handle:active { cursor: grabbing; }
+        .area-sort-name { font-size: 12px; font-weight: 600; color: #e6e8eb; white-space: nowrap; }
+        .area-sort-count { font-size: 11px; color: #94a0b8; white-space: nowrap; }
+        .area-sort-ghost { opacity: 0.4; }
+        .area-sort-chosen { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,0.35); }
+        .user-manage-tip { font-size: 12px; color: #94a0b8; margin-bottom: 10px; }
+        .user-manage-list { max-height: 60vh; overflow-y: auto; }
+        .user-manage-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; margin-bottom: 4px; }
+        .user-manage-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
+        .user-manage-role { font-size: 11px; color: #2f81f7; background: rgba(47,129,247,0.1); padding: 2px 6px; border-radius: 4px; }
+        .user-manage-status { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+        .status-enabled { color: #10b981; background: rgba(16,185,129,0.1); }
+        .status-disabled { color: #d14343; background: rgba(209,67,67,0.1); }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-success:hover { background: #059669; }
+        .btn-mini { padding: 3px 8px; font-size: 11px; }
+        .loading-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
+        .loading-spinner { width: 36px; height: 36px; border: 3px solid #242936; border-top-color: #2f81f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: #e6e8eb; }
+
+        .container {
+            max-width: min(1320px, 100%);
+            margin: 12px auto 24px;
+            padding: 0 16px;
+        }
+
+        .account-controls-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            margin: 0 -16px 12px;
+            padding: 6px 16px 8px;
+            background: rgba(15, 17, 21, 0.94);
+            backdrop-filter: saturate(150%) blur(10px);
+            -webkit-backdrop-filter: saturate(150%) blur(10px);
+            border-bottom: 1px solid #2a3140;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .sticky-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+        }
+
+        .sticky-row-batch {
+            --batch-ctrl-h: 40px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #242936;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
+            min-height: 42px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .sticky-row-batch::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .sticky-row-batch::-webkit-scrollbar-thumb {
+            background: #3d4a63;
+            border-radius: 3px;
+        }
+
+        .sticky-row-batch > * {
+            flex-shrink: 0;
+        }
+
+        .sticky-row-batch .batch-select-ep {
+            flex: 1 1 140px;
+            min-width: 100px;
+            max-width: 260px;
+            width: 160px;
+        }
+
+        /* 批量启动方式下拉 - 固定 150px 宽度 */
+        .sticky-tools .batch-launch-mode-select {
+            width: 150px;
+            flex-shrink: 0;
+            height: var(--batch-ctrl-h, 36px);
+            padding: 0 8px;
+            font-size: 14px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            cursor: pointer;
+            outline: none;
+        }
+        .sticky-tools .batch-launch-mode-select:focus {
+            border-color: #7c6ff7;
+        }
+
+        /* 区服下拉与数字框同高，与 Element Plus 尺寸变量对齐 */
+        .sticky-row-batch .batch-select-ep.el-select .el-select__wrapper {
+            min-height: var(--batch-ctrl-h);
+            height: var(--batch-ctrl-h);
+            box-sizing: border-box;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .sticky-row-batch .batch-select-ep.el-select .el-select__selection {
+            display: flex;
+            align-items: center;
+        }
+
+        .sticky-row-batch .batch-select-ep.el-select .el-select__placeholder,
+        .sticky-row-batch .batch-select-ep.el-select .el-select__selected-item {
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .sticky-row-batch .btn-compact {
+            min-height: var(--batch-ctrl-h);
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            padding: 0 12px;
+        }
+
+        .sticky-page-title {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6e8eb;
+            line-height: 1.3;
+            flex-shrink: 0;
+            max-width: 42%;
+        }
+
+        .sticky-tools {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .batch-row-head {
+            font-size: 16px;
+            font-weight: 500;
+            color: #e6e8eb;
+            margin-right: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            line-height: 1.2;
+        }
+
+        .batch-info-icon {
+            cursor: help;
+            opacity: 0.55;
+            font-size: 16px;
+            font-weight: 400;
+            user-select: none;
+        }
+
+        .batch-info-icon:hover {
+            opacity: 0.95;
+        }
+
+        @media (max-width: 640px) {
+            .sticky-page-title {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .sticky-tools {
+                justify-content: flex-start;
+            }
+        }
+
+        .btn-compact {
+            padding: 5px 9px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .btn.btn-mini.btn-compact {
+            padding: 3px 7px;
+            font-size: 11px;
+        }
+
+        .btn {
+            background: #2f81f7;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: #1f6fe0;
+        }
+
+        .btn.btn-secondary {
+            background: #2a3345;
+            color: #d6dbe6;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.btn-secondary:hover {
+            background: #35415a;
+        }
+
+        .btn.btn-danger {
+            background: #d14343;
+            color: #fff;
+        }
+
+        .btn.btn-danger:hover {
+            background: #b73838;
+        }
+
+        .btn.btn-mini {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .sticky-row-batch .batch-inline-label {
+            font-size: 16px;
+            font-weight: 400;
+            color: #e6e8eb;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .sticky-row-batch .batch-num-input {
+            width: 88px;
+            max-width: 88px;
+            flex: 0 0 88px;
+            box-sizing: border-box;
+            height: var(--batch-ctrl-h);
+            min-height: var(--batch-ctrl-h);
+            padding: 0 10px;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            padding: 0 4px;
+            font-size: 12px;
+            color: #2f81f7;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .btn-link:hover {
+            color: #5a9dff;
+        }
+
+        .area {
+            margin-bottom: 14px;
+        }
+
+        .area-head {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin: 10px 0 8px;
+        }
+
+        .area-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e6e8eb;
+        }
+
+        .area-sub {
+            font-size: 12px;
+            color: #94a0b8;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            align-items: start;
+        }
+
+        @media (max-width: 1020px) {
+            .cards {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 420px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: linear-gradient(180deg, #171a21 0%, #141821 100%);
+            border: 1px solid #242936;
+            border-radius: 10px;
+            padding: 0;
+        }
+
+        .sortable-account-card {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 10px 10px;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* 右上角 URL 状态指示点 */
+        .card-url-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .card-url-dot.has-url {
+            background: #10b981;
+            box-shadow: 0 0 4px rgba(16,185,129,0.5);
+        }
+        .card-url-dot.no-url {
+            background: #555;
+        }
+        /* URL 生成时间标签，小绿点左边 */
+        .card-url-age {
+            position: absolute;
+            top: 4px;
+            right: 20px;
+            font-size: 11px;
+            color: #7d8aa0;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .card-check-wrap {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            cursor: pointer;
+        }
+
+        .card-check-wrap input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #2f81f7;
+        }
+
+        .sortable-account-card .card-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-drag-handle {
+            flex-shrink: 0;
+            width: 26px;
+            min-height: 44px;
+            align-self: stretch;
+            margin: 0;
+            padding: 0;
+            border: 1px solid #2f3545;
+            border-radius: 8px;
+            background: #1a1f2e;
+            color: #7a869f;
+            font-size: 12px;
+            line-height: 1;
+            letter-spacing: -1px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card-drag-handle:hover {
+            color: #c5ccd8;
+            border-color: #3d4a63;
+        }
+
+        .card-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .card-sortable-ghost {
+            opacity: 0.45;
+        }
+
+        .card-sortable-chosen {
+            border-color: #2f81f7;
+            box-shadow: 0 0 0 1px rgba(47, 129, 247, 0.35);
+        }
+
+        .card-sortable-drag {
+            opacity: 0.95;
+        }
+
+        .card-top {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .card-actions .btn {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .card-name {
+            min-width: 0;
+        }
+
+        .card-name .nick {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6e8eb;
+            margin-bottom: 3px;
+        }
+
+        .card-name .uname {
+            font-size: 12px;
+            color: #94a0b8;
+            word-break: break-all;
+        }
+
+        .card-pass-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .pass-code-input-wrap {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+
+        .pass-code-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0f1115;
+            border: 1px solid #242936;
+            border-radius: 6px;
+            color: #e6e8eb;
+            padding: 6px 24px 6px 8px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .pass-code-input:focus {
+            border-color: #2f81f7;
+        }
+
+        .pass-code-input::placeholder {
+            color: #4a5568;
+            font-size: 11px;
+        }
+
+        .pass-code-clear {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 50%;
+            background: #242936;
+            color: #94a0b8;
+            font-size: 10px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .pass-code-clear:hover {
+            background: #3d4a63;
+            color: #e6e8eb;
+        }
+
+        .pass-code-status {
+            flex-shrink: 0;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .pass-code-status.sending {
+            color: #2f81f7;
+        }
+
+        .pass-code-status.ok {
+            color: #10b981;
+        }
+
+        .pass-code-status.expired {
+            color: #d14343;
+        }
+
+        .pass-code-status.fail {
+            color: #d14343;
+        }
+
+        .card-row {
+            display: grid;
+            grid-template-columns: 42px 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #94a0b8;
+        }
+
+        .pwd {
+            width: 100%;
+            background: #0f1115;
+            border: 1px solid #242936;
+            border-radius: 8px;
+            color: #e6e8eb;
+            padding: 8px 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+        }
+
+        .modal {
+            width: min(560px, 100%);
+            max-height: min(92vh, 900px);
+            overflow-y: auto;
+            background: #171a21;
+            border: 1px solid #242936;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            padding: 18px;
+        }
+
+        .form-section-label {
+            margin: 4px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7d8aa0;
+            letter-spacing: 0.02em;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: #94a0b8;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0f1115;
+            border: 1px solid #242936;
+            border-radius: 8px;
+            color: #e6e8eb;
+            padding: 10px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        textarea.form-input.form-textarea {
+            min-height: 72px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+
+        .url-extract-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .url-paste-input {
+            flex: 1;
+            min-width: 0;
+            min-height: 52px;
+        }
+
+        .url-extract-btn {
+            flex-shrink: 0;
+            align-self: flex-start;
+            padding: 10px 14px;
+        }
+
+        .form-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+        }
+
+        .area-select {
+            width: 100%;
+        }
+
+        .area-select.el-select {
+            --el-select-input-focus-border-color: var(--el-color-primary);
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #94a0b8;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .modal-actions-top {
+            margin-top: 0;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2b2b4a;
+        }
+
+        .tip {
+            margin-top: 12px;
+            color: #94a0b8;
+            font-size: 13px;
+        }
+
+        .tip-secondary {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #7d8aa0;
+        }
+
+        .tip code {
+            font-size: 12px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .white-space-nowrap{
+            white-space: nowrap;
+        }
+
+        .btn-proxy-active {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .btn-proxy-active:hover {
+            background: #059669;
+        }
+    </style>
+</body>
+
+</html>

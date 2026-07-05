@@ -1,0 +1,10 @@
+name = "red-moon-ff95"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "7160279964fc33ef7afdc22ac2bd7c66"
+
+# 定时刷新过期账号（每6小时，仅主Worker）
+[triggers]
+crons = ["0 */6 * * *"]

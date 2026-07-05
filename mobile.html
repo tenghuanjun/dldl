@@ -37,6 +37,18 @@
         .btn:active { opacity: 0.8; transform: scale(0.97); }
         .btn-secondary { background: #E8DFD0; color: #6b5a42; }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* 筛选下拉 */
+        .filter-select {
+            appearance: none; -webkit-appearance: none;
+            padding: 6px 28px 6px 10px;
+            font-size: 12px; font-weight: 500; color: #6b5a42;
+            background: #E8DFD0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b5a42' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+            border: none; border-radius: 6px; cursor: pointer;
+            transition: all 0.15s; min-width: 80px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .filter-select:active, .filter-select:focus { outline: none; opacity: 0.85; }
         .btn-block { display: flex; width: 100%; }
 
         /* 登录表单 */
@@ -271,6 +283,7 @@
                     <option value="expired">地址过期</option>
                     <option value="none">无地址</option>
                 </select>
+                <button v-if="currentUser && currentUser.username === 'tenghuanjun'" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
@@ -412,6 +425,7 @@ createApp({
         const loadError = ref('');
         const launchedMap = reactive({});
         const refreshLoading = ref(false);
+        const cronRefreshLoading = ref(false);
         const lastRefresh = ref('');
         const actionLoading = ref(false);
         const urlFilter = ref('all');
@@ -823,6 +837,23 @@ createApp({
             return grouped;
         }
 
+        // ===== 定时刷新按钮（仅管理员） =====
+        async function handleCronRefresh() {
+            if (cronRefreshLoading.value) return;
+            cronRefreshLoading.value = true;
+            try {
+                var resp = await fetch('https://red-moon-ff95.tenghuanjun.workers.dev/api/cron-refresh');
+                var result = await resp.json();
+                alert('定时刷新完成：扫描 ' + result.scanned + ' 个，刷新 ' + result.refreshed + ' 个，错误 ' + result.errors + ' 个');
+                // 刷新列表
+                areas.value = await fetchAccounts();
+            } catch (e) {
+                alert('定时刷新失败：' + (e.message || '网络错误'));
+            } finally {
+                cronRefreshLoading.value = false;
+            }
+        }
+
         // ===== 刷新按钮（强制从服务端拉取） =====
         async function handleRefresh() {
             refreshLoading.value = true; loadError.value = ''; globalLoading.value = true; globalLoadingText.value = '加载中…';
@@ -1033,7 +1064,8 @@ createApp({
             loginLoading: loginLoading, loginError: loginError,
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
             areas: areas, loading: loading, loadError: loadError,
-            refreshLoading: refreshLoading, lastRefresh: lastRefresh,
+            refreshLoading: refreshLoading, cronRefreshLoading: cronRefreshLoading,
+            handleCronRefresh: handleCronRefresh, lastRefresh: lastRefresh,
             actionLoading: actionLoading, urlFilter: urlFilter,
             filteredAccounts: filteredAccounts,
             hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,

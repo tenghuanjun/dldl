@@ -1,0 +1,5461 @@
+Manifest-Version: 1.0
+Created-By: 1.8.0_171 (Oracle Corporation)
+
+Name: res/layout/sy37_m_payweb_dialog.xml
+SHA1-Digest: IW+JjLjAiIMcUWvn3/q4o/qd9Wg=
+
+Name: res/layout/hyberry_layout_kaihei_window.xml
+SHA1-Digest: Mg+2I7idwwoAtC40ofE+E65W9yg=
+
+Name: res/drawable-hdpi/abc_list_divider_mtrl_alpha.9.png
+SHA1-Digest: B+V5QEOwy10ghi7uX5XLTPFJGJs=
+
+Name: res/drawable-xhdpi/syfx_ic_close.png
+SHA1-Digest: VWWBsM4qxoZuckGrYRpDX/SmjNg=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_middle_mtrl_dark.png
+SHA1-Digest: RityxShgYvia8YgkzYMZPsO+8ng=
+
+Name: res/layout/sy37_kefu_reg.xml
+SHA1-Digest: l2Yx6rqgrRlbXoljKOYAF8Y6mXA=
+
+Name: res/drawable-xxhdpi/hyberry_checkbox_checked.png
+SHA1-Digest: 473vdk8UOKHhIuRfiIF2jg9K/2U=
+
+Name: res/drawable-xhdpi/abc_ic_star_black_16dp.png
+SHA1-Digest: 4qWwbYAltuuVjAtBs79psFxXWYk=
+
+Name: res/drawable-xxhdpi/abc_btn_switch_to_on_mtrl_00001.9.png
+SHA1-Digest: c1dPFBo1a9vOlb71Pwu5h4ppYqo=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_message_0.png
+SHA1-Digest: vU9mQMblFIyOf6gu88LCzv64ZW8=
+
+Name: res/drawable/notification_bg_low.xml
+SHA1-Digest: XhQ1VAM5FI7umBywrmwii72jPb4=
+
+Name: res/drawable/sy37_guide_view_bg.xml
+SHA1-Digest: DuCRmkEMz7gboouHCApq54/MMMY=
+
+Name: res/drawable-hdpi/sy37_icon_list_diver.png
+SHA1-Digest: 0MUrO70bbweSbirWfddYEfbTprg=
+
+Name: res/drawable/abc_list_selector_background_transition_holo_light.
+ xml
+SHA1-Digest: D/xFiNsnwMWVVKryfOGtsOxr+eE=
+
+Name: res/drawable/sdk_assistant_button_circle_selector.xml
+SHA1-Digest: CHWAHo4GVrOem6CaoJ7iosOWIEg=
+
+Name: res/drawable/sy37_shape_login_dialog_bg.xml
+SHA1-Digest: G3JVgXUj9FNJY/qxA5ETieTPr9Y=
+
+Name: res/drawable-xhdpi/hyberry_default_cover.9.png
+SHA1-Digest: uz50sVsLdGF4NbPfv78HvfAE3os=
+
+Name: assets/libwbsafeedit_x86_64
+SHA1-Digest: FkeNvOJmHJjz35zr+ZxP7hOdxd4=
+
+Name: res/drawable/sy37_kefu_reg_simple.xml
+SHA1-Digest: PRZ9STMhSApxrDmHda+/xhhRpn4=
+
+Name: res/drawable-hdpi/sy37_bg_menu_four.png
+SHA1-Digest: tVdd2e6ZUhmTjww2XtQJ3Gfz6r0=
+
+Name: assets/image/smile/53.png
+SHA1-Digest: zHOI6ZtQT0unsZ9Z5tmR5qtqonA=
+
+Name: res/drawable-xhdpi/sy37_icon_customer_float_right.png
+SHA1-Digest: +pwGCUjfBUFCyp0Ow8uqqz6jRC4=
+
+Name: res/drawable-xhdpi/fx_bg_login_phone_code.png
+SHA1-Digest: VsCGTZAwBLah8V+KpqCS/B+paeQ=
+
+Name: res/drawable-xhdpi/hyberry_huya_logo.png
+SHA1-Digest: uwZfpYXas4Lix83MxZAj2DA8QrY=
+
+Name: res/drawable-xhdpi/sy37_icon_coupon_select.png
+SHA1-Digest: iyqs1n7zp6DmqP7xVuBcRFyxX3o=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_ic_danmu_close.png
+SHA1-Digest: /xBMZ9d9rW5QpynNk5M7Q/MPwN8=
+
+Name: res/xml/network_security_config.xml
+SHA1-Digest: 5p24qix1NF8Voip4mLVA6Jbq3h0=
+
+Name: res/drawable-hdpi/sy37_user_set_down_bg_down.png
+SHA1-Digest: YzO1jFiCCbB1mSarSiiOxQfy/f0=
+
+Name: res/color/abc_primary_text_material_light.xml
+SHA1-Digest: 8yCVev5GUmggABXjU1lGprT/1Ow=
+
+Name: res/drawable/sy37_shape_bg_bottomdelete.xml
+SHA1-Digest: SBOTc1y1e6kBj1xzb3YSSYrtrdY=
+
+Name: res/drawable-xhdpi/hyberry_modify_nickname_pay_selected.png
+SHA1-Digest: K4JPj098fIr48dgc89XXZXQU30E=
+
+Name: res/drawable-xhdpi/notification_bg_normal.9.png
+SHA1-Digest: URz3Lz/tIjMAtXfNHimWcDQLTtQ=
+
+Name: res/drawable-xhdpi/ic_close_confirm_dialog.png
+SHA1-Digest: km+lrL765gUSecDwnne+YcXjjz8=
+
+Name: res/drawable/hyberry_common_button_circle_bg.xml
+SHA1-Digest: 9KPYQHF0AA0jqlvpWqDftfN32UM=
+
+Name: res/drawable-hdpi/abc_list_longpressed_holo.9.png
+SHA1-Digest: 0UXXKnMaseFRUAoKEvA7nU8HXfQ=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_sound.png
+SHA1-Digest: lWdfxPYyqpAyrluPwKkKcMIVSjk=
+
+Name: res/drawable-xhdpi/sy37_net_error_view_animal.png
+SHA1-Digest: Rn1xp968DBwFuKO7dJnXlO3OFDM=
+
+Name: res/color/abc_primary_text_disable_only_material_light.xml
+SHA1-Digest: 9hQmXUYOmST/OQJbgNOoiIRKguM=
+
+Name: res/layout/sy37_pay_item.xml
+SHA1-Digest: vLXaqNy24ovHvnFHLZ90Rf68zAo=
+
+Name: res/layout/sy37_common_float_menu.xml
+SHA1-Digest: YJkIci+RgYCI9m8GV2tLXGcqtzk=
+
+Name: res/drawable-hdpi/sy37_sdk_launcher.png
+SHA1-Digest: zpI16CFBwoGGr/oK3LjzLu4ppew=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_up_2.png
+SHA1-Digest: j9lR7uPs4GGCvrLZErhgMPgcGFE=
+
+Name: res/drawable-xhdpi/sy37_net_error_view_title.png
+SHA1-Digest: cLmtiDPKxXqTXNQa1zt1m+Qp0fk=
+
+Name: res/anim/abc_popup_exit.xml
+SHA1-Digest: L6ajQb9BiIk0i95pdrDeM/csRWY=
+
+Name: assets/image/smile/44.png
+SHA1-Digest: Uaiag8WuPeAcfnA6jNi4SSYDjxk=
+
+Name: res/layout/sysq_common_float_menu.xml
+SHA1-Digest: +BCchfVrJ1RIWnztH9nqyXuqf6E=
+
+Name: res/drawable/sy37_web_view_toast_anim.xml
+SHA1-Digest: GdcXEt2dHeAPVwbtNaRKMsAEGLY=
+
+Name: kotlinx/serialization/json/internal/JsonTreeListDecoder.kotlin_m
+ etadata
+SHA1-Digest: 7iTrlOjDAszwGNNN9hPzeohOyhk=
+
+Name: res/drawable-hdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: 78smH/WloXlRnKFiYjX1mhRdm8A=
+
+Name: kotlinx/serialization/json/internal/PolymorphismValidator.kotlin
+ _metadata
+SHA1-Digest: G6ni4OkGUXbJnGEeRzBR52iXCYY=
+
+Name: res/drawable/sy37_icon_game.xml
+SHA1-Digest: WvSyWFu9DpIgd7MfDTsUwQFYs54=
+
+Name: res/drawable-hdpi/sy37_icon_game_0.png
+SHA1-Digest: H4SJvSQd/3uz4sm5QdQ5IIEE0nU=
+
+Name: res/drawable/sy37_base_liveshow_player_expand.xml
+SHA1-Digest: upaO9KblzgrGAPoelzejPJNtB24=
+
+Name: res/drawable-xhdpi/background_to_pause.png
+SHA1-Digest: 08gNABsTGk7NwvKxInOlm+ha5g8=
+
+Name: res/layout/hyberry_activity_webview.xml
+SHA1-Digest: FI4q1lRmTlirF9+DZ/RgaJA3p60=
+
+Name: res/layout/sy37_s_login_view_reg_social.xml
+SHA1-Digest: eRGFV8dqiu2gPqRF9AsKZm8peo4=
+
+Name: res/drawable/sy37_pay_confirm_cancel_bg.xml
+SHA1-Digest: AcZL9tYur9Q48axmy09bjalKnMI=
+
+Name: res/drawable-xxhdpi/sysq_icon_customer.png
+SHA1-Digest: gmIAE67aRKSLHlFXaYiZiL10RG8=
+
+Name: res/drawable-xhdpi/sy37_pop_bg.9.png
+SHA1-Digest: wMZW4Yt7Vxiak294vuH/+UfRugQ=
+
+Name: res/layout/share_confirm_dialog_landscape.xml
+SHA1-Digest: URs3okRAMKxcxiaSv3AWjN286v4=
+
+Name: res/drawable/abc_ic_voice_search_api_material.xml
+SHA1-Digest: 6lMXx1GvyyBwsWZGLr7rXoPTrB0=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_half_black_16dp.png
+SHA1-Digest: 6g2A+DWI9ch/SwvHTvMtn7hIhA0=
+
+Name: res/drawable/hyberry_floating_danmu_icon.xml
+SHA1-Digest: GSo5Ib8w2uK+LOVs+0jPbWYOYD0=
+
+Name: lib/arm64-v8a/libBugly.so
+SHA1-Digest: IIAKrdQuSdidcrbAVJuRWO2qtTE=
+
+Name: kotlinx/serialization/json/internal/SuppressAnimalSniffer.kotlin
+ _metadata
+SHA1-Digest: 7h/JQ2HDc7XXDyzdvXp2dD/W1yM=
+
+Name: res/drawable/sy37_web_view_loading_anim.xml
+SHA1-Digest: GdcXEt2dHeAPVwbtNaRKMsAEGLY=
+
+Name: res/drawable-xhdpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: FlZ7TBoisQ5sOWGa7b7L8UTYJXw=
+
+Name: res/drawable/sysq_dialog_page_background.xml
+SHA1-Digest: 7703s5LcUz9mYz17Nhzhr/v6HBw=
+
+Name: res/drawable/sy37_btn_commit_selector.xml
+SHA1-Digest: C62P/vW2tPL5UkfSn7Paq0yey+0=
+
+Name: res/drawable-xhdpi/abc_btn_check_to_on_mtrl_000.png
+SHA1-Digest: N8u5hjDMGa2e6JOJbgxZal1aNwY=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_choose_view.png
+SHA1-Digest: JY881vHu3gn1SnTtFHApmD62eWM=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_right_mtrl_light.png
+SHA1-Digest: ubcsLJOipiWUipWvjL7+QYtPl/I=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_default_cover.jpg
+SHA1-Digest: oo7kwi1PN/AfSyH0LQsVn9zzB3E=
+
+Name: res/drawable-hdpi/abc_ab_share_pack_mtrl_alpha.9.png
+SHA1-Digest: cjgJg24n0TTtgvnxe15sLlJeLfw=
+
+Name: res/drawable-hdpi/sy37_login_game.png
+SHA1-Digest: xQSwvlARLkczlFKOkEMng9+6I94=
+
+Name: res/drawable/sy37_web_view_round_title_bar_bg.xml
+SHA1-Digest: h0NABgsJ+Yl3Ne1Vf2rzqdavVx8=
+
+Name: res/drawable-hdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: ZqUgtx8BcZt5TvaiP1WTtE2Qj/4=
+
+Name: res/layout/sy37_account_change_simple.xml
+SHA1-Digest: T7OlIhI3IbqQ/fiLb8HJ8sjkakk=
+
+Name: res/drawable-xxhdpi/icon_close_press.png
+SHA1-Digest: 5lKplYj6Px2U4S1rvgnBRiu5w7g=
+
+Name: res/drawable-hdpi/sy37_bg_btn_exit_1.9.png
+SHA1-Digest: iX7W7ck/Oe0Hrmpb8VQSlv4oEtM=
+
+Name: res/drawable-hdpi/sy37_bg_btn_change_account.png
+SHA1-Digest: hE8JbUYIbAkfvWOmslivnCwsP8Y=
+
+Name: res/drawable/hyberry_floating_voice_icon.xml
+SHA1-Digest: RZ4qpUqKSRTo94GBW4fre9wZs8g=
+
+Name: META-INF/services/org.glassfish.jersey.internal.spi.AutoDiscover
+ able
+SHA1-Digest: 9JVN9dFPFTLtncdj+Xx+FSHSzI0=
+
+Name: res/drawable/hyberry_common_frame.xml
+SHA1-Digest: v8HyT7S3KI4r9Q5Kj8QkqQMCcEY=
+
+Name: res/anim/abc_popup_enter.xml
+SHA1-Digest: CnJcRHXxkdxBHOg2/4A1R0qPS6M=
+
+Name: res/color/abc_tint_switch_track.xml
+SHA1-Digest: lL/Dhs/iqlCP6L9hVBll+t/NNB0=
+
+Name: res/drawable-hdpi/sy37_web_view_default_web_refresh.png
+SHA1-Digest: JYWiwYyvj5sNMfqbmLhHe+QmjHA=
+
+Name: lib/arm64-v8a/libproperty_get.so
+SHA1-Digest: FzWkOyC4cpGqqkhJGVdCvKLAn3U=
+
+Name: res/drawable/hyberry_shape_bg_ffa200_radius_25.xml
+SHA1-Digest: tyxjPzRcJpSNryZFzpE28feLJAY=
+
+Name: res/drawable-xhdpi/background_to_resume.png
+SHA1-Digest: EfqP3nARehxrlvkMRB73d1GeTJg=
+
+Name: res/layout/hyberry_layout_kaihei_window_not_login.xml
+SHA1-Digest: 3Ez3MGe1FNmL9grCeRV7AIt2jAE=
+
+Name: res/drawable-hdpi/sy37_update_progress_bg.png
+SHA1-Digest: qwbcnbob2gIhc6pqG4/C9n7vO/I=
+
+Name: res/layout/hyberry_fragment_modify_nick_name_land.xml
+SHA1-Digest: lb4aRTObchYSdH1+S4Dl1Gz4rXg=
+
+Name: assets/image/smile/51.png
+SHA1-Digest: W4ODMn6tyguJfEMrtGmMb8xdxRg=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_down.png
+SHA1-Digest: N+dNbWIWDv+DPDLEM9/aWC50Qho=
+
+Name: res/drawable/sy37_welcom_main_bg.xml
+SHA1-Digest: sOvgrqj1dkKVxWNAuLzVOwYaBvA=
+
+Name: res/drawable-hdpi/abc_list_pressed_holo_dark.9.png
+SHA1-Digest: jCr1uRQgTJfOo3pcHxt7KQpsl+k=
+
+Name: lib/x86/libyim.so
+SHA1-Digest: 4kp2AiiM+hlljUkIm8TZ1nLLlh4=
+
+Name: res/drawable-xxhdpi/abc_ic_menu_paste_mtrl_am_alpha.png
+SHA1-Digest: Z2s/VaXsO8QlR8UdBIRVN3Eshc0=
+
+Name: res/drawable-xhdpi/abc_scrubber_control_to_pressed_mtrl_005.png
+SHA1-Digest: b25IOITwDFJwuuXN8h/SxX4BZc4=
+
+Name: res/layout/sy37_view_service.xml
+SHA1-Digest: vm/2wsRGJnU0UyS8I32wl6HsYY4=
+
+Name: res/drawable-hdpi/sy37_welcom_color_bg.9.png
+SHA1-Digest: 00d0Vnn09APOdBff44VE3ft8sxI=
+
+Name: assets/image/smile/28.png
+SHA1-Digest: LrN83IQw0+sUOx6iorrO+UpkYdA=
+
+Name: res/drawable-xxhdpi/hyberry_huya_logo_notext.png
+SHA1-Digest: Qiqn6TfsUWs6daXD66Jyq0BCaok=
+
+Name: res/layout/sy37_view_account.xml
+SHA1-Digest: 8C3WztAqy7z0rw2LsLsJz3tOaTw=
+
+Name: kotlinx/serialization/json/internal/JsonTreeMapEncoder.kotlin_me
+ tadata
+SHA1-Digest: wqTMVD3Qj8bsOa1YlooMn/xiLQE=
+
+Name: res/drawable/sy37_shape_corner.xml
+SHA1-Digest: mdi1E3JTKwdWiEjjKgtVjzfdIV4=
+
+Name: kotlinx/serialization/json/JsonPrimitive.kotlin_metadata
+SHA1-Digest: bDnv18yu1/vW54LQLhs2Gim7A1g=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_iv_send.png
+SHA1-Digest: LFxuk8Oh2dLxmXdWVJ5eSK9z7JM=
+
+Name: res/drawable/web_container_background.xml
+SHA1-Digest: i8sSG8tJ+i5Dpf0S3y+B17iD1Og=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_left_mtrl_light.png
+SHA1-Digest: Vcpm+wrwznnFPz7Fj+ObnkoUBMU=
+
+Name: res/drawable/hyberry_shape_bg_white_20_radius_25.xml
+SHA1-Digest: 4ZfGCZnodkLNXIbYfHPejZf4DeY=
+
+Name: res/drawable-hdpi/sy37_login_0.9.png
+SHA1-Digest: xaAYK+dt8QT0xqkMJYpE3mV8S1I=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_user.png
+SHA1-Digest: XSZhHER8v2jYadELc0227VZ2D68=
+
+Name: res/layout/sysq_face_confirm_activity.xml
+SHA1-Digest: UiyOkR7oulbLZjLHI+kqjQ1dYLw=
+
+Name: res/drawable-xxhdpi/abc_scrubber_control_to_pressed_mtrl_000.png
+SHA1-Digest: wER9a8JhXugdvgLGSc+ao35227U=
+
+Name: res/drawable-xhdpi/hyberry_live_chat_expand_btn_normal.png
+SHA1-Digest: xgXdsZfqk0LSZ2MG87mYHr1nnp0=
+
+Name: res/layout/hyberry_fragment_live_list.xml
+SHA1-Digest: 6D3lcbu8RK75e0jukFyTPhEhuLU=
+
+Name: res/drawable-mdpi/abc_list_pressed_holo_dark.9.png
+SHA1-Digest: yKQyIzYPiiDDZJQiNNo3WDpyIdU=
+
+Name: res/layout/hyberry_view_danmu.xml
+SHA1-Digest: X1Olb7DVJ0FVMFycTkaHOcMmhQo=
+
+Name: kotlinx/serialization/json/JsonImpl.kotlin_metadata
+SHA1-Digest: sdoJYxrubOnM5uYYTHnk8DKRfPg=
+
+Name: res/drawable-xhdpi/sy37_icon_pway_normal.png
+SHA1-Digest: 0PmIGoF0T2N4QNigJ4yJmM7/3tc=
+
+Name: assets/image/smile/35.png
+SHA1-Digest: joCoG3pXU9UFt3R5kBpU46iz3iY=
+
+Name: res/drawable/sy37_open_wx_bg.xml
+SHA1-Digest: 0PN/Ex6FIiqV1zhP27QSBy88U7E=
+
+Name: kotlinx/serialization/json/JsonPrimitiveSerializer.kotlin_metada
+ ta
+SHA1-Digest: /tytF4IIifB0VRhGKX+9QtRzMes=
+
+Name: res/drawable-xxxhdpi/abc_ic_menu_paste_mtrl_am_alpha.png
+SHA1-Digest: AngyLGM9fD0MqfEzkDY1wrwUdK0=
+
+Name: res/drawable/hyberry_selector_phone_icon.xml
+SHA1-Digest: kHxG+oUT7ySbxo4hsRo/MtWUPGE=
+
+Name: com/j256/ormlite/core/LICENSE.txt
+SHA1-Digest: A3L+oNgVTIV6ZjksmgXBeIWe7uU=
+
+Name: res/drawable-xxhdpi/abc_ic_star_half_black_16dp.png
+SHA1-Digest: XWFKBQbHNFDN4EvD+/bGkwMMO48=
+
+Name: res/drawable-ldpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: Xw8Wmn6A1HT55bL2pzYUcS+Y2Qw=
+
+Name: res/layout/abc_alert_dialog_material.xml
+SHA1-Digest: QObxCnVqaQBhzTxFrE7TxCEvr/g=
+
+Name: res/drawable-xhdpi/ic_share_qq.png
+SHA1-Digest: kVIMUZ2sr0lb8k1tl+m06apk/6s=
+
+Name: res/drawable-xxhdpi/icon_download.png
+SHA1-Digest: 2lSTv99odTtvGNXNgKffmRJkRkQ=
+
+Name: res/drawable-hdpi/sy37_user_pwd_eye_open.png
+SHA1-Digest: leU8YWYCLAHqAiNqUOZNh6QpwbM=
+
+Name: res/drawable-xhdpi/hyberry_delete.png
+SHA1-Digest: VQXbit88AnSxVba98ARlDq1LHdI=
+
+Name: res/layout/live_alert_portrait.xml
+SHA1-Digest: 21BHcfBIWTyy/X/CY16Q7sq/8lw=
+
+Name: res/drawable-hdpi/sy37_icon_account_1.png
+SHA1-Digest: l5DlmvDzTShpI2o0komTMKuTXhA=
+
+Name: res/drawable-xhdpi/hyberry_start_live_btn.png
+SHA1-Digest: TvRmYHyEsge9A6hmRQLuhMILp1g=
+
+Name: res/layout/sy37_base_activity_liveshow_im_room.xml
+SHA1-Digest: +HQs3N/DqmDPlAUKl/9GyjqA4Qc=
+
+Name: res/drawable-hdpi/abc_list_pressed_holo_light.9.png
+SHA1-Digest: sEEFmeXdodmb58YCgcQtE6eYELQ=
+
+Name: res/layout/sy37_layout_auth_preview.xml
+SHA1-Digest: hO7pMX+IX71GHuLH3DjTIpUiyAk=
+
+Name: res/drawable-xhdpi/hyberry_network_error.png
+SHA1-Digest: R0rH8xVF97Vw+KkgKvw7xNfzC/4=
+
+Name: kotlinx/serialization/json/internal/StringJsonLexer.kotlin_metad
+ ata
+SHA1-Digest: 6aJJv/Xh6NiGv1rQ0qWyD64yC5s=
+
+Name: res/layout/hyberry_video_line_item.xml
+SHA1-Digest: 04J4GuiufwATS0MSchUR1A8Di8I=
+
+Name: res/drawable-xxhdpi/sy37_web_back_enable.png
+SHA1-Digest: nI8fp+zqXXtr8RK5WqZscXfI2X8=
+
+Name: res/drawable-xxhdpi/cancel.png
+SHA1-Digest: WlpE8HlTs7MP8RtxbUvcsOaXO04=
+
+Name: com/j256/ormlite/android/README.txt
+SHA1-Digest: NO0vpP55TdaqVX9LT/xlT1MssDQ=
+
+Name: res/drawable-ldrtl-mdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: MkcRfAdEGbq7ti9z8UjusxP9Ojw=
+
+Name: res/drawable-xxhdpi/hyberry_floating_voice_open_normal.png
+SHA1-Digest: Pjm9DqGa724EgGUsKUoO2gOezjo=
+
+Name: res/drawable/download_progress_horizontal.xml
+SHA1-Digest: 9xMHsAxpFkq9NWCuby6Sv8zvo3A=
+
+Name: res/drawable-xhdpi/hyberry_floating_bg_game.jpg
+SHA1-Digest: wXkzOgdLqo7t/kYeEC9RyubT9q8=
+
+Name: kotlinx/serialization/json/internal/TreeJsonDecoderKt.kotlin_met
+ adata
+SHA1-Digest: wYkW3F6+lPJLCOOefggdaDk2a0U=
+
+Name: res/layout/sy37_web_dialog_portrait_full.xml
+SHA1-Digest: RaCO/jJVPA73VHq7+pwqcEqZpnQ=
+
+Name: res/drawable/sysq_login_btn_unable.png
+SHA1-Digest: tlPa4Iy890q763YpQyGLy+781QI=
+
+Name: res/drawable-mdpi/abc_list_focused_holo.9.png
+SHA1-Digest: VvdE/sc+sr8KSGfF3QrsuQf22yY=
+
+Name: res/drawable-xxhdpi/sysq_pay_dialog_failure.png
+SHA1-Digest: GtWSQQHxbLGrBq9mEwDgvt4+DMs=
+
+Name: res/drawable-xhdpi/abc_list_pressed_holo_light.9.png
+SHA1-Digest: r7/Y5GDo3RwmZL5VK1c2D5arMaM=
+
+Name: kotlinx/serialization/json/internal/TreeJsonEncoderKt.kotlin_met
+ adata
+SHA1-Digest: FK1CMWeN9MmXVpk3UOBSHIm+GCk=
+
+Name: res/drawable-xxhdpi/hyberry_mic_btn_pressed.png
+SHA1-Digest: e9S7vKNcb7s7rNZ5IWgIaJnm84Q=
+
+Name: lib/armeabi-v7a/libemulator_check.so
+SHA1-Digest: 40pc8UmkLwaI5EsN/ac1B5DbwD8=
+
+Name: res/layout/notification_template_custom_big.xml
+SHA1-Digest: UqnazX51KIaXFK3dFqEeRJbRqp8=
+
+Name: res/anim/abc_slide_out_bottom.xml
+SHA1-Digest: pLc6/o40DA67wLYmi1PAflE0RM4=
+
+Name: res/drawable-xxhdpi/hyberry_component_target.png
+SHA1-Digest: NMkNUUJatnWLSkCd6pwuJc3Z5VA=
+
+Name: res/drawable-xxhdpi/sysq_ic_pwd.png
+SHA1-Digest: xbip1Bae5JwfrQFcK7eE3kYV8vw=
+
+Name: res/drawable-hdpi/abc_text_select_handle_right_mtrl_light.png
+SHA1-Digest: CoHblLo+7UrSh+txuV4v8zvblHw=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_wechat.png
+SHA1-Digest: ZM4k6W9RLNq9s69Mk992SNg/WoI=
+
+Name: res/drawable-xhdpi/hyberry_target_up_icon.png
+SHA1-Digest: He1hxrw2EWtU0zS9Z3AKwldRU0s=
+
+Name: res/layout/sy37_layout_liveshow_room_list.xml
+SHA1-Digest: sh1LfpJDAzg0RUCjx2srZr0C/WM=
+
+Name: kotlinx/serialization/json/internal/JsonIteratorKt.kotlin_metada
+ ta
+SHA1-Digest: QzhDiR4Y3y6ZpTMZ0HiyqMwZNZQ=
+
+Name: assets/image/smile/42.png
+SHA1-Digest: fPKz3Tl1jGvMKyKE1JMcuyvPL70=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_chat_room.png
+SHA1-Digest: S49XMEruc3RElOcgjunMF1gYYIw=
+
+Name: res/color/abc_btn_colored_borderless_text_material.xml
+SHA1-Digest: W1Du8gQPxWpq8eXP1dkL7CSJal4=
+
+Name: res/drawable-mdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: oBOA2ngofm+35DGGiPN1y6cYN/s=
+
+Name: res/drawable/abc_item_background_holo_light.xml
+SHA1-Digest: p6cdNK1vQ37OEubhbPkfN2NNMU0=
+
+Name: res/drawable-xhdpi/abc_ic_menu_share_mtrl_alpha.png
+SHA1-Digest: 6cpWbLXdd27zuqRASTBkUE+2QG0=
+
+Name: res/drawable-ldpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: wowHER07Irw4+inyN4qEwKHbhi0=
+
+Name: res/drawable-hdpi/sy37_my_information.png
+SHA1-Digest: PNKoVTUm8wQJptK6KtH+B6TgLF8=
+
+Name: res/drawable-hdpi/sy37_icon_to_right.png
+SHA1-Digest: 8Nl5DwSqOCKvs8dpZWprsyONKVA=
+
+Name: res/drawable/sy37_shape_login_btn_bg_blue.xml
+SHA1-Digest: cwEVLQlwmigIpBSjNKu62ooGPqA=
+
+Name: res/drawable-hdpi/abc_ic_star_half_black_48dp.png
+SHA1-Digest: TlbyZYv9H1HCXgUpxYDLUFphgco=
+
+Name: res/drawable/sy37_confirm_bg_round_13.xml
+SHA1-Digest: CMmvkaaTEXgU0JMPThhTxZf+mTE=
+
+Name: res/layout-port/sy37_item_liveshow_room.xml
+SHA1-Digest: u2zPVE1eubTmWzmijU+HROXe+XE=
+
+Name: res/drawable/sy37_pay_dialog_bg.xml
+SHA1-Digest: 0FjbwbI7Wjnk5J/N7MLuclcWDnc=
+
+Name: res/layout/sysq_coupon_item.xml
+SHA1-Digest: OtbRBP2jIUGkn8arWIGxGtsbLXM=
+
+Name: assets/image/smile/37.png
+SHA1-Digest: dGoDnmxIrce7tCQg1ctKjmxQHmM=
+
+Name: assets/image/smile/8.png
+SHA1-Digest: FIV8Qea1s28uJzFJVB1b70jYnd4=
+
+Name: lib/armeabi-v7a/libmtpencrypt.so
+SHA1-Digest: zNu5kk/uSwrQRQBSxgkeOBdKlik=
+
+Name: res/drawable/hyberry_selector_alert_btn_bg.xml
+SHA1-Digest: UARQ2o8W7YwCEYtFiDGKe8tVlyg=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_room_bottom_bg.png
+SHA1-Digest: x3Kz1PtH4sJmqUvUCrB4JEDd2cw=
+
+Name: res/drawable/sy37_btn_exit.xml
+SHA1-Digest: 421jLtRRJEHQAwDSeO6/RO3gUi4=
+
+Name: res/drawable/abc_text_cursor_material.xml
+SHA1-Digest: Jnox44yRLuWswZJ4qg39s2rcbKE=
+
+Name: res/drawable-xxxhdpi/abc_text_select_handle_left_mtrl_light.png
+SHA1-Digest: yjIuZH/odjMspAm9j8UrkuEWCs8=
+
+Name: res/layout/hyberry_layout_common_top_bar_land.xml
+SHA1-Digest: bKXiTxFyRycO+v/FEVHVdrkaEWs=
+
+Name: res/drawable-night-xxhdpi/sysq_ic_logo_union.png
+SHA1-Digest: SyfU3kJ7Jl+jx24HENKZR0YAbk0=
+
+Name: res/layout/abc_list_menu_item_layout.xml
+SHA1-Digest: b6F017wm9ky9xVBv8IGAwIjYdxc=
+
+Name: res/layout/sysq_pay_dialog_trade.xml
+SHA1-Digest: EDPMSyIU9NxoPmp/s2Th8WGXMmk=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_change.png
+SHA1-Digest: asRXUwjWUYoReC4ZQ2qiuzkrOQo=
+
+Name: res/drawable-hdpi/sy37_bg_account_drop_select.9.png
+SHA1-Digest: cvC0ty1XA/3SOnXpn3F/Ax5R85E=
+
+Name: res/drawable-hdpi/notify_panel_notification_icon_bg.png
+SHA1-Digest: inKyhhyZgO65645KR/OH06l6dAc=
+
+Name: res/drawable/sy37_selector_common_btn_bg.xml
+SHA1-Digest: G31rreaovGxQ5KODQ4GlqhBOmzM=
+
+Name: res/layout/hyberry_fragment_alert_window_tip.xml
+SHA1-Digest: cYmWt/GflUgqx/It9Pw8Q+FRZR8=
+
+Name: res/layout-port/sy37_layout_liveshowfloat.xml
+SHA1-Digest: 4vx5KJFtarT73ZDGtDgASPKpMa8=
+
+Name: res/layout/abc_list_menu_item_radio.xml
+SHA1-Digest: wGqa6HneNLOStMvHZv8k1XQ+m2c=
+
+Name: res/drawable/abc_list_divider_material.xml
+SHA1-Digest: 7pOHOTd2EWAT2fBmhTkP4xj+g7U=
+
+Name: res/drawable/sy37_liveshow_bg_sound_float_right_semicircle.xml
+SHA1-Digest: bQRvh/Yso70hS7FQ9NVH0Xy39+4=
+
+Name: res/layout/sysq_dialog_net_error.xml
+SHA1-Digest: 5RQXJ7Y1iHz6dpuQ/WSUpVxwooY=
+
+Name: res/drawable-xxhdpi/hyberry_component_bg.png
+SHA1-Digest: rFCTMDCtKkpR0j3/2Or9KKa5PWA=
+
+Name: res/drawable-hdpi/weixinlogin_icon.jpg
+SHA1-Digest: 2Gg3nc8ypCkLmh0MGry0Vj+ahIo=
+
+Name: res/drawable-hdpi/sy37_dialog_topbar.9.png
+SHA1-Digest: NKgaanNNNw62PXS+MCKNh7CEn1Y=
+
+Name: res/drawable-mdpi/abc_scrubber_control_to_pressed_mtrl_000.png
+SHA1-Digest: HA/9xyNTCblPawbUxf0mHnv9sc0=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_gift.png
+SHA1-Digest: WNzjfkBetTrV2BerusF0PoHZLw0=
+
+Name: res/drawable/sy37_shape_permission_dialog_bg.xml
+SHA1-Digest: Uy9HdNAN5+Xu7AzTnhWNYzXKFx8=
+
+Name: res/drawable/sy37_base_common_loading_bg.xml
+SHA1-Digest: aLEPAMirtJdR2OFk9UekCrBw2Yk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_people.png
+SHA1-Digest: zKYRVSw1kj5NuXOmDaIPLaKJagU=
+
+Name: res/layout/sy37_pay_layout_load_wait.xml
+SHA1-Digest: Z/7EflYrIsYDcVq+OATdsQPeu4E=
+
+Name: res/drawable/sy37_dialog_permision_bg.xml
+SHA1-Digest: U02cbnw2X8oZE8RmERQC81ev4/0=
+
+Name: res/drawable-xxhdpi/hyberry_end_live_bg_land.webp
+SHA1-Digest: EKkLtbFv2EqQNBpIWj2c1lXcsWk=
+
+Name: res/layout/abc_action_menu_layout.xml
+SHA1-Digest: UWxBYbE2rvkrvEgRSpMXrWUfz08=
+
+Name: res/drawable/sy37_weibo_progress.xml
+SHA1-Digest: 8b0FMA228Tr28ECKp+vpwG3w8cE=
+
+Name: res/drawable-xhdpi/sy37_icon_pay_customer.png
+SHA1-Digest: aYQI7+PD8NjEQIqC0utXCs/SXTs=
+
+Name: res/drawable-xxhdpi/sysq_ic_test_menu.png
+SHA1-Digest: S/yrtbQJtXtSbKhuAju1lo6rlvM=
+
+Name: res/drawable/account_reg_bg.xml
+SHA1-Digest: pblzY6QlooOkKR63qmHorP/C3FE=
+
+Name: res/drawable-xhdpi/hyberry_mic_btn_pressed.png
+SHA1-Digest: fbCSd9px+rSxDKNfA/vVbjAWdmw=
+
+Name: res/drawable-hdpi/sy37_reg_01.png
+SHA1-Digest: RkWviuemaPccMkQTDODjtbaOAq8=
+
+Name: res/layout/sysq_dialog_login_view_account.xml
+SHA1-Digest: +gdnC+UT0yQMkat/4AGV1q0Ry7s=
+
+Name: res/drawable-xxhdpi/abc_ic_commit_search_api_mtrl_alpha.png
+SHA1-Digest: sitGlrxh0i/sA/j9OIOfu+ovotA=
+
+Name: res/drawable-hdpi/sy37_load_inner.png
+SHA1-Digest: vAyZC+rt89kPzmP/EuzXKYxzjP8=
+
+Name: res/layout/sy37_share_dialog_portrait.xml
+SHA1-Digest: CNc5wuP62EBh3CMirkCxAK3XKvU=
+
+Name: res/color/sy37_button_text.xml
+SHA1-Digest: 5C3MuXmyml6eDCz2Vz91RQau4ZQ=
+
+Name: res/drawable-hdpi/sy37_bg_account_right_flag.png
+SHA1-Digest: mX551JKuA3hrHGRJeThOiJj0vjU=
+
+Name: lib/arm64-v8a/libnsdt.so
+SHA1-Digest: HPrU37CYLxusgS1Zg/VfdhEhJwY=
+
+Name: res/layout/sysq_view_auth_countdown.xml
+SHA1-Digest: ebvDDfYwgqdmz0HQNfLxebQzb0I=
+
+Name: res/drawable-ldrtl-mdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: lpS64GBqOPsxcQPEWomK+hhL3+I=
+
+Name: res/drawable/abc_action_bar_item_background_material.xml
+SHA1-Digest: 76WkzQZ+uANP7xIObsPWXCc9eD8=
+
+Name: res/drawable/sy37_submit_simple_pressed.xml
+SHA1-Digest: kQkmeQ9IjgwXYLUPaQrf5xxZAU4=
+
+Name: res/layout/sysq_dialog_exit_face_verify.xml
+SHA1-Digest: x8VlpgisI4ZEOM3jh/9EktBDtCg=
+
+Name: res/drawable-xxhdpi/icon_share.png
+SHA1-Digest: UQzwpir9x/QYT1p2Fl3XvqvKfzk=
+
+Name: res/drawable-hdpi/sy37_btn_green_verybig_up.png
+SHA1-Digest: 7XRcJWaDaxpJ2vxQevQceV/P5ss=
+
+Name: res/drawable-xhdpi/hyberry_pauselive_btn_normal.png
+SHA1-Digest: kcdQOkGSxK+22QFd7mvPvCReUTU=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_left_mtrl_light.png
+SHA1-Digest: R8WBookM68joCzpD5dW/NrGyQhY=
+
+Name: lib/arm64-v8a/libudbauthunify.so
+SHA1-Digest: BWzTTKIbNgDc6sOqT03WxBIyXgQ=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_back_1.9.png
+SHA1-Digest: wpATDrb4yK+wyWksRCFXZCcq5mY=
+
+Name: res/drawable/sy37_submit_simple_normal.xml
+SHA1-Digest: Be6pOzdPBgbkFIa1s41x2hAg7FE=
+
+Name: res/drawable-xxhdpi/sysq_ic_float_edit.png
+SHA1-Digest: 5ai+pPQueMKhnie2n5DetQJr5Qw=
+
+Name: res/drawable-xhdpi/ic_psd_open.png
+SHA1-Digest: uhdrCADXe7iMls713/x37FffcKc=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_right_mtrl_light.png
+SHA1-Digest: PfIR1E4CQu8D3NItlRHOJHMCpjk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_ic_danmu_open.png
+SHA1-Digest: 27tV2NLFc/6rA18th3pHDiotJak=
+
+Name: res/drawable-xhdpi/sy_fx_bg_login_phone_code.png
+SHA1-Digest: 0snvU/fGdf0S6W5cQeBgV6aLe90=
+
+Name: assets/image/smile/10.png
+SHA1-Digest: ATrwYfpWTncBMO3UpMxgAViaQCs=
+
+Name: res/anim/sy37_pop_left_in.xml
+SHA1-Digest: /3fftSD80L88F8L2KtMubFTyTbE=
+
+Name: res/drawable-xhdpi/hyberry_floating_video_fresh.png
+SHA1-Digest: qP0XSw910/iGXhC38izIrTa/wPo=
+
+Name: res/drawable-hdpi/sy37_icon_activity_0.png
+SHA1-Digest: tLA6Pq3vX5y32l/ZE6SUXylMefI=
+
+Name: res/drawable-xxhdpi/hyberry_start_live_btn.png
+SHA1-Digest: bt8RJVPc4lDgE7rrRdSmFI/mLC4=
+
+Name: AndroidManifest.xml
+SHA1-Digest: 0pUDK1/wznWR2WYE1mjuwlmvNNw=
+
+Name: res/drawable/sy37_icon_service.xml
+SHA1-Digest: wjp4ZlChltiop8DBTJ/mpb7d2vk=
+
+Name: res/anim/dialog_anim_enter.xml
+SHA1-Digest: yu5q9y6ylxpquSivINSpdL1K+7A=
+
+Name: res/drawable-hdpi/sy37_web_view_default_img_loading.png
+SHA1-Digest: XpN1NSOR/CJzCFfgDtib0XHDdIA=
+
+Name: lib/arm64-v8a/libc++_shared.so
+SHA1-Digest: a/aNGLBFuPVh/rQxq2vKZCY5HIM=
+
+Name: res/drawable-hdpi/notification_bg_normal.9.png
+SHA1-Digest: ralFi/xjLzZzimSmlAGCFAUgfbE=
+
+Name: res/drawable-hdpi/sy37_bg_point_0.png
+SHA1-Digest: KqDeYSkUKpbpxFY3QUETvClI1rI=
+
+Name: res/layout/sy37_pay_dialog_portrait.xml
+SHA1-Digest: VA1b2r5VeXLnr0A7Dyih9dBFyg8=
+
+Name: res/drawable-xxhdpi/background_to_pause.png
+SHA1-Digest: bJVTnD1CX0ujMuBRLxvD3PtjHks=
+
+Name: res/drawable-xhdpi/sy37_splash_land.jpg
+SHA1-Digest: MH7ihHNol2tZ+zeVXuL8+LQwZOk=
+
+Name: res/drawable-xhdpi/hyberry_login_bg.png
+SHA1-Digest: eWmIzQ68i7UZaJ3VPMsIF9vHaCg=
+
+Name: res/drawable-xhdpi/hyberry_switch_camera_icon.png
+SHA1-Digest: BfW+W6An8qrB+uknC5jW/H0EDOA=
+
+Name: res/drawable-mdpi/notification_bg_normal_pressed.9.png
+SHA1-Digest: XM7feGbMa+T8EnwOVP4H5N5FDc0=
+
+Name: res/drawable-hdpi/sy37_icon_gift_finish_0.9.png
+SHA1-Digest: HZ3YypeLsQA8ZggOMoO8olpr9uo=
+
+Name: res/drawable-xhdpi/abc_btn_radio_to_on_mtrl_000.png
+SHA1-Digest: h9xb/y1vTncbTrp8yIjn7eRoG/w=
+
+Name: res/drawable/background_bubble_left.9.png
+SHA1-Digest: bk+uvoM3ZjPj9DQkyZzPMA1eE5A=
+
+Name: res/drawable-xxhdpi/hyberry_phone_normal.png
+SHA1-Digest: 4Vqj5PKUBuVa+29ljBCEi9OxME4=
+
+Name: res/drawable-xxhdpi/hyberry_mic_ban_icon.png
+SHA1-Digest: Hw3MQ8o/KvFf20oh7vq9c6qIKbA=
+
+Name: res/layout/sy37_web_tool_bar.xml
+SHA1-Digest: 9sBKigW5nf2henhqC5yEHptjdS0=
+
+Name: kotlinx/serialization/json/JsonObjectSerializer.kotlin_metadata
+SHA1-Digest: K2SeVHBzYFKjfTm9hYxlYDkbjSs=
+
+Name: res/layout/sysq_pay_dialog_head_failure.xml
+SHA1-Digest: 4u1OFMFJChmTfVO9ougqAzD7pWE=
+
+Name: res/drawable-xxhdpi/hyberry_network_error.png
+SHA1-Digest: W4qH5g5gwIAxAi7gqqN0yFtPDyc=
+
+Name: res/layout/sy37_activity_demo.xml
+SHA1-Digest: K30EjEaHrAMa+1R+7B3Xhp7K/Eo=
+
+Name: res/drawable-xxxhdpi/abc_text_select_handle_left_mtrl_dark.png
+SHA1-Digest: gmU/asd/wKsho+a3IpIs+2ucir4=
+
+Name: assets/image/smile/57.png
+SHA1-Digest: aUrWiBMcCX0BYHSm62tnhbZSZIs=
+
+Name: res/drawable-xhdpi/hyberry_checkbox_checked.png
+SHA1-Digest: Flk5H/wgx4KHURNxeZFCFm/f3h8=
+
+Name: res/layout/sysq_account_login_dialog_attach.xml
+SHA1-Digest: Kn44K9im9lUuIobLxt/6oHu10o0=
+
+Name: assets/image/smile/24.png
+SHA1-Digest: v87SsTdqlXEwirGHdqX2dvus8wo=
+
+Name: kotlinx/serialization/json/JsonElementSerializersKt.kotlin_metad
+ ata
+SHA1-Digest: FDI3F0XVoyQ6QC8ht2nChSt9VWk=
+
+Name: assets/image/smile/40.png
+SHA1-Digest: yai8I80D8MYklzIdgoEWkaKeoWw=
+
+Name: res/layout/sy37_kefu_reg_by_phonenum.xml
+SHA1-Digest: CzUQXqB8yw5YKr2wbqFlRQ02IAo=
+
+Name: res/layout/sy37_adapter_activities.xml
+SHA1-Digest: LKLm5GjPTfYcE5x9+QXz3HjTDxc=
+
+Name: res/drawable/notification_bg.xml
+SHA1-Digest: YZYGxHW5YmsU1rTWhCErmRefLMg=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_send.png
+SHA1-Digest: hV6FgjttxytGPa2Bolk+mWYa67E=
+
+Name: res/drawable-hdpi/mtp_huya_download_icon.png
+SHA1-Digest: K5PJTgwN6z9l+42HiPZqHRMxjME=
+
+Name: res/layout/sy37_view_game.xml
+SHA1-Digest: artNe7uJsgpKq6R9pqJSjhI/eFs=
+
+Name: res/drawable-xhdpi/hyberry_live_chat_expand_btn_pressed.png
+SHA1-Digest: otMThLHKT4vod7u+HIBkkdd7E5c=
+
+Name: kotlinx/serialization/json/JsonEncoder.kotlin_metadata
+SHA1-Digest: MV5KGlf+CYbyZiidh/NwXElX4c8=
+
+Name: res/drawable-xhdpi/remoteviews_notification_icon.png
+SHA1-Digest: CV9QiLjyce9BHUhkMoDUcpMAL/k=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_desc.png
+SHA1-Digest: rECWu4eq6stJXAZgxZGoF5Vokh0=
+
+Name: res/drawable/hyberry_shape_alert_bg.xml
+SHA1-Digest: +U8tC4ovLmUMdC2GxVXTd6VfOe4=
+
+Name: res/drawable-xhdpi/hyberry_start_live_btn_tip.png
+SHA1-Digest: EuLX51kiBN5JKpgB9PgRoQOdmbo=
+
+Name: DebugProbesKt.bin
+SHA1-Digest: mWMXvno72XQrLsQLWQgV8WVrOn4=
+
+Name: assets/oaid.dex
+SHA1-Digest: 3fJFG8zQgjnKX74cqsQvMkxQXIg=
+
+Name: res/drawable/sy37_window_user_bg.xml
+SHA1-Digest: jLf3V0CEtOgXeCIgWpIV/61SUJA=
+
+Name: res/drawable-mdpi/abc_text_select_handle_left_mtrl_dark.png
+SHA1-Digest: uq/qJD7rKhkbpyPMvTOim2053KY=
+
+Name: res/drawable/sysq_bg_float.xml
+SHA1-Digest: 7eNdg/bL18W44dX4KopMx0HHRp8=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_up.png
+SHA1-Digest: qjmMqC+YX0nyxdt8hblTPO3hNEc=
+
+Name: res/layout/abc_action_mode_bar.xml
+SHA1-Digest: YloBiPqfAN57A9eYX27z9mGCEu4=
+
+Name: res/drawable-hdpi/sy37_icon_line.png
+SHA1-Digest: QuI7kW1hLSqTgRQV1xyZiFKWowM=
+
+Name: res/drawable-xxhdpi/abc_btn_check_to_on_mtrl_000.png
+SHA1-Digest: xvH3+9y8HNviCPbOoz9lepKEFzA=
+
+Name: res/drawable-hdpi/sy37_down_1.9.png
+SHA1-Digest: DurS7P0Pys0W2DnNM6xNXXDJNx4=
+
+Name: res/layout/notification_media_action.xml
+SHA1-Digest: 4LEacpgd1rOJWScftkk9MNAqlQw=
+
+Name: res/layout/sy37_item_roast_view.xml
+SHA1-Digest: CcmTxcmhozW9gvJEsvbE4IWHTFY=
+
+Name: res/layout/sysq_dialog_login_view_phone.xml
+SHA1-Digest: EEki8u4gHPxNxLek8e0hHxKHKXI=
+
+Name: res/layout/sysq_doubt_guide_dialog.xml
+SHA1-Digest: lvfpO1kS2Ma6leiXQCRox/UvAjo=
+
+Name: res/drawable-hdpi/abc_ic_star_half_black_36dp.png
+SHA1-Digest: eQQh5aeKM/AY05jkg1A1q1bCpQ8=
+
+Name: res/drawable-hdpi/abc_text_select_handle_right_mtrl_dark.png
+SHA1-Digest: BQnCRl78cwIwg5JXXaAxfCbxtGc=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_target.png
+SHA1-Digest: vhd9VOIGL30yYiPmdZ8PgH7J9rc=
+
+Name: res/color/abc_tint_seek_thumb.xml
+SHA1-Digest: TAMFUEhMZLtiaKE8gETQcIRWui8=
+
+Name: res/drawable/sy37_kefu_submit.xml
+SHA1-Digest: +N9ohkIm+dgUr12DzBHjGukaWV0=
+
+Name: res/drawable/hyberry_video_rate_bg.xml
+SHA1-Digest: /RmmDXjtSjKty9kg9xGi3KEclqk=
+
+Name: res/drawable-xxxhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: hLDouoWL7HAYB0e4/tnvxihrDoc=
+
+Name: res/layout/abc_list_menu_item_checkbox.xml
+SHA1-Digest: +FgUjKE5l11HQvGgPuj6z6y/a/U=
+
+Name: res/layout/sy37_web_view_layout_title_bar.xml
+SHA1-Digest: gQi2z9EIUsBXg8nDrJ4TGjO+2QI=
+
+Name: res/color/abc_secondary_text_material_dark.xml
+SHA1-Digest: Mm46g3lv+tPVm66WxGGI53kQrGE=
+
+Name: res/drawable-ldrtl-xxxhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: fVWDV+rsrO7rxcZFUfmKYjRxZEs=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_left_tab_unselected.pn
+ g
+SHA1-Digest: 0Y4qItHSnxDmI9s6W7P9bKR+IJw=
+
+Name: res/layout/sy37_layout_auth_permission.xml
+SHA1-Digest: t5I1C8xmWjNwCo0RycI6oHwdfAg=
+
+Name: res/drawable/sy37_welcom_texture_bg.xml
+SHA1-Digest: OMT2INI7SomUsPeCJOk2CgZhZwY=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_middle_mtrl_dark.png
+SHA1-Digest: YQVXegdUPGvpPHvsEO9EtpBXV0g=
+
+Name: res/layout/sy37_home.xml
+SHA1-Digest: X6F/48N6m1MoAbNf005trLT5w80=
+
+Name: assets/image/smile/39.png
+SHA1-Digest: nTXbxSJygd34mo++NjsSzPnPg8E=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_ic_danmu_open.png
+SHA1-Digest: IKgkkSbX1YhVNYXo5rRhaR5SU7A=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_icon_people.png
+SHA1-Digest: UC0uv5nNzbOVLyNrEvigimwzkpg=
+
+Name: res/drawable-mdpi/abc_btn_switch_to_on_mtrl_00001.9.png
+SHA1-Digest: BShgmCB9r3vjFLZsy2GsJjQ8ZHg=
+
+Name: res/drawable/sy37_base_liveshow_player_edge.xml
+SHA1-Digest: upaO9KblzgrGAPoelzejPJNtB24=
+
+Name: res/drawable/sy37_kefu_progress.xml
+SHA1-Digest: cOB3uHIQNS6OVDkEgLWWycgeFv8=
+
+Name: res/anim/abc_slide_in_top.xml
+SHA1-Digest: /x3AbPnQbB3t69dVgY37+tz+m+c=
+
+Name: lib/x86/libyoume_voice_engine.so
+SHA1-Digest: TWpIhiow4f7RSVyE7y+TFniKrLQ=
+
+Name: res/drawable-xhdpi/sy37_icon_no_coupon_un_select.png
+SHA1-Digest: 4xLa14VffqNRW0H8mHTcEacxG08=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_customer.png
+SHA1-Digest: MCQs1/ycpQh/JBoumVbeysfP5iQ=
+
+Name: res/drawable-xxhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: n2t7IZLEWJnT0GlFsa5RwK7lKGk=
+
+Name: res/layout/sy37_base_web_dialog.xml
+SHA1-Digest: B47LUtX/ijNZQhLkm/335XfRYHk=
+
+Name: res/drawable-xxhdpi/sy37_scan_line.png
+SHA1-Digest: 9DkAABay+axuW2oMJk9pQXaruxo=
+
+Name: res/drawable-xhdpi/hyberry_preview_guide_bg_up.png
+SHA1-Digest: 5c+I7+ulbzUYuWKX/oSt21eJ4ew=
+
+Name: res/drawable-xhdpi/hyberry_floating_voice_close_pressed.png
+SHA1-Digest: UMBq9XETqBwG0OOcnwaj1cWqK8c=
+
+Name: res/anim/sy37_popwindow_bottom_out.xml
+SHA1-Digest: PRlV9nbHWdyyZUU7Tyu969sZNiM=
+
+Name: res/drawable-xxhdpi/hyberry_floating_fullscreen_pressed.png
+SHA1-Digest: h05vUmeVxo3Yc3vSsZQYcYVumFk=
+
+Name: res/drawable/sy37_submit_pressed.xml
+SHA1-Digest: r6uIK3jrbZ8tYF7uDhjlc/wXTME=
+
+Name: res/drawable-hdpi/abc_btn_switch_to_on_mtrl_00001.9.png
+SHA1-Digest: 7+3ZWYBJN6bjp8LVgfVbGqVYTdo=
+
+Name: res/drawable-hdpi/abc_text_select_handle_middle_mtrl_dark.png
+SHA1-Digest: POyfH8dFoW0F8wRoJRyINhzqIuo=
+
+Name: res/drawable-xhdpi/ic_share_more.png
+SHA1-Digest: EFNB8kmIC+TeOdWCEcrIF6kv3HA=
+
+Name: res/drawable-xhdpi/ic_open_wx.png
+SHA1-Digest: TJICNJKuCy4HKdp8tV0MlS0QRKU=
+
+Name: res/drawable-xxhdpi/sysq_ic_logo_union.png
+SHA1-Digest: 7ssJ44obfDlH0P87rQyEz5DFUKI=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_icon_room_people.png
+SHA1-Digest: Zx4cPKKRXl8Tju6XreCPVwpV/7U=
+
+Name: res/drawable-xxhdpi/hyberry_floating_close_danmu.png
+SHA1-Digest: 9WM7l14yJfr6fS6wFGHZyqDuvU0=
+
+Name: res/drawable-xxhdpi/abc_ic_star_half_black_48dp.png
+SHA1-Digest: vEJLmUKnbTQx7SdNZzIcFHWiueg=
+
+Name: res/drawable/hyberry_shape_bg_white_80_radius_100.xml
+SHA1-Digest: 2+3DRcFYcF3DQ7gtFAghCNxxSMM=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_left_tab_selected.png
+SHA1-Digest: Dq8gaY5+/Aes197JSSDg3Kyfmy0=
+
+Name: res/drawable-xhdpi/sy37_icon_back.png
+SHA1-Digest: yXusyskKiay/aGem5EZQbetYalI=
+
+Name: res/drawable-hdpi/sy37_icon_close.png
+SHA1-Digest: Riw5FGsQjZp6Ft5hGs4MD4zqQB0=
+
+Name: lib/arm64-v8a/libemulator_check.so
+SHA1-Digest: O/MVgbFbu/UjvHuEB4ZaL1wiKI8=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_im_room_avatar.png
+SHA1-Digest: VMAJ6EziRQFYLxrhzVvDYh3EAxg=
+
+Name: res/drawable/abc_textfield_search_material.xml
+SHA1-Digest: yorJOYHC83QpyhxeBSK4JXRgqKU=
+
+Name: res/drawable-xxhdpi/sysq_ic_pwd_show.png
+SHA1-Digest: f+EPn+rJ/ciZrXxOjgUYYLm1Isc=
+
+Name: res/drawable-mdpi/abc_textfield_activated_mtrl_alpha.9.png
+SHA1-Digest: w3jIfB4ivh6zH+yzZuKu//D3goI=
+
+Name: res/layout/sy37_layout_history_search_dialog.xml
+SHA1-Digest: UOhz5pa+cZMmxKJS3OqcCJMRFD8=
+
+Name: res/drawable/test_bg_contentview.xml
+SHA1-Digest: ef96P9xauQtQdAgbSdGjFz9TcI8=
+
+Name: kotlin/kotlin.kotlin_builtins
+SHA1-Digest: 5sYmZaQmdTqylpwAAR24X7kpoIc=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_bg_port.png
+SHA1-Digest: iyollRTCNpIynMT6LFEpfkuqU74=
+
+Name: res/drawable-v23/abc_control_background_material.xml
+SHA1-Digest: oNBpvGD1toxRhYTdzBPTshDybjY=
+
+Name: res/drawable-xxhdpi/hyberry_floating_voice_close_pressed.png
+SHA1-Digest: 8IP9t8fePHplvYlUVhoq7a/ec3o=
+
+Name: res/drawable-xxhdpi/hyberry_huya_logo.png
+SHA1-Digest: Ta1lnIEH6FmQ3hGOLJSnJVTHv0c=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_dialog_cancel.png
+SHA1-Digest: 3Qf3bTE7uabeG8bZRpNipgP3M3o=
+
+Name: assets/image/smile/55.png
+SHA1-Digest: 5QZquZNNBsn0rYN2BZv1JHBZtqk=
+
+Name: assets/image/smile/12.png
+SHA1-Digest: AiacxH4H+JiwaNpLEaJnEjccyLw=
+
+Name: res/drawable-xhdpi/notification_bg_low_pressed.9.png
+SHA1-Digest: BzhvBeft2kMMmg4dwHk5bYQPZiw=
+
+Name: res/drawable/sy37_icon_account.xml
+SHA1-Digest: W7uORaJDsR29wdY1ILZMINszryY=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_horn_small.png
+SHA1-Digest: BrVjAxsIu5R7YZvzTD4VBG+CRtI=
+
+Name: res/drawable-xxhdpi/hyberry_stoplive_btn_pressed.png
+SHA1-Digest: dF6Ow3q576e4uzoY/+fr1tCX+tY=
+
+Name: res/drawable-mdpi/abc_scrubber_control_off_mtrl_alpha.png
+SHA1-Digest: i3AN/o3LJoVLXD67fTL8ocimn2E=
+
+Name: res/drawable-xhdpi/sq_icon_customer_phone.png
+SHA1-Digest: 9mEjWe6ZioVKFOgtjR2ld9zCNJA=
+
+Name: res/xml/provider_file.xml
+SHA1-Digest: aG3KXuc/SHvCH0qi9yY6DNzbATs=
+
+Name: res/layout/abc_action_bar_up_container.xml
+SHA1-Digest: XBOKgRINxnfpTTQq9nybqJn3+4o=
+
+Name: res/drawable-xhdpi/ic_close_share_dialog.png
+SHA1-Digest: mCTmR02dGtw+FbmY78YmJ2iaFGI=
+
+Name: assets/supplierconfig.json
+SHA1-Digest: O1hPF+t2ZrCRv2d8fmGopgebPJM=
+
+Name: res/layout/abc_cascading_menu_item_layout.xml
+SHA1-Digest: 3KCTLo+hwTamQSboY8SBraVVDTM=
+
+Name: res/drawable-hdpi/sy37_icon_bind_mobile.png
+SHA1-Digest: loKSvrLOYINgZ6SCr3lNeD5znts=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_bg.png
+SHA1-Digest: FVkBKcgZojT5uy/GTo7HpdDa6/U=
+
+Name: res/drawable-hdpi/sy37_web_view_img_title_close.png
+SHA1-Digest: +u5VL/BsPrjFC+7QcOiic4oX/sU=
+
+Name: res/layout-port/sy37_layout_liveshow_room_list.xml
+SHA1-Digest: Ri+nESZONrHWdkbe59Z5Q8yzKzg=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_horn_small.png
+SHA1-Digest: cOBVaDhPIxz1mO1B8TGm4SN/Ngk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_title.png
+SHA1-Digest: OQtCMjbCxXuzG38oM/kNoVa7Flg=
+
+Name: res/drawable-xxhdpi/sy37_webview_loading1.png
+SHA1-Digest: gDR4W1o77ZJmgrabd5zgnmPfmWQ=
+
+Name: lib/arm64-v8a/libmmkv.so
+SHA1-Digest: rzFj7Z+PbCTJCWyZ3BvC8iFkdig=
+
+Name: res/drawable-hdpi/sy37_web_view_default_net_error.png
+SHA1-Digest: 4waWyi+TtYIG3QajqgTTCxXIqyM=
+
+Name: res/drawable-ldrtl-hdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: GnQHgopmZcVc0gCuTpO72BC8WfA=
+
+Name: res/drawable/abc_ic_menu_overflow_material.xml
+SHA1-Digest: l7LmBV94YTOjXM6LP/pW/RBjqNI=
+
+Name: res/drawable-hdpi/qqlogin_icon.jpg
+SHA1-Digest: rqobehLYSzQ9Z4TIXrUKfVCo+U8=
+
+Name: res/drawable-xhdpi/hyberry_floating_voice_close_normal.png
+SHA1-Digest: UMBq9XETqBwG0OOcnwaj1cWqK8c=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_bg_land.png
+SHA1-Digest: ix43eV0n+sWlJADecNyyNkPzuao=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_down_2.png
+SHA1-Digest: 9uhyFbEJpLWrGT1N6FwHA84Mlfs=
+
+Name: res/layout/sysq_face_warning_dialog.xml
+SHA1-Digest: Pt1k9S7SSJOBCtWCXs4s4xDSuVo=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_cover_icon_people.png
+SHA1-Digest: craAtXjuLbJZAVK7GP4WBb6oz3I=
+
+Name: res/drawable/abc_edit_text_material.xml
+SHA1-Digest: TW3VKWWrGhfvF7sladODXhXr/bs=
+
+Name: res/drawable-xxhdpi/sy37_webview_loading3.png
+SHA1-Digest: 0c2/NHB+1St93RNHqaMOy/V+ay8=
+
+Name: res/drawable-xxhdpi/sy37_live_show_full_screen_back_icon.png
+SHA1-Digest: tiB5tkEELoIE6tDhLUOmNwupZ2c=
+
+Name: res/layout-port/sy37_tab_item_room_left.xml
+SHA1-Digest: OrfnrpT+Uigl/E9mZd/yVLqZcMo=
+
+Name: res/drawable-mdpi/abc_ic_star_black_36dp.png
+SHA1-Digest: b1A+49CQbTsiy08NW+AFfIZSj9w=
+
+Name: res/drawable-hdpi/sy37_message_tip.9.png
+SHA1-Digest: +K0DprtDbaj7PkgVHzzJv6Uuygo=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_account.png
+SHA1-Digest: qhZqLpSDFDKsIEewht4dA77e3iE=
+
+Name: kotlinx/serialization/json/internal/AbstractJsonLexerKt.kotlin_m
+ etadata
+SHA1-Digest: ZRZVLzTVy3v8Yo8WRO1fLd/XwpI=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_center_2.png
+SHA1-Digest: 31d4mROM/Dg5HnWRX74V/URFZZ4=
+
+Name: res/drawable-xxxhdpi/abc_switch_track_mtrl_alpha.9.png
+SHA1-Digest: mxPIPxC5eJ5IawxHNtpbpkKLvpw=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_guide.png
+SHA1-Digest: RFX7QeyQ3nPQnuw6tDA5WN0QXBU=
+
+Name: res/drawable/hyberry_resolution_text_color.xml
+SHA1-Digest: LaViSZXi7lknkrMsXxHZzMM9atg=
+
+Name: res/layout/sy37_s_login_dialog_360.xml
+SHA1-Digest: lXw4vS6PlOD/Vv1FF9LNZ3DfFnY=
+
+Name: res/color/switch_thumb_material_dark.xml
+SHA1-Digest: 13JXFG3xyeNPzVCt0ilWptkiLdk=
+
+Name: res/drawable-mdpi/abc_ic_star_half_black_36dp.png
+SHA1-Digest: CmOteym4sNWBck2TyCjE7HD4plk=
+
+Name: res/drawable-hdpi/sy37_top_bg.9.png
+SHA1-Digest: L8YQ+ezIoitrsTZls/YOBSx1gIU=
+
+Name: res/drawable-xxhdpi/sysq_ic_face_verify_success.png
+SHA1-Digest: 1fAVWDFBQWCWmtKr1MMcHKonrlw=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_coupon_left.png
+SHA1-Digest: tP/NWRj8e9Kpy75WiiIT6DijkJQ=
+
+Name: lib/x86/libmsaoaidauth.so
+SHA1-Digest: 05mcO4d6mXWZNEafKYMaDBNTt8I=
+
+Name: res/drawable-xhdpi/notify_panel_notification_icon_bg.png
+SHA1-Digest: cuJ+cwlm5QO6frAFAjbS9w6zhJ4=
+
+Name: res/drawable/sy37_kefu_progress_simple.xml
+SHA1-Digest: oEZfI9mhsTUjyucQnmYyjsNhbV8=
+
+Name: res/drawable-hdpi/sy37_retrieve_password.png
+SHA1-Digest: NiXzYIzKZx/8RHkOawMvl1XOCtE=
+
+Name: res/anim/abc_tooltip_enter.xml
+SHA1-Digest: gcx6jMaCLC+M8wZYxX+Ccy1rSvY=
+
+Name: res/drawable/sy37_web_view_default_loading_anim.xml
+SHA1-Digest: wAEfY8VMLxGBdl8oACFkPAVIUlU=
+
+Name: lib/armeabi-v7a/libhyutils.so
+SHA1-Digest: 3KaJlKbpk8FnysA+lT5uybByC48=
+
+Name: res/layout/sy37_netload.xml
+SHA1-Digest: sDmzDDg1pQ3HhfDg5SetI+lSBMg=
+
+Name: res/drawable-xhdpi/abc_list_divider_mtrl_alpha.9.png
+SHA1-Digest: B+V5QEOwy10ghi7uX5XLTPFJGJs=
+
+Name: res/drawable-xhdpi/hyberry_mic_ban_btn_normal.png
+SHA1-Digest: u9hVfSuVmytWaxOrV4rVtGus9ts=
+
+Name: res/drawable/sy37_confirm_dialog_bg.xml
+SHA1-Digest: teMgrxhPe4BNewFaMj+s7UQvj+E=
+
+Name: res/drawable/sy37_check_selector.xml
+SHA1-Digest: AwhgdK4KUyJNtZ5rBjqTAUT3UMg=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_dialog_desc.png
+SHA1-Digest: 72sQix11q9i5dFSbdiz6QxbsMk4=
+
+Name: res/drawable-xxhdpi/abc_list_longpressed_holo.9.png
+SHA1-Digest: Ttj4Ojp5fjj5Q75qpXwKiFMwyfg=
+
+Name: res/drawable/background_bubble_bottom_right.9.png
+SHA1-Digest: mxjx2xhAhv1c/s2ZZorir6N0gkk=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_horn.png
+SHA1-Digest: eQW0BrHk7NLuoFFX1sd6Xz3I+ng=
+
+Name: res/layout/hyberry_activity_player.xml
+SHA1-Digest: 9Bc7pP6SMgFMsMnftzfGUB1bkig=
+
+Name: res/drawable-mdpi/abc_list_selector_disabled_holo_dark.9.png
+SHA1-Digest: 17F2N9KIPEmz6klrBSo83JunFuE=
+
+Name: res/drawable/sy37_pay_load_wait.xml
+SHA1-Digest: B5SwNJHG9SYpVKFTJ+sUla1sXeo=
+
+Name: res/drawable-ldrtl-hdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: L9+4buIjKx5vfOxyxB8vvbKmt3M=
+
+Name: res/drawable-hdpi/sy37_icon_confirm_0.9.png
+SHA1-Digest: Vk8ZI3NA7dBiQgizaT7NzwtPDu8=
+
+Name: res/drawable-xxhdpi/sysq_pay_ic_close.png
+SHA1-Digest: Z6iymF46ks48gJJI0F1Bo8qKZAc=
+
+Name: res/drawable-hdpi/sy37_background.9.png
+SHA1-Digest: RTukFfxt9xUGv9CzjT2b7La/OIk=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_icon_enlarge.png
+SHA1-Digest: oYr56RmhvW0MQ3MTACqMTbVlZCw=
+
+Name: res/layout/sysq_dialog_login_view_wechat_v2.xml
+SHA1-Digest: enjrWiwVGFjNPqxqmw5eH/iBZuE=
+
+Name: res/drawable-xxhdpi/sysq_ic_face_verify_close.png
+SHA1-Digest: CvOs68nrPYmeoIBZP+XlVg82OXA=
+
+Name: res/drawable/hyberry_common_checkbox.xml
+SHA1-Digest: kVEh6B+ghDalXTNxe3Sz9xjA0Mo=
+
+Name: res/layout/sy37_net_error_view.xml
+SHA1-Digest: ZSMD66jjgual2H9cL3KoXFxaWq8=
+
+Name: res/drawable/ic_webview_close.xml
+SHA1-Digest: RLS4cUxknrQo7HK+TRPufSvX2x8=
+
+Name: res/drawable/sy37_bg_auth_btn.xml
+SHA1-Digest: 82Gb6G1dakgDCromKaWR4aO5icA=
+
+Name: res/drawable/sy37_select_pway.xml
+SHA1-Digest: Gy2nsv1uEcacvw3/0+Q4KP689Zg=
+
+Name: lib/arm64-v8a/libhydeviceid.so
+SHA1-Digest: oIi+2dlJ8A02/WmAxxvY/UkD1MQ=
+
+Name: res/anim/dialog_anim_exit.xml
+SHA1-Digest: VCAzn/tG/91xH9xhLksGTkrobkQ=
+
+Name: res/drawable-xhdpi/sy37_icon_pway_select.png
+SHA1-Digest: l8VRA9g6xkRI7qSZaPaebdiOqB4=
+
+Name: res/drawable-xhdpi/abc_ab_share_pack_mtrl_alpha.9.png
+SHA1-Digest: I3YSmk44nlPBqXPhCeiPGFYY+wU=
+
+Name: res/drawable-mdpi/abc_cab_background_top_mtrl_alpha.9.png
+SHA1-Digest: FA9EgD1hzzHOd/RdS9z1h32Nb2w=
+
+Name: assets/image/smile/26.png
+SHA1-Digest: 5/3dSOCItMBzm667/ekJKrfIhno=
+
+Name: res/drawable-hdpi/sy37_btn_back_bg_down.png
+SHA1-Digest: pfsTJVLK6eIAbEOwVyd7Hr2cgXA=
+
+Name: res/drawable/sy37_bg_layout_auto_login_account.xml
+SHA1-Digest: NAvSu74C6UYk7144Y0wEekZfppw=
+
+Name: res/drawable/sy37_reg_normal.xml
+SHA1-Digest: nDXQVv6HGb/hjiuKzb/4mA2wk14=
+
+Name: res/drawable/hyberry_mic_btn.xml
+SHA1-Digest: zTC+0s/Uk9vvl3bZK6Yfi0+clo4=
+
+Name: res/drawable-xhdpi/hyberry_code_selected.png
+SHA1-Digest: ci71letRkPtvh/5FDZeJ8nSC9YI=
+
+Name: kotlinx/serialization/json/JsonNullSerializer.kotlin_metadata
+SHA1-Digest: fDpVcpVNnl5uNDHIA5viKhx5pg4=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_red.png
+SHA1-Digest: G91fJs/C0dagtGUraBB3j8Qr/js=
+
+Name: res/drawable-xxhdpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: KyQ8UFCqw+GXo41JV0/6EjAOBjI=
+
+Name: res/drawable-xxhdpi/cancel_pressed.png
+SHA1-Digest: KQJjHo16Sdx+7K9E6jzDxDDB8KM=
+
+Name: classes.dex
+SHA1-Digest: x/bi0jic9EddhfUr4z73LhJ2AHU=
+
+Name: res/drawable/shape_alert_bg.xml
+SHA1-Digest: nHn/j0HUsOq9oKf+AT8Z08QrWxk=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_bbs.png
+SHA1-Digest: owvG25MAz2iPgLrghxCHr2kSwR0=
+
+Name: res/drawable/hyberry_anchor_modify_nickname_btn.xml
+SHA1-Digest: cCb7UEaFwUbf2MbczCW8rECGecY=
+
+Name: res/layout/sy37_kefu_wallet.xml
+SHA1-Digest: /MQ+OJkg21WZws9fq9Q2WzkGL2Q=
+
+Name: res/layout/hyberry_floating_view_edit.xml
+SHA1-Digest: fY16MEEelgXL/uaTX1txl42AKKg=
+
+Name: kotlinx/serialization/json/internal/JsonTreeReader.kotlin_metada
+ ta
+SHA1-Digest: yYQDtfzrhECWBPnyEinvsWb/lxc=
+
+Name: res/layout/sy37_m_notice_dialog.xml
+SHA1-Digest: tGJzgDI3Aa+WetQeMa7ZVLaTkWE=
+
+Name: res/layout/activity_web_view.xml
+SHA1-Digest: Bpza/jjiu8UF2aYefxWxyRmMT7Y=
+
+Name: res/drawable-xxhdpi/sysq_bg_face_verify.png
+SHA1-Digest: /6jN1ZxowpmnLkL/DdmRJdMJiiY=
+
+Name: lib/armeabi-v7a/libhyrtmpupload.so
+SHA1-Digest: wyvVZf/dIaP7NAbaYPOrSLwXk8k=
+
+Name: res/layout/sysq_age_appropriate.xml
+SHA1-Digest: po8cLDaLOhLbTMhc2YauBofmoCo=
+
+Name: res/drawable-mdpi/abc_scrubber_track_mtrl_alpha.9.png
+SHA1-Digest: tlbhDMsXZRxi3i2zSOW2Ylmm6lg=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bt_check_new_message.png
+SHA1-Digest: RlK9ez223umZ9vFpaFD7CWAprwI=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_dialog_join.png
+SHA1-Digest: RuukKDMf75RkFcdVNpZ/xxoA23c=
+
+Name: res/drawable-xhdpi/progress_loading_8.png
+SHA1-Digest: Zsw8+P2vDTsv8VpQY2Xk4iGi1io=
+
+Name: res/drawable/hyberry_start_live_floating_icon.xml
+SHA1-Digest: 3+Cydyhm02BUEqWVXE3cccc8Oos=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_back.png
+SHA1-Digest: wsfYKwQ5tMOEU72bc1M2EZl2pIw=
+
+Name: res/color/sy37_text_color_change.xml
+SHA1-Digest: oUH5PluncJlxK8sEBO9kvWPSI5U=
+
+Name: kotlinx/serialization/json/JsonObject.kotlin_metadata
+SHA1-Digest: Fpn9vtzo4hnGZBVn7zANSD0dyK4=
+
+Name: res/drawable-xxhdpi/sysq_ic_avatar_selected.png
+SHA1-Digest: DEbhz78XDeN7SoLDQcDZWWmisFM=
+
+Name: res/layout/sy37_web.xml
+SHA1-Digest: Ce9QwhbZbgMtT1h3BIJHmq1QNQc=
+
+Name: res/layout/abc_alert_dialog_button_bar_material.xml
+SHA1-Digest: 5mrPyuLQfEVTb3Gclxr0KRNm/B8=
+
+Name: res/drawable-hdpi/sy37_detail_downlayout_bg.png
+SHA1-Digest: fKOVBcMbqP9RcD1Hoa1Om2hcdN8=
+
+Name: res/drawable-xxhdpi/sy37_ic_float_shake_check.png
+SHA1-Digest: NAkNgc+CIuNQvzx7DVdI6rQqEwo=
+
+Name: res/drawable/sy37_txt_liveshow_send.xml
+SHA1-Digest: KEdcTvdSDgveuL6CKNpxCD7AAhQ=
+
+Name: res/drawable/sysq_dialog_login_privacy_check_box.xml
+SHA1-Digest: tT3REOotMcnUNoXeO60q04dHIog=
+
+Name: res/drawable-xxhdpi/hyberry_continuelive_btn_normal.png
+SHA1-Digest: qQPPJDHV2JCVJO4BWmkBkO/jln0=
+
+Name: assets/libwbsafeedit_x86
+SHA1-Digest: Nh3g5KIJXoD6nHxNK2GnbMGAu/4=
+
+Name: assets/image/smile/2.png
+SHA1-Digest: ICNZ4gw3oxWoTNULMJCu1X28LNA=
+
+Name: res/drawable-xxhdpi/hyberry_continuelive_btn_pressed.png
+SHA1-Digest: P+cUpM42/+ul/Xsqp+Hi6F4Cvm8=
+
+Name: res/drawable/sy37_base_common_loading_bar_anim.xml
+SHA1-Digest: ue+LSpR/ZWi7VBsJMig75w8oxa4=
+
+Name: res/drawable-xhdpi/abc_scrubber_primary_mtrl_alpha.9.png
+SHA1-Digest: /HIhwwGJjYpGLULlHuRkrdAlAXA=
+
+Name: res/drawable/sy37_shape_gray_radius_5.xml
+SHA1-Digest: nBJmk+TMQmuUquUs06f3WVTEVEI=
+
+Name: res/drawable-xhdpi/abc_list_pressed_holo_dark.9.png
+SHA1-Digest: MezqkUDSSwyEtAdRxKIWA4DGZCk=
+
+Name: lib/x86/libBugly.so
+SHA1-Digest: 0ZfxJ/sXBwUfr5GDEW92zoh+ezU=
+
+Name: res/drawable-hdpi/abc_btn_check_to_on_mtrl_000.png
+SHA1-Digest: UWWU9aFhXt2HTKHmtijjW8iQy+I=
+
+Name: res/layout/sy37_wxentry_main.xml
+SHA1-Digest: GHeoOm+aJyQu9OxiiqVqa64pZGQ=
+
+Name: res/drawable/test_bg_decorview.xml
+SHA1-Digest: lAj1YsBRnyO0WzO24sGT0x9wGlg=
+
+Name: res/drawable/sy37_shape_one_key_bg_j.xml
+SHA1-Digest: uje2OBnZbSCz+Xk/eJa1SfSA3uI=
+
+Name: res/layout/abc_screen_simple_overlay_action_mode.xml
+SHA1-Digest: gOcaGQAJNTAbZUn26AIqu+0GMt0=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_strategy.9.png
+SHA1-Digest: /5bnu/m9P7nkOR/K6CAgJ0G9YJA=
+
+Name: res/drawable-hdpi/sy37_icon_reg_phone.png
+SHA1-Digest: lqL9qCJEewhe104/rflKrTIx9V8=
+
+Name: META-INF/services/javax.ws.rs.ext.MessageBodyReader
+SHA1-Digest: nE4joHf340zTEN5s1Ka8p0GtOWs=
+
+Name: res/drawable/hyberry_shape_component_bg.xml
+SHA1-Digest: L7xVRg9ycB8BUkd8+CaZj3QmF+Y=
+
+Name: res/drawable/hyberry_shape_bg_white_60_radius_10.xml
+SHA1-Digest: NFTtA/HU92urliOczoROz691Cog=
+
+Name: res/layout/hyberry_service_tool_menu_layout.xml
+SHA1-Digest: srF3QgNvDtfncyhfDqoc72vjYhk=
+
+Name: res/drawable/sysq_bg_blue_corner.xml
+SHA1-Digest: xQmK0uP/jzvinrVviejPVtMg3+E=
+
+Name: res/layout/sy37_base_liveshow_floatview_mask.xml
+SHA1-Digest: SlyxDREVtLONHOAmpRsKCUT4hNc=
+
+Name: res/drawable-xxhdpi/hyberry_floating_close_normal.png
+SHA1-Digest: l/uEnbd88VOQFty39/5Xn0sO3ew=
+
+Name: res/drawable/sy37_shape_pay_refresh_button_bg.xml
+SHA1-Digest: TRxZjTPPqVgICJ6iEaImV7e61jc=
+
+Name: assets/image/smile/14.png
+SHA1-Digest: ZJSxz59lDmoVnD3kjVhluC2jgNo=
+
+Name: res/layout/sysq_pay_dialog_trade_landscape.xml
+SHA1-Digest: h4Ma2XJJauhRZXfnev1hm5LDc38=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_ic_room_list_close.png
+SHA1-Digest: Ehk4F4vijgSs/IoiOebRLlFQ6aM=
+
+Name: res/drawable-xxhdpi/hyberry_pauselive_btn_normal.png
+SHA1-Digest: rp+cFIqqTNaIcUXq6EUsRib10Fg=
+
+Name: res/drawable/sy37_bg_org.xml
+SHA1-Digest: PNLh9SBwbtIPhtQn3D0LQfnY0Dw=
+
+Name: res/layout/sy37_s_reg_view.xml
+SHA1-Digest: 1Nh3wRWiOEdgCdk6BeRn13Wy1yY=
+
+Name: res/drawable/sysq_dialog_login_secondary_btn_bg.xml
+SHA1-Digest: y3ft9zL87P8TJCZzVgizkOodDRw=
+
+Name: res/drawable/sysq_dialog_login_gray_bg.xml
+SHA1-Digest: i6aSPDnDy2pC97KqoxoH6kaldOo=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_middle_mtrl_light.png
+SHA1-Digest: MIIOS76JbXB+sAkPUvepKa+vGWo=
+
+Name: res/drawable-xhdpi/hyberry_kaihei_arrow.png
+SHA1-Digest: oKGRnf5gBWFpfBxvigyTY0XlWbQ=
+
+Name: res/layout/sy37_view_bottom_delete.xml
+SHA1-Digest: Ncc8PUra3wTgr9Ke/s3nHldf/uA=
+
+Name: res/drawable/background_to_pause_selector.xml
+SHA1-Digest: fU4bHTFB+XROahvFLexKzCrydIA=
+
+Name: res/drawable/abc_ratingbar_material.xml
+SHA1-Digest: 0Ptwdk9ZdlvrxTw8lR/GNR63w4Y=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_huabei.png
+SHA1-Digest: oJwt+yeWqjkYRDFgBqy3r7e4b10=
+
+Name: res/drawable/account_dialog_bg.xml
+SHA1-Digest: nWW0UEzPfT1hAGfuSefzjsxBnsA=
+
+Name: res/drawable/face2.png
+SHA1-Digest: mJWQTkg2+JFLG6V5k3+I8LgnZJg=
+
+Name: res/drawable-xxhdpi/sysq_ic_float_head.png
+SHA1-Digest: dIwY/WfljUnNxLO4b/vf7Tv5pa4=
+
+Name: res/layout/sysq_policy_dialog.xml
+SHA1-Digest: 6EuWmWJCJTAO1IwioJiP2/lNLsA=
+
+Name: res/drawable-hdpi/sy37_security_center.png
+SHA1-Digest: p98+FJVkfOfzdePrgLUujz/Dwis=
+
+Name: lib/armeabi-v7a/libnsdt.so
+SHA1-Digest: R8C/VUVzp66cWSuuiNhqt0YYBTc=
+
+Name: res/drawable-ldrtl-hdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: FxjgXmDlWk8IXh70BdYxQtmnSF8=
+
+Name: res/drawable/sy37_web_view_shape_progress_load_bg.xml
+SHA1-Digest: v83GUl+/QVO7pFaCEaJH9gEdpVE=
+
+Name: res/drawable/sysq_coupon_no_select_rb_bg.xml
+SHA1-Digest: 0jDUfl/9GrAhThNo5S5jBz/+slQ=
+
+Name: res/drawable-xxhdpi/hyberry_end_live_bg.webp
+SHA1-Digest: Q2bJHAQPx232dpPE1K4sJjGdojg=
+
+Name: res/drawable-xxhdpi/sysq_ic_back.png
+SHA1-Digest: Ye/MyvQm9pUt3qbTOoYUZHmKqMc=
+
+Name: res/layout/sy37_kefu_account_manager_view.xml
+SHA1-Digest: BbWEZ2vG2JXxw5W6zCqpl/b3gH0=
+
+Name: res/drawable-hdpi/sy37_share_wx_online.png
+SHA1-Digest: WwfGbObsViCiSJ5rmqi+WRFskUM=
+
+Name: res/layout/abc_dialog_title_material.xml
+SHA1-Digest: aw8pWT3HjGeRYL2R3WS16WuqLFM=
+
+Name: res/drawable/hyberry_floating_full_screen.xml
+SHA1-Digest: +o2egZfiVoSBaQFNdPfmoiVD0Go=
+
+Name: res/drawable-xhdpi/abc_list_selector_disabled_holo_light.9.png
+SHA1-Digest: Rfsgcq80xg8bFHFCh0m1hSazCLU=
+
+Name: res/drawable-xhdpi/abc_btn_check_to_on_mtrl_015.png
+SHA1-Digest: lcJn8kD6MOEj3AFqwpcH1+zJpIY=
+
+Name: res/drawable-xhdpi/hyberry_floating_fullscreen_pressed.png
+SHA1-Digest: 5Ju8K6JgcZvmgkWoro07FmTx7ns=
+
+Name: lib/armeabi-v7a/libhyssl.so
+SHA1-Digest: mLAhapXZj6z4WnfxK7+NrDJVq5M=
+
+Name: res/drawable/face16.png
+SHA1-Digest: kvTZaMiTXwVNXR39kt3cmkLfIs0=
+
+Name: res/drawable-xxhdpi/base_presenter_avatar_default.png
+SHA1-Digest: DI/ezRIBvrRnkP7L6ycKdALr3s8=
+
+Name: res/anim/sy37_loading.xml
+SHA1-Digest: D6tF+YPPOahHsmscnR6J8e+c3pE=
+
+Name: res/layout/sysq_pay_labor.xml
+SHA1-Digest: ZI66nz6GItxOy1LlcnKCwbazCh0=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bottom_bg.png
+SHA1-Digest: eOdhG0VcLJpFJ9S8bQlVy9k+gRE=
+
+Name: res/drawable-xhdpi/abc_ic_star_black_48dp.png
+SHA1-Digest: vtDPk0TLYBBzQxoTuzAY/w1SkPE=
+
+Name: lib/arm64-v8a/libhyrtmpupload.so
+SHA1-Digest: khRlPpqYFh86iFS2dwuieEiKV/I=
+
+Name: kotlinx/serialization/json/internal/ComposerForUnsignedNumbers.k
+ otlin_metadata
+SHA1-Digest: CGrwmF+zqJ+kcukw56VDU4HFWsg=
+
+Name: res/drawable-xhdpi/hyberry_checkbox_uncheck.png
+SHA1-Digest: tT7f0+Er1WBslq3vU083sJaVmnU=
+
+Name: res/color-v23/abc_tint_spinner.xml
+SHA1-Digest: 2a4pmhMirqPDsmp8z5pU+g24FcI=
+
+Name: res/drawable/state_button_default.xml
+SHA1-Digest: IDNwCH64WRRt4dFujj/bRg0ddTk=
+
+Name: res/color/abc_background_cache_hint_selector_material_dark.xml
+SHA1-Digest: xuK+54v4mnl80qstzSmG8kSSU/4=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_right_mtrl_dark.png
+SHA1-Digest: eXpHsKhUWPFOZPkKlLFLqd2Bu4c=
+
+Name: res/layout/sysq_reg_success.xml
+SHA1-Digest: fOqTUsD9bWS8z098ilan9E05IrU=
+
+Name: res/layout-land/sy37_web_dialog.xml
+SHA1-Digest: RuoJ1sQ4xl4hFR1td06C8W8PhVU=
+
+Name: res/drawable/hyberry_common_button_bg.xml
+SHA1-Digest: kEqAJgegHmozUKt45JJeO+ng/+U=
+
+Name: res/drawable-hdpi/sy37_icon_gift_default.png
+SHA1-Digest: y0awzQJfR8wFNjFFH58YmuAgs0M=
+
+Name: res/drawable-xxhdpi/sysq_ic_back_white.png
+SHA1-Digest: pjSwspfVXCQOlh7bGSQaFrCahXU=
+
+Name: res/layout/sy37_multi_account_item.xml
+SHA1-Digest: 5TLWGOY7r0DWeV357+Hu3nL0OHY=
+
+Name: res/layout/abc_search_view.xml
+SHA1-Digest: hHW0lR6f7uA+UDI7e1xuhOJCOGo=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_guide_small_video.png
+SHA1-Digest: VbKABRbqKIlOx5Tpk1IWHCd/CPg=
+
+Name: res/drawable-hdpi/sy37_web_view_img_title_refresh.png
+SHA1-Digest: xrehRmcJ50am9r/d1EfGlxJ2fic=
+
+Name: lib/x86/libmarsstn.so
+SHA1-Digest: JNIHW74G0Kv0sBEGKWgAk+AhwbI=
+
+Name: res/drawable-xhdpi/ic_reg_qq.png
+SHA1-Digest: AFYMWesZpiLb1Wcp/E/TYyK9v80=
+
+Name: res/drawable/sysq_dialog_login_green_bg.xml
+SHA1-Digest: /yMgG2PWhwubOFYZ9zhZxEKDU/s=
+
+Name: res/drawable-xxhdpi/hyberry_item_live_list_mask.png
+SHA1-Digest: N6wid+/C0eJfT3N1qmQzSk2DhZE=
+
+Name: res/drawable/sy37_dialog_tips_bg.xml
+SHA1-Digest: oYH4AmnLRMlrKUjU2Evnus1HCOk=
+
+Name: res/layout/hyberry_small_window_preview_guide_up.xml
+SHA1-Digest: AnOefBGAAW/NHPufhEuTR70eFQs=
+
+Name: res/drawable-hdpi/sy37_desc_title_bg.png
+SHA1-Digest: s8a0fJ1rUvy0ofi893k6feO/WeA=
+
+Name: res/drawable-xxhdpi/sysq_ic_avatar_unselect.png
+SHA1-Digest: t2wHyIJL3ACwWwFOJJDrjHpK7XU=
+
+Name: res/drawable-xhdpi/ic_login_psd.png
+SHA1-Digest: Wa+TYbyQhA/vDcXx3Zj5OfkqZ+4=
+
+Name: res/layout/hyberry_fragment_line_list_portrait.xml
+SHA1-Digest: Gv+QyXlP0aP0vNgfbxcmHHARzms=
+
+Name: res/drawable-xhdpi/hyberry_phone_selected.png
+SHA1-Digest: eUsqWuksEi7m33MwORgGMnoBnzs=
+
+Name: res/drawable-xhdpi/progress_loading_6.png
+SHA1-Digest: lU+Z70muI0Hw9i6GOshzhyRp/nc=
+
+Name: res/drawable-xxhdpi/sysq_item_account_wechat.png
+SHA1-Digest: CN31+dGfebQ9PXNNhUNIiNqm+6c=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_left_mtrl_dark.png
+SHA1-Digest: kURPQHJw9rRZIJOyIH7Xb/YnWY4=
+
+Name: kotlinx/serialization/json/JsonContentPolymorphicSerializer.kotl
+ in_metadata
+SHA1-Digest: Ps5gb3CCoqJeyxNFZ9g+FynpyLE=
+
+Name: res/drawable-xxhdpi/hyberry_stoplive_btn_normal.png
+SHA1-Digest: tLj7zL4yWly3lCEuGlRt5E5KPOI=
+
+Name: res/drawable-mdpi/abc_ic_star_half_black_48dp.png
+SHA1-Digest: XWFKBQbHNFDN4EvD+/bGkwMMO48=
+
+Name: res/drawable-xhdpi/hyberry_user_num_icon.png
+SHA1-Digest: i0aglxsP/Nn2KzcYXuvohztDEzA=
+
+Name: res/layout/sy37_adapter_mygift.xml
+SHA1-Digest: QSFX97iLqAUrVwfuC0h60WF9dfs=
+
+Name: res/drawable/sy37_shape_dialog_bg_r_5.xml
+SHA1-Digest: kCBMQj5QJY/9yPB8zQ/e8xDGJ28=
+
+Name: res/drawable-hdpi/sy37_d.9.png
+SHA1-Digest: OZvDONmkqaYppJJz08/FEzdmoUM=
+
+Name: kotlinx/serialization/json/internal/StreamingJsonEncoder.kotlin_
+ metadata
+SHA1-Digest: 4XRJoNhweY0LCwypdK46DIbvGhA=
+
+Name: res/layout/sy37_web_demo_activity.xml
+SHA1-Digest: CSJlOP30q/qO8IG5tjPXNbi5PDQ=
+
+Name: res/drawable-xhdpi/abc_switch_track_mtrl_alpha.9.png
+SHA1-Digest: 5a/32w4mGMTN/vMpUHN1mSA3jro=
+
+Name: res/drawable-xxxhdpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: a1ji3WB8uBG7MbG1FUcATzuB6KM=
+
+Name: res/drawable-mdpi/abc_list_longpressed_holo.9.png
+SHA1-Digest: TfLYFX/WJIZrp5S0WJthkA2Tc2I=
+
+Name: res/drawable/hyberry_shape_chat_container_bg.xml
+SHA1-Digest: Pmvcn9U/VVXm9cN4YeBrKvrqsMw=
+
+Name: res/drawable-xhdpi/ic_login_phone.png
+SHA1-Digest: 2BkoFwiP73+9RkpDF0fCHIvbux8=
+
+Name: res/layout/abc_expanded_menu_layout.xml
+SHA1-Digest: XhoeVFWXSTfdS+RxZOSvEMVnNoI=
+
+Name: res/drawable-xxhdpi/abc_ic_star_half_black_36dp.png
+SHA1-Digest: x4uhEofK76crzXsenEFuLL5XoSk=
+
+Name: lib/armeabi-v7a/libtapsdkcore.so
+SHA1-Digest: 0xI9hpv2JsFDNRjo5ALaWjT4bxY=
+
+Name: res/drawable/background_bubble_right.9.png
+SHA1-Digest: dm2UEHetKbMEnoJwLCUxAoXLTuI=
+
+Name: res/drawable-xhdpi/hyberry_end_live_bg_land.webp
+SHA1-Digest: dqQgGVCp52901fMxLOmRPTpsjCo=
+
+Name: res/drawable-xhdpi/sy37_icon_phone_reg.png
+SHA1-Digest: psYvyTev6pEO9nkviII+bgucRXY=
+
+Name: META-INF/services/javax.ws.rs.ext.Providers
+SHA1-Digest: nE4joHf340zTEN5s1Ka8p0GtOWs=
+
+Name: res/drawable-mdpi/abc_textfield_search_default_mtrl_alpha.9.png
+SHA1-Digest: myu4A8u9T/lfeRKxcmgMaRHa8I0=
+
+Name: res/drawable-xhdpi/hyberry_pause_live_bg.webp
+SHA1-Digest: dwY56fr3EgHk7kEtNidYKIz/IDw=
+
+Name: res/drawable-hdpi/sy37_transparent.png
+SHA1-Digest: fG5vBZZFgHFLbtIlyueZ4Dc2mUA=
+
+Name: res/drawable-hdpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: Ox5c9wTbEp1i6KpzYlALCDQunM8=
+
+Name: res/drawable/sy37_login_progress.xml
+SHA1-Digest: y6PHr0WyhxRClecfoIYHDvVNJNM=
+
+Name: res/layout/sy37_dialog_announcement.xml
+SHA1-Digest: LUekXB6Zoiq/BRkgDPakFpqD1lg=
+
+Name: res/drawable-xxhdpi/hyberry_switch_camera_icon.png
+SHA1-Digest: L1yTTyic/T26egAZxiMZDkhhidI=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_checked.png
+SHA1-Digest: brPP730dtKamlFgdFsAqZrhWwCY=
+
+Name: res/drawable-xhdpi/abc_textfield_default_mtrl_alpha.9.png
+SHA1-Digest: iiuC1oMc22/RFffIWnlRhVpMTZg=
+
+Name: res/drawable-ldrtl-xxhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: A2BhFvRaquOoxnaNY6Ct0RyDB+0=
+
+Name: assets/image/smile/20.png
+SHA1-Digest: YkU0eQWta2AaeZ2AunzwPe02YF4=
+
+Name: res/drawable-hdpi/sy37_bg_reg_by_phone.png
+SHA1-Digest: b8gMmK9Dy+sVV204UGpkDV19UsA=
+
+Name: res/drawable-xxhdpi/sysq_bg_face_verify_confirm.png
+SHA1-Digest: 5pw4hBGDMdlvcpWd4KoRmHQuonA=
+
+Name: res/drawable-hdpi/sy37_reg_1.9.png
+SHA1-Digest: h9c9iXtWjyf6SRmC/xYk8QJMCwA=
+
+Name: assets/image/smile/0.png
+SHA1-Digest: y6rY0xWEv7fcMzsMkJaybyEXWoY=
+
+Name: res/drawable-mdpi/abc_tab_indicator_mtrl_alpha.9.png
+SHA1-Digest: VOGru/bFrfIpDMpSmMBkRFWnAk8=
+
+Name: res/drawable-ldrtl-xhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: /dcXrhcoTacpJtH5lNwjpjK5LdA=
+
+Name: res/drawable-mdpi/abc_ic_menu_selectall_mtrl_alpha.png
+SHA1-Digest: 9GVtakZbkFTmghbikDK4zXzyXfQ=
+
+Name: res/drawable-mdpi/abc_popup_background_mtrl_mult.9.png
+SHA1-Digest: g1/pDMcNrukTcoZUVqlPrpEKUro=
+
+Name: res/drawable-xxhdpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: /yrIgbjlQM9DKNtJq/7gJkMCNvo=
+
+Name: res/drawable-xhdpi/hyberry_preview_guide_bg_down.png
+SHA1-Digest: CTEldirXERjMi1SgQ7tlI5b5BVU=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_im_room_bg.png
+SHA1-Digest: IMWvU12vVzlIEs5bq4wgz1WXz/0=
+
+Name: res/drawable-hdpi/abc_textfield_activated_mtrl_alpha.9.png
+SHA1-Digest: jCrVIn6TZSBBmTQ+SRZN15voWsw=
+
+Name: res/layout/sy37_view_activities.xml
+SHA1-Digest: IrymDZFnX0KYVOHXb3MepWAOxCc=
+
+Name: res/drawable-xhdpi/icon_share_press.png
+SHA1-Digest: 9TD6+3i6w52YO9J2ldQz86gMp1w=
+
+Name: res/layout/abc_activity_chooser_view_list_item.xml
+SHA1-Digest: RJberZdFTWpM3IMxu9iZq5/hTb4=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_list_empty.png
+SHA1-Digest: G7cbVDa+R0OMjA4CZEQD+t8IyUs=
+
+Name: res/drawable-xxhdpi/age.png
+SHA1-Digest: eBokoSh0es/BvckaVrgR4ywdViE=
+
+Name: res/drawable/sysq_face_verify_privacy_check_box.xml
+SHA1-Digest: bWbdIgWQbEwS0uaPTMJWLQiBZ5w=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_target_small.png
+SHA1-Digest: ckCCtwdhW0QcTAZVshVgLJj8NWM=
+
+Name: res/drawable-xxhdpi/hyberry_code_normal.png
+SHA1-Digest: dZWtHp0iAhRYXkwuBsbB9wv3FyY=
+
+Name: res/color/abc_tint_edittext.xml
+SHA1-Digest: FSN8GoEGjUMP72+lOr579+MuZtY=
+
+Name: lib/arm64-v8a/libhyssl.so
+SHA1-Digest: BFC7Z8LPybEFY07jK7uStDNhK2E=
+
+Name: res/drawable-xxhdpi/sysq_ic_pwd_hide.png
+SHA1-Digest: nnqxtcyJtrXK3o633bR5WvLFQ5Q=
+
+Name: res/drawable-xxhdpi/sysq_ic_check_normal.png
+SHA1-Digest: 650IWJBP+OIPsdVhQah9/+W7Ocw=
+
+Name: res/layout/abc_action_bar_title_item.xml
+SHA1-Digest: 35k5pxf+QspuDFoNdDmzJGhf7Bo=
+
+Name: res/layout/sysq_pay_dialog_action_bar.xml
+SHA1-Digest: mDAbrdgwWDCKAn2YEf7cZo3swSg=
+
+Name: res/drawable/abc_btn_check_material.xml
+SHA1-Digest: w3yyABor0D0dRRUS89ZlIetrP/g=
+
+Name: res/drawable-hdpi/sy37_pay_load_bg.png
+SHA1-Digest: ZqiPcdbvf39rjJYkiZQywIX+eeI=
+
+Name: res/drawable-mdpi/abc_ic_star_black_16dp.png
+SHA1-Digest: qXZN1JuLYJ37Wy2MtWuKWX7mwnM=
+
+Name: res/drawable/sysq_login_btn_bg.xml
+SHA1-Digest: iYDqENn29lqsIQihyCJnIh/mc9o=
+
+Name: res/drawable-xxxhdpi/abc_btn_check_to_on_mtrl_000.png
+SHA1-Digest: jvBFoaEliTx3SIKazSWCuF4AqfQ=
+
+Name: assets/image/smile/16.png
+SHA1-Digest: WH5Q8VB9UjM+fHqlNw9ezSZGcbk=
+
+Name: res/drawable-hdpi/abc_switch_track_mtrl_alpha.9.png
+SHA1-Digest: kBzxOXvE4kVgkw/9U8Bs2SOMEAc=
+
+Name: res/drawable-xhdpi/hyberry_floating_bg_moble.jpg
+SHA1-Digest: wNg20bfl04T+3Rl1mAhqlZfMMmk=
+
+Name: kotlinx/serialization/json/JsonArraySerializer.kotlin_metadata
+SHA1-Digest: VnqDLKTkRktZUOOjAAev3e+tIiQ=
+
+Name: res/drawable-xxhdpi/sysq_ic_wechat_login.png
+SHA1-Digest: pVaUhsiDivWLnwe2f0y/rLcslj0=
+
+Name: res/drawable/hyberry_mic_ban_btn.xml
+SHA1-Digest: zuVhfx7EQsP9PcubrhMN+4qzLg0=
+
+Name: res/layout/sy37_adapter_gift.xml
+SHA1-Digest: /md5m6pOg4Uby+DlExDUfMVjimc=
+
+Name: res/layout/sy37_share_dialog_landscape.xml
+SHA1-Digest: AaoWRVwjSwrmjr3YcAovMfs5N7k=
+
+Name: res/drawable/sy37_shape_one_key_bg.xml
+SHA1-Digest: R6VwHaWapSbtV6GG0Jhmx32Gheg=
+
+Name: res/drawable/hyberry_user_num_bg.xml
+SHA1-Digest: KAV1y92fWP8jIoUbRknBTBXmNMQ=
+
+Name: res/layout-watch/abc_alert_dialog_button_bar_material.xml
+SHA1-Digest: ukI51G+uBjIMv9f3s4h9xNVjskg=
+
+Name: res/drawable-hdpi/sy37_share_wx_sessions.png
+SHA1-Digest: oJWXyEL57AVSLmyn1onNt7YfLQo=
+
+Name: res/drawable-hdpi/sy37_bg_login_dialog.png
+SHA1-Digest: puOxzGgSv6Fdr2H9/tfezyF1eWs=
+
+Name: assets/image/smile/22.png
+SHA1-Digest: 5FDXtzwbpFwh5FzB6Z5RO6Cha88=
+
+Name: kotlinx/serialization/json/internal/JsonNamesMapKt.kotlin_metada
+ ta
+SHA1-Digest: fjSxhe22PCW3ezKtTvpVwYmjelg=
+
+Name: res/drawable-hdpi/sy37_title_background.png
+SHA1-Digest: 2gxBVDjRc24WBOWZlEumDXW3ZcE=
+
+Name: res/drawable/abc_seekbar_track_material.xml
+SHA1-Digest: //nLrm2CKiDi//hpLOc0f+Dgc48=
+
+Name: res/drawable-hdpi/sy37_icon_service_1.png
+SHA1-Digest: BVCzHKwRId0YLM502lUdPUKJaHc=
+
+Name: res/drawable-xxhdpi/abc_btn_radio_to_on_mtrl_000.png
+SHA1-Digest: 1Ui+F76JKWCGL6W0jcmi9XdxmJU=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_target.png
+SHA1-Digest: kzXo+epTWHcz7+drpJ7LbuBTj/4=
+
+Name: lib/x86/libmtpencrypt.so
+SHA1-Digest: /YqplNeALKLqKDYA87Em1DaHWKo=
+
+Name: res/layout/sy37_kefu_account_manager_menu.xml
+SHA1-Digest: oPXn8agK56Ni+Q0z/bFeYfM1IeM=
+
+Name: res/drawable-hdpi/sy37_login_logo_new.png
+SHA1-Digest: BZjH0+oWuvfFSyDCr+DMQ6B+q8s=
+
+Name: lib/arm64-v8a/libhycrypto.so
+SHA1-Digest: durnWcOiVAYzu3+CwmuhOPtytiE=
+
+Name: res/drawable/sy37_shape_login_btn_bg_blue_j.xml
+SHA1-Digest: eAtnNh7HvegIKXybf3+IqjvH3MA=
+
+Name: res/drawable-xhdpi/abc_btn_radio_to_on_mtrl_015.png
+SHA1-Digest: jaWedGWrccy2jh9xnm9NUBEu+NQ=
+
+Name: res/layout/select_dialog_item_material.xml
+SHA1-Digest: 3r0y7S/zYWax64x4AhbrjbgdWLc=
+
+Name: res/layout/sdk_game_tips_layout.xml
+SHA1-Digest: 2MkecZlZqnLTF8S0KCsBN8SGKLc=
+
+Name: res/layout/sy37_s_login_dialog_social.xml
+SHA1-Digest: HTq6znEFn1B7yK3KFGXSBplTBvQ=
+
+Name: res/drawable-hdpi/sy37_icon_submit_simple.png
+SHA1-Digest: tSNAabVUKiIY1a0cy2uZEk7Ck84=
+
+Name: kotlinx/serialization/json/JsonConfiguration.kotlin_metadata
+SHA1-Digest: t93VOywyRZSrDNGG4hgLcSv4NmE=
+
+Name: res/layout/sy37_m_activation_code_dialog.xml
+SHA1-Digest: jUqJnvwEfyowjocLffIrv3xL1iM=
+
+Name: res/layout/sy37_progress_dialog.xml
+SHA1-Digest: uyOWPKD02dZebFEK5cN0XCWUvNc=
+
+Name: res/drawable/sy37_coupon_no_select_rb_bg.xml
+SHA1-Digest: 0jDUfl/9GrAhThNo5S5jBz/+slQ=
+
+Name: res/layout/sy37_update_layout.xml
+SHA1-Digest: lHgd8azq2NGEcMzkARtmXHC5sjA=
+
+Name: res/drawable-xxhdpi/abc_ic_menu_share_mtrl_alpha.png
+SHA1-Digest: fxBcFBzow7JR0uBZ+mssvFuku9I=
+
+Name: res/drawable-xhdpi/icon_close.png
+SHA1-Digest: rDR3syzdiI/dN5SzJ01Ka+G6/so=
+
+Name: res/color/abc_secondary_text_material_light.xml
+SHA1-Digest: jNSOl6Psk+PdL78jHKWZUVl+wgQ=
+
+Name: res/drawable-xxhdpi/abc_textfield_activated_mtrl_alpha.9.png
+SHA1-Digest: a7GtxsJpR8txQPV7OFrmp/CrN7Y=
+
+Name: res/drawable-hdpi/abc_btn_radio_to_on_mtrl_000.png
+SHA1-Digest: jZplRuGP8H6Cd+ClJv6n8lHUG0Y=
+
+Name: res/drawable-hdpi/sy37_reg_simple.png
+SHA1-Digest: dh7aUGQMQ9XLb/zU4TgWsJFhQQ4=
+
+Name: res/color/switch_thumb_material_light.xml
+SHA1-Digest: 1t+tiwdV053MKOWFFYmXqfZ/kRE=
+
+Name: res/drawable-anydpi/sdk_assistant_arrows_right_ic.xml
+SHA1-Digest: zB22RQAiRYo+Q7BTjN+2FGo+pBk=
+
+Name: res/drawable-xhdpi/hyberry_live_item_new_msg.png
+SHA1-Digest: NvsodNW7uYnHJFuRi3yRPjLylkU=
+
+Name: res/layout/sy37_common_blank_dialog.xml
+SHA1-Digest: Lg8nc7l7tYVoy2jADPYiKpKh8Y0=
+
+Name: res/layout/abc_screen_simple.xml
+SHA1-Digest: POXDYn5oXuuzSYZGyfhY1OBM7dk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_default_portrait.png
+SHA1-Digest: W8GJs4lkvKaoUx4r9N48WL/1X1U=
+
+Name: res/color-v23/abc_tint_seek_thumb.xml
+SHA1-Digest: omvliG+LLGERwHTHufKI+yGmHh8=
+
+Name: kotlinx/serialization/json/internal/SerialReader.kotlin_metadata
+SHA1-Digest: TTb358UQbLn9DsfXdB6wfumnWFQ=
+
+Name: kotlinx/serialization/json/internal/JsonIteratorWsSeparated.kotl
+ in_metadata
+SHA1-Digest: gTX/G/YSnPTfNdn1h3cbv59PJ1Y=
+
+Name: res/layout/sy37_reg_success.xml
+SHA1-Digest: 7v0npQaLmdCrF+dTv3hqLl6v/Ms=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_service.png
+SHA1-Digest: W2RFJnZ5S6YIZ2y3Ovb7jO9HFUs=
+
+Name: res/color-v23/abc_tint_edittext.xml
+SHA1-Digest: 2a4pmhMirqPDsmp8z5pU+g24FcI=
+
+Name: res/drawable/abc_switch_thumb_material.xml
+SHA1-Digest: C+K1DNXeKh/hHwNPF5vYTmbfcfA=
+
+Name: lib/x86/libthemis.so
+SHA1-Digest: RTnbe/8lsZ7ibRYW/vVZ1GTw7ls=
+
+Name: res/drawable-xhdpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: R5+kclI1jmgQdoeHItmAIUC+BhQ=
+
+Name: res/drawable-hdpi/sy37_update_progress.png
+SHA1-Digest: 6BmMXJTDkeaUqjOfnZ1z/RP6t5M=
+
+Name: res/drawable-hdpi/sy37_login_1.9.png
+SHA1-Digest: CvDVKbcr7yXy5n3ztYOcAZDi6Dk=
+
+Name: okhttp3/internal/publicsuffix/publicsuffixes.gz
+SHA1-Digest: +bdceAw9yQ7uKnkFzDSoze/ZLGc=
+
+Name: res/drawable-xhdpi/ic_tip.png
+SHA1-Digest: sCoROsSzl8YxIGesthH6zS2a8d4=
+
+Name: res/drawable-xhdpi/ic_psd_close.png
+SHA1-Digest: LrrH/L8NVcV4mCgSuk2AhIu1dp8=
+
+Name: kotlinx/serialization/json/internal/CharMappings.kotlin_metadata
+SHA1-Digest: t1kmd4qYahtqLMa7wjXYYGjvPss=
+
+Name: res/drawable/hyberry_audio_pause_water.png
+SHA1-Digest: A+0q7k5YBlwKc/85fP9O6ZiIbMA=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_black_16dp.png
+SHA1-Digest: tQfP7jA/eugBgDBn+L4XOyd+OSU=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_bg_port.png
+SHA1-Digest: sjEG2jNeMASK2DuvUu+68fVX7us=
+
+Name: lib/x86/libproperty_get.so
+SHA1-Digest: qIq93GE8ekrvvdu+YORrSnkX8DQ=
+
+Name: assets/image/smile/33.png
+SHA1-Digest: kQcKFIRlehB2eW18Sl3iLykvckw=
+
+Name: res/drawable-xxhdpi/abc_cab_background_top_mtrl_alpha.9.png
+SHA1-Digest: Gsx0FVAx0FS5iLSV24zMlbGJEpI=
+
+Name: res/drawable-xhdpi/sy37_icon_no_coupon_select.png
+SHA1-Digest: QzZ07s6BgcQCpU8hNaIrHbEwg0Q=
+
+Name: res/drawable/sy37_customer_float_view_bg.xml
+SHA1-Digest: tWr8OnvIxfgtabSnfbLqeCTnGqw=
+
+Name: res/drawable-xhdpi/abc_scrubber_track_mtrl_alpha.9.png
+SHA1-Digest: L2WqBhLIwQj8AHigkhWuxaM0ERM=
+
+Name: res/drawable-xhdpi/sy37_icon_charge_tips.png
+SHA1-Digest: Jf5WJx0Afz5+A+LhwjHcGlBHrTQ=
+
+Name: classes4.dex
+SHA1-Digest: 6MzTzGl7hrjf9/QcKVnNPTHI8+k=
+
+Name: res/drawable-xhdpi/sy37_icon_wechat.png
+SHA1-Digest: Jkm/uPBH7mUuGR059tynL0MUN2A=
+
+Name: res/drawable/sy_sq_dialog_login_btn_bg_13.xml
+SHA1-Digest: iBukx3AJxyI+EmiXl6KEp2B56+4=
+
+Name: res/drawable-xhdpi/hyberry_audio_pause_water.png
+SHA1-Digest: A+0q7k5YBlwKc/85fP9O6ZiIbMA=
+
+Name: res/layout/huya_udb_login_strategy_webview.xml
+SHA1-Digest: H+eO70S99imRvssvOsXgjs6qVZg=
+
+Name: res/drawable-hdpi/sy37_disconnected.png
+SHA1-Digest: QL22ZJFR0WmLn5lXxWYK006WDSQ=
+
+Name: assets/image/smile/48.png
+SHA1-Digest: kCXcydl6V/AWYt/N4mn+PeN7yg8=
+
+Name: lib/arm64-v8a/libmsaoaidsec.so
+SHA1-Digest: SoOBkJPTuyrm3Cii5Qq9wbu1x/I=
+
+Name: res/drawable-hdpi/sy37_icon_info.png
+SHA1-Digest: 0N9Qb8lq6rT4QNvmuWZiNTNSwOQ=
+
+Name: assets/libwbsafeedit_64
+SHA1-Digest: WZ4Fcsa28xh9fwwaW3136wyGUO4=
+
+Name: kotlinx/serialization/json/internal/SchemaCacheKt.kotlin_metadat
+ a
+SHA1-Digest: 75/sdN1M086XTVtp7j60KV0g1s0=
+
+Name: res/layout/sy37_dialog_shake2floattips.xml
+SHA1-Digest: O1ikCLmYHhTh/tnfn49qtpaZB+I=
+
+Name: res/drawable-xhdpi/sy37_splash_port.jpg
+SHA1-Digest: uvnBuXE+qkognMog2PrZ6pGWXTA=
+
+Name: res/layout/sy37_base_liveshow_floatview.xml
+SHA1-Digest: Gr7vu5Nm+MbsNXJPuRS4wOxxbCc=
+
+Name: res/drawable-xhdpi/hyberry_target_down_icon.png
+SHA1-Digest: aYuk8CSyEwBfA105TKdoqT0+SV4=
+
+Name: res/drawable-hdpi/sy37_welcom_texture.png
+SHA1-Digest: OGtZBfaT7/BH5nZMmgc7opSw3xE=
+
+Name: res/drawable-xxhdpi/ic_close_confirm_dialog.png
+SHA1-Digest: km+lrL765gUSecDwnne+YcXjjz8=
+
+Name: res/drawable-xxhdpi/sy37_bg_bottomdelete_portrait_highlight.png
+SHA1-Digest: 1LDoGsVhIPKVyQToTa9xLkZeHwg=
+
+Name: res/drawable/hyberry_save_nickname_btn_bg.xml
+SHA1-Digest: 3ajznnZeEQDNiMUelJ1F/ejgdx8=
+
+Name: res/drawable-xhdpi/abc_ic_menu_selectall_mtrl_alpha.png
+SHA1-Digest: MhP2e4zt8+WjIw5c3c5H98Svn98=
+
+Name: res/drawable-mdpi/abc_text_select_handle_right_mtrl_dark.png
+SHA1-Digest: hcESoV6oB6nrMEuucMLW4vSxhfU=
+
+Name: res/drawable-mdpi/abc_textfield_default_mtrl_alpha.9.png
+SHA1-Digest: ETYiz5Fr7CDzRd1OeXdRPbcHmIQ=
+
+Name: res/drawable-xxhdpi/hyberry_floating_subscribe.png
+SHA1-Digest: zJFnl9qUYbFRYCAbJE7LhHIxRok=
+
+Name: res/drawable-xxhdpi/sysq_ic_delete.png
+SHA1-Digest: L/i9Ad2RmrkfS/XnWlNARYhIS7M=
+
+Name: res/drawable-hdpi/sy37_btn_green_verybig_down.png
+SHA1-Digest: Ycv3oUmRwFrBiTR+6Tl0IkoCqcg=
+
+Name: res/drawable/abc_seekbar_thumb_material.xml
+SHA1-Digest: rMMdcwbmL398sXwtEmGFM7lshHA=
+
+Name: kotlinx/serialization/json/internal/Composer.kotlin_metadata
+SHA1-Digest: u3ea7xxhn7fek0szoWQqyH2goqI=
+
+Name: res/drawable-mdpi/notify_panel_notification_icon_bg.png
+SHA1-Digest: cz2cTpSbxUR34pkCMo3M7a+mSXk=
+
+Name: res/drawable-hdpi/notification_bg_normal_pressed.9.png
+SHA1-Digest: Fj400gAeTvwRD/HsecGYDmDL/L0=
+
+Name: res/drawable-hdpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: C6bMkNemP25xvMd2X33O3aotK8Y=
+
+Name: res/drawable/face6.png
+SHA1-Digest: ynSGjSslfrfBmlE0anYgRgW+G+A=
+
+Name: res/drawable-xhdpi/abc_popup_background_mtrl_mult.9.png
+SHA1-Digest: Mb10wVzyCfJZeFrZBwSAIQ2lNEc=
+
+Name: res/drawable-hdpi/sy37_update_btn_ok.9.png
+SHA1-Digest: U7YgwRzxcxwsHj4fUdSZ3AjVjbg=
+
+Name: res/drawable-xhdpi/hyberry_start_live_pressed.png
+SHA1-Digest: Ra59otsYk81yBbKspOptlzERYUw=
+
+Name: res/drawable-hdpi/sy37_bg_line.png
+SHA1-Digest: 7Zfq9XAkwAh/tQy/hXsd6wov/EQ=
+
+Name: res/drawable-mdpi/abc_ic_commit_search_api_mtrl_alpha.png
+SHA1-Digest: rN5JNKDujDks9haoqD0zZGgU2r0=
+
+Name: kotlinx/serialization/json/JsonNames.kotlin_metadata
+SHA1-Digest: 0xESWjKYyMbX99FAQl+OnfoMCk0=
+
+Name: res/drawable/state_background_edit.xml
+SHA1-Digest: pGJcZBWOByWe0Ry7Ydqjd4dBTpE=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_gift.9.png
+SHA1-Digest: Bep59zEb0A6gbq8z+5G74vAlyjk=
+
+Name: res/drawable-xhdpi/hyberry_mic_btn_normal.png
+SHA1-Digest: JCrr/T0HUAz7/1EerPpdxc4XD5E=
+
+Name: res/drawable-xxxhdpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: QzkeSh1cWRZOhZLRymXgI4qGyk8=
+
+Name: res/drawable-xxxhdpi/abc_btn_radio_to_on_mtrl_015.png
+SHA1-Digest: dxbx4B8sB83Fn8VDs3wb1keI5K0=
+
+Name: res/layout/hyberry_fragment_end_live_land.xml
+SHA1-Digest: 80SxOPZ27pn3cGWKJXVOEzzgY5s=
+
+Name: res/drawable-xhdpi/hyberry_floating_fullscreen_normal.png
+SHA1-Digest: 5Ju8K6JgcZvmgkWoro07FmTx7ns=
+
+Name: res/drawable/sy37_bg_round_149.xml
+SHA1-Digest: gHzIur5sK9ujWRyQO1J8zPPB8ZE=
+
+Name: res/drawable-hdpi/sy37_reg_0.9.png
+SHA1-Digest: tFjfEnm8YVfU5sP+D5zzPlXDZWA=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_close.png
+SHA1-Digest: pvLKLc3kB2lRlrMrum39pb0cYcM=
+
+Name: res/drawable-hdpi/abc_ic_star_black_48dp.png
+SHA1-Digest: PHk61zRqf6D0+NgV5DAowumKYDM=
+
+Name: res/drawable-hdpi/sy37_dialog_content_bg.9.png
+SHA1-Digest: 6zlBawX6LancuYWv55Uo3pQOpkI=
+
+Name: res/drawable-xxhdpi/background_to_resume.png
+SHA1-Digest: olSQn6npGYJ1ltbIOK1n9qrys6k=
+
+Name: res/drawable-xhdpi/ic_account_list.png
+SHA1-Digest: oQe2j/1uWDcXTRoEY+0PUSqy4eM=
+
+Name: res/drawable-xhdpi/hyberry_mic_ban_btn_pressed.png
+SHA1-Digest: LADtpZKhgfzHJ5LpS6mRJtA+tuc=
+
+Name: assets/image/smile/18.png
+SHA1-Digest: O+QTyGdQvaS4LHcKTN9f8ThYzwQ=
+
+Name: res/layout/sy37_layout_liveshowfloat.xml
+SHA1-Digest: 25K9mUIWquqxlH+zAsfvTqDoS8Y=
+
+Name: res/drawable-xhdpi/sy37_pay_title_bg_land.png
+SHA1-Digest: AXp6gFW0i/lpkcd7erbmPmdhGu4=
+
+Name: res/layout/hyberry_fragment_login_land.xml
+SHA1-Digest: oAULNAldxHtBDmJiM7heUmKX+LM=
+
+Name: res/drawable-hdpi/sy37_cut_bg.9.png
+SHA1-Digest: 9aLDUJfJcDzEmuxXNL+s/5HYwso=
+
+Name: res/drawable-hdpi/notification_bg_low_pressed.9.png
+SHA1-Digest: UHxfZfOA3Iy60KW8vg4whdNOM1U=
+
+Name: res/layout-watch/abc_alert_dialog_title_material.xml
+SHA1-Digest: WaWc9bCK63najSPowq5uduDgMdo=
+
+Name: res/drawable/hyberry_select_line_item_bg.xml
+SHA1-Digest: muZO8xwZpOvnZB3JgzzSUhtGlB8=
+
+Name: res/anim/abc_shrink_fade_out_from_bottom.xml
+SHA1-Digest: JVzivIPmiW3+QAYGVTId2am62uQ=
+
+Name: res/drawable-hdpi/sy37_notice_down_tips.png
+SHA1-Digest: ovN3arwkf/s3DeeNkuIVAGSOOw4=
+
+Name: assets/sdk_res.json
+SHA1-Digest: ooRuVAFebcQAz3xx+OHM7IERkws=
+
+Name: res/drawable-xxxhdpi/abc_ic_menu_share_mtrl_alpha.png
+SHA1-Digest: gVZY2tYM6EcgHw/lljdR0VIQvI8=
+
+Name: res/drawable-xhdpi/sy37_icon_coupon_div.png
+SHA1-Digest: QVkdyJ8J0bF5g5i3jhCbOiVzt9w=
+
+Name: res/drawable-xhdpi/hyberrry_empty_list_icon.png
+SHA1-Digest: HRqjk4+GViREdDosanBAz4EL2hA=
+
+Name: res/layout/sy37_s_login_view.xml
+SHA1-Digest: rjJ+wuoh1zcyh4cHnHEDNjEci/o=
+
+Name: res/drawable-hdpi/sy37_icon_null.png
+SHA1-Digest: uBy85VKqvrkw3M3ujLw1YRgz87w=
+
+Name: res/layout/sy37_share_wx_dialog.xml
+SHA1-Digest: CFZ+S482LL4EkBOvzCAXTB/txH4=
+
+Name: lib/armeabi-v7a/libstlport_shared.so
+SHA1-Digest: Gqr+a+q2j8FhsYhEodhdhyqFUYQ=
+
+Name: res/drawable/sy37_shape_white_radius_5.xml
+SHA1-Digest: axjeVkJ5ZINEj1E061VHc+4BYYw=
+
+Name: lib/armeabi-v7a/libudbauthunify.so
+SHA1-Digest: 1CtLkHyKM8vroa/N1Gm8Vrc9spQ=
+
+Name: res/drawable-xhdpi/progress_loading_4.png
+SHA1-Digest: vZuIFEXTGaUUy54YF0k+WB5JagI=
+
+Name: res/layout/sy37_web_view_layout_function_web.xml
+SHA1-Digest: n1MDOrVmsdKi+FebzzMlIxGzIgk=
+
+Name: res/drawable-hdpi/sy37_web_view_default_web_back_enable.png
+SHA1-Digest: nI8fp+zqXXtr8RK5WqZscXfI2X8=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_down.png
+SHA1-Digest: n6AjyU1w2xzqL9Y0nnQFK92272g=
+
+Name: res/drawable-hdpi/abc_tab_indicator_mtrl_alpha.9.png
+SHA1-Digest: 742V0njnuDcWLDQvYG+Tmh0W43g=
+
+Name: res/layout/sy37_layout_guide_view.xml
+SHA1-Digest: ctevHlqh+U+HbvinslN/buWKBII=
+
+Name: res/drawable-mdpi/abc_text_select_handle_middle_mtrl_dark.png
+SHA1-Digest: Pxe7w4aULrnrFcOkUlAKzzeDXts=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_ali.png
+SHA1-Digest: 2voKQ0N4GXmgYnwue3RNV08ZHl4=
+
+Name: res/drawable-xxhdpi/sy37_web_exit.png
+SHA1-Digest: wJoWGu1gMiMULem/T+r4WW4YbmE=
+
+Name: assets/image/smile/6.png
+SHA1-Digest: /IqmDgtCCa9E/X0ZhGNZNahC+3M=
+
+Name: res/drawable-hdpi/sy37_pay_load_fill.png
+SHA1-Digest: nRuVBMT3j90dJLFGe2x34KTF6s8=
+
+Name: res/drawable/selector_alert_btn_bg.xml
+SHA1-Digest: E8zNjTI2ADX2b0Pi3rRSK+ffmZY=
+
+Name: res/layout/notification_template_icon_group.xml
+SHA1-Digest: k8ObsEju/QqSLmm9ElFYaKryqhU=
+
+Name: res/layout/abc_select_dialog_material.xml
+SHA1-Digest: TY78InoOgQBovNZd44Eby7QsBwQ=
+
+Name: res/drawable-xxhdpi/sy37_web_forward_enable.png
+SHA1-Digest: KDiQWuj+KQfVMTRGTIG0pmT7MOI=
+
+Name: res/drawable-mdpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: Tc8e1h3ztftF8Z8v1AaxXZdz9+I=
+
+Name: res/drawable/hyberry_pay_bean.xml
+SHA1-Digest: Kcp2v44Y9onDyrn4lcNflcj8Uz8=
+
+Name: lib/x86/libemulator_check.so
+SHA1-Digest: TR/VFipCAsZSJUg+yjGHlPXELzg=
+
+Name: res/color/abc_btn_colored_text_material.xml
+SHA1-Digest: 7necj9rjL55Hc2QUXOaaYqeqPwU=
+
+Name: res/layout/sysq_user_protocol.xml
+SHA1-Digest: WOVh3q/OewFHQqHAdRPPPEso81Q=
+
+Name: assets/image/smile/4.png
+SHA1-Digest: lbCfwJMAq25Hqqqq7NsCvx+HekA=
+
+Name: res/drawable-xxhdpi/abc_textfield_search_activated_mtrl_alpha.9.
+ png
+SHA1-Digest: 75ZUXU//cZSOZPRPgWzgSAecZtg=
+
+Name: res/layout/hyberry_pub_live_message_board.xml
+SHA1-Digest: iNH/GuNkY1SSjjgKZVlP1741HEw=
+
+Name: classes2.dex
+SHA1-Digest: lVAFQHuGjazurk/d9bEsEC8zFyY=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_pay_head.png
+SHA1-Digest: iiGjaCzH9/2dECBEgmwqM/I2rFU=
+
+Name: res/drawable-mdpi/abc_ic_star_black_48dp.png
+SHA1-Digest: TnhZoMoFP0WZ5LAuQsFxNCmLjoI=
+
+Name: res/drawable/sweetness.png
+SHA1-Digest: QhWw+KYn04Z5qURlS1ax4vscFfE=
+
+Name: res/drawable/hyberry_selector_code_icon.xml
+SHA1-Digest: j7lHycn3QTtQpd6ZCPWrBjAc4Gs=
+
+Name: res/drawable-anydpi/sdk_assistant_network_test_logo.xml
+SHA1-Digest: +ZobhTFkylCg6UhmAspWXdyCxeE=
+
+Name: res/drawable-xhdpi/abc_list_focused_holo.9.png
+SHA1-Digest: UIgeGr2nL9ZJkBKbZUeaRF7tVuw=
+
+Name: res/drawable-mdpi/abc_scrubber_control_to_pressed_mtrl_005.png
+SHA1-Digest: hUn9aTRWU4lRSsdZe8nW1pwCeZg=
+
+Name: res/drawable-xhdpi/ic_share_wechat.png
+SHA1-Digest: pVLIQ7Br4O/2kdvWO2IALhkDUjY=
+
+Name: res/drawable-hdpi/abc_ic_star_black_16dp.png
+SHA1-Digest: JMhA1uehQ/dgzPwMY81jQJFvmlo=
+
+Name: res/layout/sy37_dialog_network_desc.xml
+SHA1-Digest: 9xvQyG9e049ZfKI0yhUnVx3urdo=
+
+Name: assets/image/smile/46.png
+SHA1-Digest: 4bJXYPA7pIq1GcZTOKhFrAsKHdI=
+
+Name: res/drawable/abc_list_selector_holo_dark.xml
+SHA1-Digest: wQSGdtiQVk0M9nCkMzG/Pyqadpk=
+
+Name: res/layout/sysq_binding_dialog.xml
+SHA1-Digest: xSz+KNNpHRM6rmR6PwhUKOOAcYE=
+
+Name: res/drawable-hdpi/sy37_m_icon_left.png
+SHA1-Digest: g/bYnYbHNM8mNEhdrJcIcqDPWHY=
+
+Name: res/drawable-hdpi/sy37_comment_hd.png
+SHA1-Digest: n/Uz48/AMDHsoFwMQRHE0QG/D40=
+
+Name: res/drawable-xxhdpi/sysq_item_account_phone.png
+SHA1-Digest: yG7A7ZBEFmP70vLscsLdsISc1VM=
+
+Name: lib/armeabi-v7a/libBugly.so
+SHA1-Digest: TyiGLoPRbjFd8VmEy394xQv/Qv8=
+
+Name: res/drawable-xxhdpi/abc_scrubber_control_off_mtrl_alpha.png
+SHA1-Digest: Zcm8IHP2RP8jh6SjMBmR3Hrh1Pk=
+
+Name: res/layout/notification_template_big_media_custom.xml
+SHA1-Digest: wsUZd8gZ1T3E3KZq3ysEn6ZrAX8=
+
+Name: res/drawable-xxhdpi/abc_ab_share_pack_mtrl_alpha.9.png
+SHA1-Digest: yIDju9bITqrouyRmtVkYHyG6of4=
+
+Name: res/drawable/sysq_login_btn_normal.png
+SHA1-Digest: AOkuCwcQRI+VcEABxUeiSdiay2U=
+
+Name: res/drawable-xxhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: 1pW9dciiErH5/1CobcWOB5eiymM=
+
+Name: res/drawable-xhdpi/sy37_icon_customer_service_pop.png
+SHA1-Digest: +nCMwWRFhXohu6v2tn+yWpdnnb4=
+
+Name: res/drawable-hdpi/sy37_icon_url.png
+SHA1-Digest: 1u2XyVqqKR3ksUC+eu7igzkd0h0=
+
+Name: res/layout/sy37_layout_playerview.xml
+SHA1-Digest: QKy/sRrn1rYmK2TLXFhZrdivOvM=
+
+Name: res/drawable/abc_ratingbar_small_material.xml
+SHA1-Digest: QbRKNArvczBO0NrWS3SQi3VXcnA=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_small_room.png
+SHA1-Digest: R46mGGCxEXFT/8bUMJWdZM/p6eo=
+
+Name: res/drawable-xhdpi/hyberry_code_normal.png
+SHA1-Digest: UFFMbvJQgVEFYI+w6lYzv9/UOz8=
+
+Name: res/drawable/abc_spinner_textfield_background_material.xml
+SHA1-Digest: PhYJv5zaFcIYYL8B1Lmnv6WTx8w=
+
+Name: res/drawable/sysq_dialog_login_bg.xml
+SHA1-Digest: UheXc493EtUMTJKJ3Ez1ybL+fiU=
+
+Name: res/drawable-xxhdpi/sysq_pay_dialog_more.png
+SHA1-Digest: Fv588l2q3yKGmNRoe3mcpaBmFL0=
+
+Name: res/drawable-xxxhdpi/abc_btn_radio_to_on_mtrl_000.png
+SHA1-Digest: CB65OtWm3GcLNGo2UhSWEf+ctYU=
+
+Name: res/drawable-xxxhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: r5N3gxi8IOsZQJVrj9Gd5WeJ17w=
+
+Name: assets/image/smile/31.png
+SHA1-Digest: MIRIq81yzTK9eEQBlC//sW97h3c=
+
+Name: res/layout/hyberry_pub_tool_message_board.xml
+SHA1-Digest: WV3kF10WOutgn3CeeWWaTZRDJm8=
+
+Name: res/layout/sdk_assistant_entrance_dialog.xml
+SHA1-Digest: RcWtpBzPFsKdmBC5deCPQBaIp9A=
+
+Name: res/layout/sy37_kefu_reg_by_phone.xml
+SHA1-Digest: UsPwulp1IZlFmpXfBFPp1/51djE=
+
+Name: res/drawable-xhdpi/hyberry_msg_preview_aaronli.png
+SHA1-Digest: 2sDPz12BWgE2n42++lxgNlE+Vwk=
+
+Name: kotlinx/serialization/json/JsonClassDiscriminator.kotlin_metadat
+ a
+SHA1-Digest: LFZrcohgYXsmbUhXJeeiyuYMUv4=
+
+Name: kotlinx/serialization/json/JsonElementSerializer.kotlin_metadata
+SHA1-Digest: G/UbR+Ol9CJSUsPo+O3Q1o6CCgg=
+
+Name: res/drawable-xhdpi/default_photo_circle.png
+SHA1-Digest: trkH6BKDCVIUFXeP0LOElkSeFzE=
+
+Name: res/layout/sy37_scan_code_confirm_activity.xml
+SHA1-Digest: XJm/oG24fNXNY8D9LMmgHf2u3Qo=
+
+Name: kotlinx/serialization/json/internal/WriteModeKt.kotlin_metadata
+SHA1-Digest: HHxBNr2LQdgmdboBgruq2SZwKPI=
+
+Name: res/layout/hyberry_pub_live_message_item.xml
+SHA1-Digest: CYlJN5u205HM3bdGZR+UwCUP1Sw=
+
+Name: res/drawable-hdpi/notification_bg_low_normal.9.png
+SHA1-Digest: D2PhKM51tYZo8a79riJ3XiUD2nc=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_small_room.png
+SHA1-Digest: VX64TL0a0xccUraukhEYsc1RC7s=
+
+Name: res/drawable-hdpi/sy37_update_btn.9.png
+SHA1-Digest: F26IaAHdvdALHi65ztYQxBTb0sc=
+
+Name: res/layout/sy37_s_login_view_login_social.xml
+SHA1-Digest: E/A6/aVZyofSTJrL3WixlLNtsFk=
+
+Name: res/drawable/sy37_submit_normal.xml
+SHA1-Digest: Uab3IY47eotO6PEqhQp4yYqKGz8=
+
+Name: res/drawable-xxhdpi/sy37_icon_img_loading.png
+SHA1-Digest: gZQhC6qoRBTXMHtNLW+rZZw5cdA=
+
+Name: res/drawable/animation_progress.xml
+SHA1-Digest: sVq4jKKgSxlyHXQKRhjWDyJUgys=
+
+Name: res/drawable-hdpi/sy37_btn_user_set_center_bg_up.9.png
+SHA1-Digest: AvBU6XlxFc3bxosn+xohaG67lGE=
+
+Name: res/drawable-xhdpi/abc_text_select_handle_left_mtrl_dark.png
+SHA1-Digest: F+gz5Rjq174KBznHDsOGg3+tGkc=
+
+Name: kotlinx/serialization/json/internal/JsonElementMarker.kotlin_met
+ adata
+SHA1-Digest: c5E9dufAgSEAWJY2Ob1uvNgdU+k=
+
+Name: res/drawable/notification_action_background.xml
+SHA1-Digest: 6f5JYZ6f+wmqogcumCXnGakp5B8=
+
+Name: res/drawable-hdpi/sy37_update_top_bg.9.png
+SHA1-Digest: MKQrvO7/Kt5SUMcAZ/mPzcyFYU8=
+
+Name: res/drawable/sy37_bg_layout_auto_login_change_account.xml
+SHA1-Digest: ksE637DkUNdCoYuQhJ4T6FHD2mo=
+
+Name: res/drawable-mdpi/abc_textfield_search_activated_mtrl_alpha.9.pn
+ g
+SHA1-Digest: 1tz4r+eO/0D/N9ReCij6yKbIDqY=
+
+Name: res/layout/sy37_web_view_loading_dialog.xml
+SHA1-Digest: dGJAiHdLafM1Q4++PgEFD4UKc+w=
+
+Name: res/drawable/webview_loading.xml
+SHA1-Digest: L8s4ly4Qqpo7nm/dzWZwomzbWHI=
+
+Name: res/drawable-hdpi/sy37_btn_green_bg_0.9.png
+SHA1-Digest: 1K8xKRKvG91QgiyrFdJMSjHQ0Xg=
+
+Name: res/drawable-hdpi/sy37_kefu_bg_modifypw_et.png
+SHA1-Digest: M7kKp8J1fRdkPqIkgW6MNljIufg=
+
+Name: kotlinx/serialization/json/internal/JsonDecoderForUnsignedTypes.
+ kotlin_metadata
+SHA1-Digest: cdzn4hG5tiBNWYMlITkDx6WtAK0=
+
+Name: lib/x86/libhyssl.so
+SHA1-Digest: ndAbzMgYwaVgYPOp4QxzWpYhUb4=
+
+Name: res/drawable-xhdpi/hyberry_delete_nickname_icon_normal.png
+SHA1-Digest: w7ih7UK6gK255vj0WLpjUjiyWK0=
+
+Name: res/layout/abc_alert_dialog_title_material.xml
+SHA1-Digest: 4dK4OYizGH6Clw7iyafR5uW6mfg=
+
+Name: res/drawable-xxhdpi/sysq_ic_check_face_verify_normal.png
+SHA1-Digest: fJ8ZdDZ08Dixh3CpKBj8zf6AEmU=
+
+Name: res/drawable-xhdpi/hyberry_floating_close_normal.png
+SHA1-Digest: i9GtKHMk1TLCF298AxhKPZaQwS0=
+
+Name: res/drawable/sy37_permission_btn_bg.xml
+SHA1-Digest: pxVbbrPDOV/cDR98gXLCq+yYEpg=
+
+Name: res/drawable-xhdpi/hyberry_floating_count.png
+SHA1-Digest: fJ5AnAHNgQeh3AiwGB+IGhyY9Q8=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_narrow.png
+SHA1-Digest: NMtj8XqArQdwj/yUOeEvS7iLUpQ=
+
+Name: kotlinx/serialization/json/internal/ReaderJsonLexer.kotlin_metad
+ ata
+SHA1-Digest: EUo2am1WGMLbX7tU15OW+8zZRLg=
+
+Name: res/layout/remoteviews_download_notification.xml
+SHA1-Digest: Ocn6//iQ0w/HgdgZCAgg4ORr+Ns=
+
+Name: res/layout/sy37_s_login_view_reg_agree.xml
+SHA1-Digest: eDRy6sFQYrKg9+X1oBVLmLOxqSI=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_room_top_bg_long.png
+SHA1-Digest: 2e+ql0gGlJjMf7Cs9OX01zuBpog=
+
+Name: res/drawable-hdpi/sy37_bg_get_verify_code.png
+SHA1-Digest: TMLO7v5zAFcmX27w0GVCmInSEuA=
+
+Name: res/layout-port/sy37_dialog_network_desc.xml
+SHA1-Digest: HH2PZxMe3oVZXXg+QXU4907BIdU=
+
+Name: res/drawable-hdpi/abc_scrubber_control_to_pressed_mtrl_005.png
+SHA1-Digest: 9RrbdrpJSVV3RkMNbwbs6GaQQQM=
+
+Name: assets/com.tencent.open.config.json
+SHA1-Digest: TCAijjFuxJdEM20Vc3Fnk4fUJoQ=
+
+Name: res/drawable-xhdpi/abc_tab_indicator_mtrl_alpha.9.png
+SHA1-Digest: uV0Q36xfPyCC5Bt31O+d82qGeS0=
+
+Name: res/drawable/sysq_bg_red_corner.xml
+SHA1-Digest: IE5/g2sA5q02lTS2KBkHPqzR8X8=
+
+Name: res/drawable/huya_udb_arrow_left.png
+SHA1-Digest: q1AtYjlZLgEy72S5rsaY1ZToqRs=
+
+Name: res/layout/sy37_dialog_message.xml
+SHA1-Digest: gAvLi91in90PDGjHfkPiIWufrHE=
+
+Name: res/drawable-xhdpi/sy37_net_error.png
+SHA1-Digest: 2DHnRdsq0ZLiQ7mrAVklibqoLj8=
+
+Name: res/layout/hyberry_item_load_more.xml
+SHA1-Digest: jJzcTz6y+jO0QDfqTmOoJYVtsxU=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_guide_small_sound.png
+SHA1-Digest: RzqIVAcRRWETaKJzVXzzXJzhNeY=
+
+Name: res/drawable-mdpi/abc_btn_switch_to_on_mtrl_00012.9.png
+SHA1-Digest: fVwihT1iMOU821Ub8jx9en9c/iE=
+
+Name: res/drawable-xxxhdpi/abc_btn_switch_to_on_mtrl_00012.9.png
+SHA1-Digest: 7ZV9lKwhU/5SRDL8g40p64jVcXk=
+
+Name: res/drawable/abc_btn_default_mtrl_shape.xml
+SHA1-Digest: jseWvCq85xmDJtu8ci+xSOnf99A=
+
+Name: res/drawable-xxhdpi/sy37_web_loading.gif
+SHA1-Digest: 0SSjOSuVdgwx4ABHJ+MA1u/X/ow=
+
+Name: res/drawable-xhdpi/hyberry_audience_count_icon.png
+SHA1-Digest: aG0JjBcU6k3kazA7e+G6QJz8nOA=
+
+Name: res/drawable/sysq_number_switch_icon.png
+SHA1-Digest: MHCinVuBFl6RIJnbxVPB9CCZKGA=
+
+Name: res/drawable-mdpi/abc_list_selector_disabled_holo_light.9.png
+SHA1-Digest: /fZrl3LEkeC2bEc9IkCxA7gMT8M=
+
+Name: res/drawable-xhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: P0GU9V0zk1JypdhCTTKrZ2RxFcc=
+
+Name: res/layout/notification_template_big_media_narrow.xml
+SHA1-Digest: 5c1sISL4bmegOzovfG9LslfN03g=
+
+Name: res/drawable-xhdpi/progress_loading_2.png
+SHA1-Digest: JufUUFGFUX8avwfbTTTKaIwrdAg=
+
+Name: res/drawable/abc_seekbar_tick_mark_material.xml
+SHA1-Digest: 2wMfjgs+iIk9Q5U3/nFABJPUBao=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_screenshot.png
+SHA1-Digest: eu6hZ9DUOY7DJNLuHeO9fehz9qE=
+
+Name: res/drawable/hyberry_webview_loading_anim.xml
+SHA1-Digest: tkkTUAmsdiW21e8Ycc7L3jJW1W4=
+
+Name: res/drawable-hdpi/sy37_icon_game_1.png
+SHA1-Digest: MMjVoH+Babs5AV5oWM3xTGxvlRU=
+
+Name: res/drawable/sysq_dialog_login_btn_bg.xml
+SHA1-Digest: BviQ4vWDpBBFpJvwugh83DfIcTQ=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_enlarge.png
+SHA1-Digest: aN06EtiZ9X0jsKFa8tCiPsLGdwE=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_black_36dp.png
+SHA1-Digest: qD2rSpTDKYbHqQcK0Y0u6l8S2vg=
+
+Name: res/drawable-xhdpi/hyberry_pauselive_btn_pressed.png
+SHA1-Digest: P4BEwF4UssaBoCHmbmWb462+u4U=
+
+Name: res/drawable/sysq_dialog_login_btn_disabled_bg.xml
+SHA1-Digest: IToAVJvr9/rjLwROdaps1sd3uu4=
+
+Name: res/drawable-xxxhdpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: XHHcw3neLpgobUEWo64K7thm0Hs=
+
+Name: res/drawable-xxhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: LNLXvmySKOfF2Lp1gubWDFlQbbs=
+
+Name: res/color-v23/abc_btn_colored_text_material.xml
+SHA1-Digest: Na3z1X258TLt5kkwCGG/G6po7O4=
+
+Name: res/drawable-hdpi/sy37_bg_layout_change_account.9.png
+SHA1-Digest: CUDYs8rc0LEIgVh40Y9VBC/PHHs=
+
+Name: res/layout/sy37_dialog_liveshow_exit_room.xml
+SHA1-Digest: UR4O/o/AQvtppP252efA0B+NOKU=
+
+Name: res/drawable-xhdpi/sy37_icon_coupon_more.png
+SHA1-Digest: jGVmR7WOJ82Pqyfxwm/0euhsG/c=
+
+Name: res/drawable-mdpi/abc_ic_menu_paste_mtrl_am_alpha.png
+SHA1-Digest: eH6eDNIa1/ooEsceQt56yMkT97M=
+
+Name: res/drawable/sy37_base_liveshow_im_chat_bg.xml
+SHA1-Digest: HnKSh+07zqflwM/P3oGoXVsjWAQ=
+
+Name: kotlinx/serialization/json/internal/AbstractJsonTreeDecoder.kotl
+ in_metadata
+SHA1-Digest: hBIU24VzMGy2wwwBuA1fxbx7TQs=
+
+Name: res/color/abc_primary_text_disable_only_material_dark.xml
+SHA1-Digest: Js7PRtNq95BfIsSH4feIVl5aobU=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_dialog.9.png
+SHA1-Digest: sEPQXNnXO9lbIj+J0BoxIzdq5mU=
+
+Name: kotlinx/serialization/json/internal/StreamingJsonEncoderKt.kotli
+ n_metadata
+SHA1-Digest: NCGfqJ1WiDh5wJdTJOqF5wYTXUk=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_gift_b.png
+SHA1-Digest: h2I8nbp9Jn05AwFN91elofdHQwk=
+
+Name: res/drawable/bg_tap_toast.xml
+SHA1-Digest: vz7/qX1mh1Yx5URFKwPxLkv5WyE=
+
+Name: lib/armeabi-v7a/libhyaudioenginecapture.so
+SHA1-Digest: 4lvjEwDcMB/HIkvjR7jaIx8LseY=
+
+Name: res/drawable-xhdpi/ic_share_wechat_circle.png
+SHA1-Digest: br9TmydQdqLz7c8j0dmttxDTEdg=
+
+Name: res/layout/hyberry_live_alert_view.xml
+SHA1-Digest: JEri5MiJ0MvXY+rrKQHSR3laLwE=
+
+Name: res/layout/sy37_reg_success_360.xml
+SHA1-Digest: ibG2RYgqX/OYQ95VFSxlHBjAWIs=
+
+Name: res/drawable-xxhdpi/sy37_web_back_disable.png
+SHA1-Digest: Xr68vn7TnnmPIBS3gQQnHdBLm6o=
+
+Name: lib/x86/libnsdt.so
+SHA1-Digest: sPEA1MbufCq3zSP0LYnZrR3ARDA=
+
+Name: res/drawable/sy37_shape_login_btn_bg_orange_j.xml
+SHA1-Digest: nBUPaUe03+4WdH3ShuRcaj8u9nM=
+
+Name: res/layout/hyberry_item_live_list.xml
+SHA1-Digest: yQFimO7qSuSm+Z87sJuZIYdzpBk=
+
+Name: res/layout/sy37_confirm_dialog.xml
+SHA1-Digest: awZLau3RrVqxqu/1TvKa1G4BX3c=
+
+Name: res/drawable-hdpi/abc_btn_switch_to_on_mtrl_00012.9.png
+SHA1-Digest: PAPt6rYwoDObcyvNqJzvsvJ0sJs=
+
+Name: assets/image/smile/29.png
+SHA1-Digest: T2y2fAMxcLkHtS8ESuXHFyxJ3Jk=
+
+Name: kotlinx/serialization/json/internal/AbstractJsonLexer.kotlin_met
+ adata
+SHA1-Digest: kvDt8dyc9yAIDLlYVEN9lowV1hQ=
+
+Name: res/drawable-xxhdpi/sysq_ic_face_verify_fail.png
+SHA1-Digest: XRzSZU1CCmn767nVVPqlBnELoCo=
+
+Name: res/drawable-hdpi/sy37_user_set_center_right_bg.png
+SHA1-Digest: 83cAH09K+OKwPyrRSp8tZVtfY7I=
+
+Name: res/drawable-xhdpi/progress_loading_1.png
+SHA1-Digest: K4lpoUV7DOWy+Tuplyhz0E76SvE=
+
+Name: res/drawable-mdpi/abc_btn_check_to_on_mtrl_015.png
+SHA1-Digest: +KP6IxDDZPXyTpZnsPiNZ8bzg0c=
+
+Name: res/drawable/abc_cab_background_top_material.xml
+SHA1-Digest: JL+TuCPNdNRHRihRFYzxYilugGE=
+
+Name: res/drawable-xxxhdpi/abc_scrubber_control_to_pressed_mtrl_000.pn
+ g
+SHA1-Digest: tJNe/P+Bqxry5hmus0ohMDtzBOM=
+
+Name: res/drawable-hdpi/sy37_btn_green_bg_1.9.png
+SHA1-Digest: aiatddWqNTlCGExCfKhyyi3oT04=
+
+Name: assets/image/smile/9.png
+SHA1-Digest: b6gJvXk9+QWiLXIU0m2HwEbKVzI=
+
+Name: res/anim/out_activity.xml
+SHA1-Digest: 4IiU0etVl67ItL9YV5aJJK/hHOY=
+
+Name: res/layout/hyberry_view_player_portrait.xml
+SHA1-Digest: L3vpFw/DS5e7930AnjS+lJqc8WA=
+
+Name: assets/image/smile/52.png
+SHA1-Digest: hC+iseQhQm+Xe/cgFUpe+Gr1UlI=
+
+Name: res/drawable-ldrtl-xxxhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: QJargT3DLQ4Gy85UQDAzUVSgJ+4=
+
+Name: kotlinx/serialization/json/internal/JsonPath.kotlin_metadata
+SHA1-Digest: d13xM1f2InpbExgKDSMKB8ruOOM=
+
+Name: res/drawable-xxhdpi/abc_switch_track_mtrl_alpha.9.png
+SHA1-Digest: BThLLp17+JqkYPih55u/EvaE6MQ=
+
+Name: res/drawable-hdpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: dPbo2aWf+fHIRzhQ98v6ypsA39M=
+
+Name: res/drawable-hdpi/sy37_icon_default.png
+SHA1-Digest: oio/dZ1i6IJjoBkq086TgGuHKRo=
+
+Name: res/layout/hyberry_layout_small_window.xml
+SHA1-Digest: 4wIn9QHbxMJg1skNo1Ocsn00BZE=
+
+Name: res/drawable/sysq_mytel_app_launcher.png
+SHA1-Digest: Q7FZUJcf8a4ic3etwDvVnZao3Io=
+
+Name: kotlinx/serialization/json/internal/StringOpsKt.kotlin_metadata
+SHA1-Digest: deDibEYw/T31lNJV0eq0Oe+5x3A=
+
+Name: lib/arm64-v8a/libmtpencrypt.so
+SHA1-Digest: wbX2soKQXWMBPJ6PhaWsmOIhTgM=
+
+Name: res/drawable/sy37_base_liveshow_im_anchor_bg.xml
+SHA1-Digest: K9Uo77YXMgmXg1zHigl14AgnEpc=
+
+Name: res/drawable-xxhdpi/hyberry_home_btn_pressed.png
+SHA1-Digest: PTglyr1rFv1kfEVgdBDUWAbwhok=
+
+Name: res/drawable-mdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: OPXRBGgjYSJyOmb1wgc4hauUGlk=
+
+Name: res/layout-port/sy37_liveshow_float_cover_view.xml
+SHA1-Digest: A/pUM26+PD8UqMBgV8CVsOvK/7E=
+
+Name: res/drawable/sy37_liveshow_bg_sound_float_circle.xml
+SHA1-Digest: txGjbEIYR2FwJ4l48zRKij8ZRkY=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_live.png
+SHA1-Digest: IjYcR1reCVQfl8XSe5WdMnqv9FM=
+
+Name: res/layout/sy37_pay_dialog_landscape.xml
+SHA1-Digest: TwHJvqEvsZ/CPhevp2k+wxTEZcs=
+
+Name: res/layout/hyberry_item_header_view.xml
+SHA1-Digest: qqbaBoTNi+OSy2Baazfk44XnEZA=
+
+Name: res/layout/sy37_toast_layout.xml
+SHA1-Digest: 6JIyKX7nzIZb4k8lQLz5GUsLU60=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_back_0.9.png
+SHA1-Digest: PvnABxlD912aSPH0VBWjfBRA6G4=
+
+Name: res/drawable/sy37_bg_auth_txt.xml
+SHA1-Digest: aAtvYkqxP1k+RGZHM+iE+40VvlM=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bt_check_new_message.png
+SHA1-Digest: ELFPng8PonG1oVvm2KcO9h7HXv0=
+
+Name: res/drawable-hdpi/sy37_loading.png
+SHA1-Digest: uVv+DzTTqQHzScSNvs/V8E626og=
+
+Name: res/drawable/sy37_weixin_progress.xml
+SHA1-Digest: PcH40SwvyU5vPG0YaCkGVrtUPAs=
+
+Name: kotlinx/serialization/json/JsonArray.kotlin_metadata
+SHA1-Digest: kgCw0IiWr3PMvZ0vLrXzgZK/qkk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_cover_icon_people.png
+SHA1-Digest: W/3QPNTZf1fYGQCh/YVdTHkTS4Y=
+
+Name: res/drawable/abc_ic_ab_back_material.xml
+SHA1-Digest: rgRqu172vZLE2d9YV43YA+E11io=
+
+Name: res/drawable-xxhdpi/sysq_ic_check_selected.png
+SHA1-Digest: 14936Ubpz/Yry+LpCf9I9Cp8CjM=
+
+Name: res/drawable-ldrtl-xxxhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: VjE2eabrk4F617tH1QobPdbUeN0=
+
+Name: res/drawable/hyberry_stoplive_btn.xml
+SHA1-Digest: UmJK46cAAvAW7K6ELxftDqGAZ7A=
+
+Name: res/layout/sysq_dialog_camera_permission_tip.xml
+SHA1-Digest: eAb8OBBSoFrAzTVPLpdY3Mmzc6A=
+
+Name: res/layout/hyberry_fragment_end_live.xml
+SHA1-Digest: JSQceqibu6hjm39eu5JGUGa7AAw=
+
+Name: res/drawable-xxhdpi/hyberry_phone_selected.png
+SHA1-Digest: Q1xj8V3M+6PFbrtLmCD5k3gf83s=
+
+Name: res/drawable-hdpi/sy37_user_set_down_bg_up.png
+SHA1-Digest: HJ/c2MM2fw18vDGPQLF8dtZNedQ=
+
+Name: res/xml/file_paths.xml
+SHA1-Digest: 0q9PsrVD3Ba+O+mS/81C/7xzZNk=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_list_empty.png
+SHA1-Digest: KwV9Xjv2SlSq5/xG2cyp3ecYlMQ=
+
+Name: res/layout/sy37_web_view_dialog.xml
+SHA1-Digest: CzIQKQiaRK56E+/yArV7t+3ujt4=
+
+Name: res/drawable-xxhdpi/sysq_ic_account_list_up.png
+SHA1-Digest: L2bg7N3cnLjX5xLYdPTAuJ3BFAQ=
+
+Name: res/drawable-hdpi/background_edit_normal.9.png
+SHA1-Digest: kh5ZkxPz/v4E7LLY1I2miIZWY5c=
+
+Name: res/drawable-xxhdpi/abc_textfield_default_mtrl_alpha.9.png
+SHA1-Digest: KAyhOpJ6WVZzbhwng4bdTLaav7I=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_message_1.png
+SHA1-Digest: ZoQuKH8keSB/Hv/RMrA89cckkgA=
+
+Name: res/drawable/face11.png
+SHA1-Digest: zSWIk6FGoGRSY2SUQqjtVa7ZB90=
+
+Name: res/drawable-xxhdpi/hyberry_user_num_icon.png
+SHA1-Digest: ca1xGqFRG72lW8tc5+6Qt8X9Uk0=
+
+Name: res/drawable/sysq_gray_corner_bg_10.xml
+SHA1-Digest: sApLQpVOAjgnhy3XWToRQo/BZXU=
+
+Name: res/drawable-xxhdpi/abc_list_selector_disabled_holo_dark.9.png
+SHA1-Digest: BkbowEsSnyUA/dwd5oL/S1tlNZc=
+
+Name: res/color/abc_hint_foreground_material_light.xml
+SHA1-Digest: TXrT9vj9D2NuPAJ5xpe7kOTHy88=
+
+Name: lib/x86/libhyutils.so
+SHA1-Digest: U6bloPccAn9XonE4HjebTNOvMA4=
+
+Name: res/drawable/sdk_assistant_edit_text_bg.xml
+SHA1-Digest: Yf6zFjPVCbKZPdoy4yMlcyH8upQ=
+
+Name: res/drawable-xxhdpi/abc_ic_star_black_48dp.png
+SHA1-Digest: qD2rSpTDKYbHqQcK0Y0u6l8S2vg=
+
+Name: res/layout/sysq_dialog_person_modify.xml
+SHA1-Digest: b20BZdC5XKag712svHQT4pDv5d0=
+
+Name: res/drawable-xhdpi/abc_btn_switch_to_on_mtrl_00012.9.png
+SHA1-Digest: sylhQt8GF2aKCIvWcH+w3kdl8IQ=
+
+Name: res/drawable/tooltip_frame_light.xml
+SHA1-Digest: sZWnFUaJFSxU3USH6qbsCBY97FQ=
+
+Name: res/layout/hyberry_fragment_modify_nick_name.xml
+SHA1-Digest: dWU0VLtdEd3LUPEpUO1KfulL6Jc=
+
+Name: res/layout/sy37_m_personal_dialog.xml
+SHA1-Digest: //aXIUGPT48wd2aBla64C92ahK4=
+
+Name: res/drawable/sy_sq_dialog_login_btn_bg_13_gray.xml
+SHA1-Digest: aGptsbnDL+/JUP2CQSzOMHUom+o=
+
+Name: res/drawable-xhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: EbXYgwFCFLuR9lmXgtVklnerCeg=
+
+Name: res/drawable-hdpi/sy37_icon_go.png
+SHA1-Digest: 83cAH09K+OKwPyrRSp8tZVtfY7I=
+
+Name: res/drawable-hdpi/sy37_icon_account_0.png
+SHA1-Digest: l5DlmvDzTShpI2o0komTMKuTXhA=
+
+Name: res/drawable-xxhdpi/sy37_bg_authcountdown_hide.png
+SHA1-Digest: 1KWVt+Gj0zd1vnMVZTWmeozpFlU=
+
+Name: assets/image/smile/45.png
+SHA1-Digest: 8/3tdaRMXZ9+mh9EXCaJpQTmcNg=
+
+Name: res/layout/sysq_item_float_avatar.xml
+SHA1-Digest: yXp6BTtlG9vONx0Na931033q7Cg=
+
+Name: res/drawable-hdpi/sy37_bg_btn_exit_0.9.png
+SHA1-Digest: yCvitKXmWyRDabZyjzqKWEPoBYk=
+
+Name: res/drawable-xxhdpi/sy37_base_liveshow_playerstatu_play.png
+SHA1-Digest: Y3fbEMeKDnY67i6Q+U4cz7RW97A=
+
+Name: res/drawable/sy37_float_box.xml
+SHA1-Digest: bIUepa85c8+Vghj9nYAHMmRJAVk=
+
+Name: res/drawable-xxhdpi/hyberry_delete_nickname_icon_normal.png
+SHA1-Digest: o1G3ockcG/teMqp+cTx3DHK5eu8=
+
+Name: kotlinx/serialization/json/internal/JsonToStringWriter.kotlin_me
+ tadata
+SHA1-Digest: h2vMq2M81eQkLSf/mWE6AMT1p4E=
+
+Name: res/layout/hyberry_live_alert_portrait.xml
+SHA1-Digest: QYfY9BVmSDoBZEsOkYAt1TNhg7k=
+
+Name: res/drawable-xxhdpi/hyberry_pay_bean_normal.png
+SHA1-Digest: D1RYzBFy3a2MxCplhKAAbBZKqwo=
+
+Name: res/drawable-xxhdpi/sysq_ic_logo.png
+SHA1-Digest: BZjH0+oWuvfFSyDCr+DMQ6B+q8s=
+
+Name: lib/armeabi-v7a/libproperty_get.so
+SHA1-Digest: N8uD4FTjzgIubOFLRrCUJt6u8Kw=
+
+Name: res/drawable-xhdpi/sy37_icon_huabei.png
+SHA1-Digest: EXGhcJGD7ZGKe9xJKIf+eQ4CUZE=
+
+Name: lib/x86/libc++_shared.so
+SHA1-Digest: 09qxDTr8YCszEPT0S/UYzzbrd1s=
+
+Name: res/drawable-xxhdpi/sysq_item_account_phone_shanyan.png
+SHA1-Digest: LhuknwBf6mTdjEt2FFc7hD99gLY=
+
+Name: res/drawable-hdpi/sy37_icon_submit_1.png
+SHA1-Digest: BzMJ0J7M9v8IsfAXoR6z7ndImbU=
+
+Name: res/drawable-xhdpi/tip_bg.png
+SHA1-Digest: hipACwp8GFC98iN+iezGwamvBaw=
+
+Name: res/layout/sy37_login_view.xml
+SHA1-Digest: 62xkplj2KArmajD851LdfQt+KQE=
+
+Name: res/layout/sy37_float_view_permission_tips_layout.xml
+SHA1-Digest: OD7sdTzUeM5+xy8GjL9GG90dPo4=
+
+Name: res/layout/abc_popup_menu_item_layout.xml
+SHA1-Digest: V5hG9EwBqvWybrXgBCfxXK97x6k=
+
+Name: res/drawable-xhdpi/abc_scrubber_control_off_mtrl_alpha.png
+SHA1-Digest: krEbusrGeef2xn3FKt+J06cC/sU=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_webview_head.png
+SHA1-Digest: ny32mulwbG60FpbPszC3xDAv6wU=
+
+Name: res/layout/sysq_dialog_login_view_verify_code.xml
+SHA1-Digest: 7/eU0ZjfFKN+J62PlKtNjiA+wtU=
+
+Name: res/drawable-xhdpi/abc_menu_hardkey_panel_mtrl_mult.9.png
+SHA1-Digest: sHjCOODQbVNalJgorF4P0Z++VcM=
+
+Name: kotlinx/serialization/json/internal/ArrayAsSequence.kotlin_metad
+ ata
+SHA1-Digest: LVhPao698xHokqjVJrE45C62zgs=
+
+Name: res/drawable/sysq_dialog_login_single_btn_bg.xml
+SHA1-Digest: 5V+Wx2hO0ARJmMcQIESpccfZoe4=
+
+Name: res/drawable/abc_ic_clear_material.xml
+SHA1-Digest: 0fA/FjJ6UUNNoFaUM6ISJOxCIBQ=
+
+Name: res/drawable-xhdpi/sy_fx_bg_login_phone.png
+SHA1-Digest: +nPUHVsGRnZqvUVs1NCfZfemTNM=
+
+Name: lib/arm64-v8a/libhyaudioengine.so
+SHA1-Digest: Ca7RAOnQ2inZFhLMR6jkZkO49BA=
+
+Name: res/drawable-xxhdpi/sysq_ic_right.png
+SHA1-Digest: 1TZhK3penvMfgmZx4fLWbWeKsP4=
+
+Name: res/drawable-xxhdpi/hyberry_floating_count.png
+SHA1-Digest: nPf5UJ7eVB4F+p80Gb9DPPb4fW8=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_input.png
+SHA1-Digest: BFQwKmJ19NBfW/NYC68vVR7UDN4=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_coupon_right.png
+SHA1-Digest: iVbIyKHiH6ta4jHgJBIvzNpaVZk=
+
+Name: assets/image/smile/7.png
+SHA1-Digest: XofbsIqGzyE/n0uzZlDWgeFDF3Q=
+
+Name: res/drawable/hyberry_start_live_btn_bg.xml
+SHA1-Digest: kN8tUuZAW8NxAHqOtTScjo3IFaQ=
+
+Name: res/drawable-hdpi/sy37_web_view_default_web_exit.png
+SHA1-Digest: wJoWGu1gMiMULem/T+r4WW4YbmE=
+
+Name: res/drawable-xxhdpi/abc_list_focused_holo.9.png
+SHA1-Digest: +qrg5JLwKTHh9qNrwZi6DH39Lvw=
+
+Name: res/drawable-hdpi/sy37_user_set_center_bg_center.png
+SHA1-Digest: JbehByDiyCl2F53AqtK2N3G7ne0=
+
+Name: res/drawable/sy37_base_liveshow_player_playstatus.xml
+SHA1-Digest: f9oBMp5J45Re9+7oU/xjD02XURA=
+
+Name: res/color/abc_tint_default.xml
+SHA1-Digest: axcgt7+jGY2ATbloM+nZdF6W5EY=
+
+Name: res/drawable/sy37_qq_progress.xml
+SHA1-Digest: HqZ3ghL+7aiY2N9hJS4+hGjf53I=
+
+Name: assets/image/smile/38.png
+SHA1-Digest: Uxm1r+etjHDQOl1C4VQzycTaopM=
+
+Name: res/drawable-xhdpi/hyberry_floating_back.png
+SHA1-Digest: h/RZXAtrSow7VNRt/34dk0u3f6w=
+
+Name: res/drawable-xxhdpi/sdk_assistant_update_log_logo.png
+SHA1-Digest: haXqHI99SNA3s66OxSbeKs4sJYg=
+
+Name: res/drawable/sy37_update_hide_btn.xml
+SHA1-Digest: 84tb9R6eGtRaS7eFhTAxBccKA3I=
+
+Name: lib/armeabi-v7a/libmmkv.so
+SHA1-Digest: 14w68Ej0vk43wuINM4+KYo0dEg4=
+
+Name: res/layout/sy37_demo_cp_filed.xml
+SHA1-Digest: 079u8Hf0a0wHSQBL4FELF6eVBk4=
+
+Name: res/drawable-xxhdpi/sy37_bg_bottomdelete_landscape_highlight.png
+SHA1-Digest: Ka1D9QK/HrT0G87K9Z0k7Zmbzts=
+
+Name: res/drawable-mdpi/abc_ab_share_pack_mtrl_alpha.9.png
+SHA1-Digest: mvqNG7zcFCFOLiK/SruQWx0c0dA=
+
+Name: res/layout/hyberry_input_live_title_dialog.xml
+SHA1-Digest: rMkMvrXGzwxoSzr5Uk9GVKYKQbo=
+
+Name: res/drawable/hyberry_pauselive_btn.xml
+SHA1-Digest: nNI8we6xcXVFSUqSpYRrqX5zx4o=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_ic_imlist_close.png
+SHA1-Digest: uuApvnhkgLu3D6rO/Qs2YcNNVhc=
+
+Name: kotlinx/serialization/json/internal/JsonPrimitiveEncoder.kotlin_
+ metadata
+SHA1-Digest: z0ZaroBp37R7eWmGjh75p2fT1I8=
+
+Name: res/drawable-xhdpi/hyberry_net_speed_bg.9.png
+SHA1-Digest: 9ovaBKqF2dRZ+vAL8xdJ8JMPx/I=
+
+Name: assets/image/smile/50.png
+SHA1-Digest: vEM5JIG9d8ggbyxkbbQrDgkOnVs=
+
+Name: res/drawable-hdpi/sy37_login_help.png
+SHA1-Digest: Tqf0tiBJaEHXTZucRsrlNcVH7rM=
+
+Name: res/drawable/sy37_shape_white_radius_8.xml
+SHA1-Digest: /PHa6hM1DCzBVuAtiagrfqmqNqE=
+
+Name: res/layout/sysq_pay_dialog_coupon.xml
+SHA1-Digest: FiOHCpw1r5/kIfOFFzXqZbJAf58=
+
+Name: res/drawable-xxhdpi/sy37_ic_draghide.png
+SHA1-Digest: ojunUr9ykva25Sz0B2VVL7aJIJk=
+
+Name: res/drawable-ldrtl-xhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: W4MJFz3vxHZ3uyM6PwMBevMyRKs=
+
+Name: res/layout/sy37_base_web_normal_dialog.xml
+SHA1-Digest: KQ7A9PgBslPegqarbZfhQYKkdMI=
+
+Name: res/drawable/sy37_liveshow_bg_left_tab_selector.xml
+SHA1-Digest: ++mhVbGv8AqQPYtnCxdMFd5XTeo=
+
+Name: res/layout/sy37_kefu_modifypw.xml
+SHA1-Digest: XPliAwx9IJtNEIqmnaCxamSZtWo=
+
+Name: res/drawable-xxhdpi/abc_ic_star_black_36dp.png
+SHA1-Digest: rB+NghVyOANUI2YjJaOG6NGuPfE=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_small_close.png
+SHA1-Digest: 4MhjG01VMdSq/wvDqLCf9J/4z7E=
+
+Name: res/drawable-mdpi/abc_list_divider_mtrl_alpha.9.png
+SHA1-Digest: B+V5QEOwy10ghi7uX5XLTPFJGJs=
+
+Name: res/drawable-xxhdpi/sy37_base_liveshow_playerstatu_stop.png
+SHA1-Digest: jygGtTWYAVI2VOQNy1mRzPkf3tM=
+
+Name: res/drawable/sy37_shape_bg_room_item.xml
+SHA1-Digest: 3y+2hVcT/DF+fBiVHDkm5Trtg/o=
+
+Name: res/anim/sy37_popwindow_bottom_in.xml
+SHA1-Digest: +0W8CxlFnj1UsDEtMChwxvvt3ug=
+
+Name: res/drawable/sy37_btn_kefu_blue.xml
+SHA1-Digest: WPbcn/yXO2ST0oe/qfveb9ZB7TY=
+
+Name: res/drawable-port/sy37_liveshow_bg_chatinput_long.xml
+SHA1-Digest: 9NkoU+y21pmpSXSLWRS5FyCk3Tg=
+
+Name: lib/armeabi-v7a/libhyaudioengine.so
+SHA1-Digest: 3iI4Hxx5fTlBGEPWoxC3RE8R98w=
+
+Name: res/drawable/hyberry_resolution_list_bg.xml
+SHA1-Digest: RHLMxxkh1959iZvcwOB/RSjFoWo=
+
+Name: res/drawable-hdpi/sy37_web_view_default_web_forward_enable.png
+SHA1-Digest: KDiQWuj+KQfVMTRGTIG0pmT7MOI=
+
+Name: lib/x86/libtapsdkcore.so
+SHA1-Digest: Z6wfcWBW/9pgAUkysdHXFB4GMwE=
+
+Name: res/drawable-mdpi/abc_ic_menu_share_mtrl_alpha.png
+SHA1-Digest: fQHZQyGml4JDOqavNeOBUdAEQAU=
+
+Name: res/drawable-xhdpi/fx_bg_login.png
+SHA1-Digest: ohLrQI4/I2PIAu0SLXwfOSZSBqY=
+
+Name: res/drawable-xxxhdpi/abc_btn_check_to_on_mtrl_015.png
+SHA1-Digest: qJcUMqyqINyIMt4rlGIQj4WjvuE=
+
+Name: res/drawable-hdpi/sy37_bg_menu_two.png
+SHA1-Digest: FcMtNlro1R8/P6yRzuCsX0H8RGg=
+
+Name: res/drawable-mdpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: CgRtl1L4YORQ+4X8N3O6KHMvWO8=
+
+Name: res/drawable-mdpi/abc_text_select_handle_left_mtrl_light.png
+SHA1-Digest: FYJhyqbL++NCfZ8sb/hL49kkkcg=
+
+Name: res/drawable/sy37_icon_activity.xml
+SHA1-Digest: XkDiN/puIgOf+MAp/z2ZGLFL81E=
+
+Name: res/drawable-hdpi/abc_btn_radio_to_on_mtrl_015.png
+SHA1-Digest: t2jYCio7knk15jtrBfpoHXZRaSU=
+
+Name: lib/armeabi-v7a/libmarsxlog.so
+SHA1-Digest: GRnwjfNjeKLRtDP2LhxWT5c17Oc=
+
+Name: res/layout/hyberry_view_player_ui_portait.xml
+SHA1-Digest: U1VRAns3uWMH10z029V5I+HAc6A=
+
+Name: res/layout/sy37_down_dialog.xml
+SHA1-Digest: fKnMk4qcanO1Cy0tEpBE2qFY0es=
+
+Name: res/layout/sy37_common_alert_dialog.xml
+SHA1-Digest: /Y3orcOWmNxEzhwmxVJtdRZS6uo=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_dialog_bg.png
+SHA1-Digest: uWESobZtwvLE+GZSgz+K4icZhUo=
+
+Name: res/layout/sy37_s_toast_layout.xml
+SHA1-Digest: 6JIyKX7nzIZb4k8lQLz5GUsLU60=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_left_tab_selected.png
+SHA1-Digest: iAVIRp3w6BJ8YGJgJs1wXfsuz9o=
+
+Name: assets/image/smile/36.png
+SHA1-Digest: elkTTqaBET0J231ERfHBJyTBBug=
+
+Name: res/drawable-xxhdpi/sy37_bg_bottomdelete_landscape_normal.png
+SHA1-Digest: 4IeTkSXWf0+Ybu8GIpwASdfZC3A=
+
+Name: res/drawable-hdpi/sy37_ic_launcher.png
+SHA1-Digest: Nq8q3HeTluE5JNCBpVvNy3BXtJI=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_chat_room.png
+SHA1-Digest: MiDOmsiMeSnqDfB+9JWL3UEjFs4=
+
+Name: res/drawable-hdpi/sy37_m_bg_notice_title.9.png
+SHA1-Digest: NKgaanNNNw62PXS+MCKNh7CEn1Y=
+
+Name: lib/armeabi-v7a/libhyquic.so
+SHA1-Digest: NEFU59W9J+7Axtq3Nc0stbJTgyc=
+
+Name: res/drawable-xxhdpi/abc_btn_radio_to_on_mtrl_015.png
+SHA1-Digest: SBEYcM7QRDZwT5WiXDnt0BBXOsg=
+
+Name: res/drawable-hdpi/sy37_icon_app.png
+SHA1-Digest: sE59vex3UzY98mYiyJyrrvzChn4=
+
+Name: res/drawable-xhdpi/hyberry_start_live_normal.png
+SHA1-Digest: bDhTzEcXt74jpqS/2YmbbXy9Nng=
+
+Name: res/drawable-hdpi/sy37_in.9.png
+SHA1-Digest: 3R4XNxYg6dxu7itVWj0mDYY8UA8=
+
+Name: res/drawable-xhdpi/hyberry_pay_bean_selected.png
+SHA1-Digest: wSm34sgHw8ErQIKunG0ZKl7gG18=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_title_chat_room.png
+SHA1-Digest: rotQ7mP2bvS/1+wBFg9gRC/52oE=
+
+Name: res/layout/sysq_item_pay_way.xml
+SHA1-Digest: ycyJfBIHOZm6CRkVz2C8lLupHKw=
+
+Name: res/drawable-xhdpi/sy37_icon_doubt.png
+SHA1-Digest: Y9lrvF9YMxoSLOAnpcNuNrdIIh8=
+
+Name: res/drawable/notification_tile_bg.xml
+SHA1-Digest: B81/Xs0NYOMaLTSicMg2pOmHV/U=
+
+Name: res/layout/sy37_web_view_layout_fragment.xml
+SHA1-Digest: JdaXTnjKmKCEhk/BzviZxVC4cIs=
+
+Name: lib/arm64-v8a/libhyutils.so
+SHA1-Digest: gN7njZJAINDinOcrYgDNPc+AJVI=
+
+Name: res/layout/hyberry_pub_live_message_item_small.xml
+SHA1-Digest: Y+1sGIoMOSpSebM+CQM/cU4rMqw=
+
+Name: res/drawable/abc_btn_colored_material.xml
+SHA1-Digest: wwOI4Ui9zpQMDxcwTk2rxXFXNSs=
+
+Name: res/drawable-xhdpi/sy37_wm_move_hide_trance_right.png
+SHA1-Digest: QBwgwbdfE/jPcipu2QDfpHS3B+U=
+
+Name: res/layout-land/hyberry_floating_view_edit.xml
+SHA1-Digest: 1Hu8ELiIkC47sghOjalWskaNQkk=
+
+Name: res/drawable-xhdpi/icon_close_press.png
+SHA1-Digest: yFIK5xhUWa43S6b9sxCmkIXgG2A=
+
+Name: res/drawable-xhdpi/hyberry_home_btn_pressed.png
+SHA1-Digest: iMHSXc2HBAEXGfmNhN4bGi56DnE=
+
+Name: res/drawable/account_reg_item_bg.xml
+SHA1-Digest: axjeVkJ5ZINEj1E061VHc+4BYYw=
+
+Name: assets/image/smile/43.png
+SHA1-Digest: q9bbt0GQmn2i69LPjklHjXaUcJo=
+
+Name: res/drawable-hdpi/sy37_layout_white_bg.9.png
+SHA1-Digest: LavWHZakt7uGsvMur+CcOqwpI1o=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_choose_view.png
+SHA1-Digest: oVQhJAcS1am7p7x5qwVZLSa6m+w=
+
+Name: assets/cacert.pem
+SHA1-Digest: 8Nr30+EryhOVQQVNa3VA92g4ww8=
+
+Name: res/drawable-hdpi/sy37_dialog_close.png
+SHA1-Digest: xA/BzwcvfYnq7g8oStpWcrv7d/Y=
+
+Name: res/drawable-xhdpi/hyberry_preview_guide_close.png
+SHA1-Digest: 3H8WJ1TGO3xO5TQ9iKvs7ltqhV8=
+
+Name: res/drawable-mdpi/abc_btn_radio_to_on_mtrl_000.png
+SHA1-Digest: BkLuPDSGprQlEI0kZDl+eMnGHK8=
+
+Name: res/color/abc_hint_foreground_material_dark.xml
+SHA1-Digest: lkmLFEqZe6uXyX7zeruAkKjkisE=
+
+Name: kotlinx/serialization/json/internal/JsonException.kotlin_metadat
+ a
+SHA1-Digest: F4tqeaLPhFuXNENpdghWios1SVo=
+
+Name: res/layout/sy37_float_item.xml
+SHA1-Digest: ebA5gjvzUd2aA/OkyiTNwcknT5g=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_bg.png
+SHA1-Digest: lLQ9cKULzCloTdagU6tYuzUfZZ8=
+
+Name: res/drawable-xhdpi/sy37_icon_reg_by_user.png
+SHA1-Digest: mLM90EzHvEQvnMQrfstjGLvyOPE=
+
+Name: res/layout/abc_list_menu_item_icon.xml
+SHA1-Digest: vGoIIIugMseGH62o7Fum+OQLa5c=
+
+Name: res/layout/notification_action.xml
+SHA1-Digest: WX445Z+80SrIUHXHq4UdGqIk4Fc=
+
+Name: res/drawable-xxhdpi/sysq_ic_close.png
+SHA1-Digest: 2FyqLNTgGEuP82xzDg09WBP1A3Q=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_room_top_bg.png
+SHA1-Digest: 9G+dz1MxOodT59/xfYhQgWw/HkI=
+
+Name: res/drawable-xxhdpi/hyberry_mic_ban_btn_normal.png
+SHA1-Digest: +9cGsJuuKo7Eacpc4RoIjP/pL+g=
+
+Name: res/drawable-hdpi/sy37_divider.png
+SHA1-Digest: OpZrsgGdj71YxYan3Dlle51wsJo=
+
+Name: res/drawable-xxhdpi/sysq_pay_ic_help.png
+SHA1-Digest: 1C8bomnpgx08qIL+5WLiMRZmuM4=
+
+Name: res/drawable/sysq_dialog_login_wechat_btn_bg.xml
+SHA1-Digest: oysDcHh7TAMiEGB09GP9uylKr2Q=
+
+Name: res/drawable-hdpi/sy37_bg_edit.9.png
+SHA1-Digest: eu7jn3NUdGnV39eKf27DtlPJx8g=
+
+Name: lib/armeabi-v7a/libhydeviceid.so
+SHA1-Digest: UZuExqrVPwdr7OGV5QEjjlJkYo0=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_cancel.png
+SHA1-Digest: obz70u/iukCP4Ps5LQEHSI6Mrdg=
+
+Name: assets/image/smile/25.png
+SHA1-Digest: wXczBMDAO97+s9eb/v49QUO/vlY=
+
+Name: kotlinx/serialization/json/DecodeSequenceMode.kotlin_metadata
+SHA1-Digest: ioEXKMQrQCLXiWEMyngD+8vkPWo=
+
+Name: res/layout/sysq_dialog_login_history_account.xml
+SHA1-Digest: VbFURU8VKzN7bjyOXyMH+m7gODM=
+
+Name: res/drawable/hyberry_pub_black_round_corner_bg.xml
+SHA1-Digest: o37blUmfx08Y9LkHJfPjgSRjvzA=
+
+Name: res/drawable-watch/abc_dialog_material_background.xml
+SHA1-Digest: hY+uvTVt215v95lqdwJwINIftQY=
+
+Name: res/drawable-xhdpi/sy37_checkbox_bg.png
+SHA1-Digest: RgVcNOqbb65wocpViRDy/4CFpFY=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_right_mtrl_dark.png
+SHA1-Digest: Y+g9Juu0+yITOfq0vSaoAZYmZ8o=
+
+Name: res/layout/sysq_pay_dialog.xml
+SHA1-Digest: Ps5Lw8tRlNUPa/aJrIP5RT43n2c=
+
+Name: res/anim/abc_slide_in_bottom.xml
+SHA1-Digest: 9mrxZ0Dde/HdRLQy8JrHYd7VT/w=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_progess_b.png
+SHA1-Digest: Zdo7YBiPqCihOIyO+mXe/dkHOEE=
+
+Name: res/layout/notification_template_part_chronometer.xml
+SHA1-Digest: fSdDeJwKt7lPStxhK2wuc1tVQEA=
+
+Name: res/drawable-xxhdpi/hyberry_delete_nickname_icon_pressed.png
+SHA1-Digest: Vu25ZyGv4/pqTWja7vYYvMDMeAI=
+
+Name: res/drawable-xhdpi/hyberry_webview_loading.png
+SHA1-Digest: qIjWM4aRXvDx8SAKeKT6x++5e7A=
+
+Name: assets/image/smile/41.png
+SHA1-Digest: TWGOoOBqP0a/U+mM6xGmsctAcgs=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_im_room_home.png
+SHA1-Digest: Roqa8ZtETTeDdxhulAnkflrjmsE=
+
+Name: res/layout-land/sy37_web.xml
+SHA1-Digest: RuoJ1sQ4xl4hFR1td06C8W8PhVU=
+
+Name: res/drawable-xhdpi/hyberry_continuelive_btn_normal.png
+SHA1-Digest: eh14JQf5uOpvSr4AuKRRaOAAMCg=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_send.png
+SHA1-Digest: qp+0Ua44U7kJKArrTu4nFr3zP2I=
+
+Name: res/drawable-hdpi/abc_ic_menu_share_mtrl_alpha.png
+SHA1-Digest: EwfaG2r9Y+WFrcU430zatEJ2UMM=
+
+Name: res/layout/sy37_scan_code_activity.xml
+SHA1-Digest: V87PUHxhq+FhEdsDqlA2dVAusB8=
+
+Name: res/drawable-xxhdpi/sy37_icon_no_coupon_un_select.png
+SHA1-Digest: 4xLa14VffqNRW0H8mHTcEacxG08=
+
+Name: res/drawable-hdpi/sy37_landing_bottom_message_img.png
+SHA1-Digest: H7Ej+OfbJu7whkOLJlWS6G/XDiQ=
+
+Name: res/layout/abc_search_dropdown_item_icons_2line.xml
+SHA1-Digest: HJT6QQmn4BToC4gbnH8Ku285gyQ=
+
+Name: res/drawable-xxhdpi/hyberry_checkbox_uncheck.png
+SHA1-Digest: 4eKNKuxQ9xYUBCZ9nlqxpXO5UOA=
+
+Name: res/drawable/hyberry_kaihei_btn.xml
+SHA1-Digest: b3bNHC31q+WbFovd8lqh3SLaIM4=
+
+Name: res/drawable/hyberry_fragment_bg2.xml
+SHA1-Digest: amrStHZEA0jpyuVf98wr+Bfb7R0=
+
+Name: res/layout/sdk_assistant_update_log_dialog.xml
+SHA1-Digest: 1CKXHxf5z7zu9MOk12a1r13vZlc=
+
+Name: res/drawable/sysq_bg_account_pop.xml
+SHA1-Digest: i6aSPDnDy2pC97KqoxoH6kaldOo=
+
+Name: res/drawable/hyberry_resolution_bg.xml
+SHA1-Digest: 5NmNVL3WVwgpBspzU1/CtYHHtx0=
+
+Name: res/drawable-xxhdpi/sy37_icon_no_coupon_select.png
+SHA1-Digest: QzZ07s6BgcQCpU8hNaIrHbEwg0Q=
+
+Name: res/drawable/sy37_icon_kefu_check.xml
+SHA1-Digest: EPpLH+jfjf4rPYjQ+YqckdohCh4=
+
+Name: res/drawable-xhdpi/ic_privacy_checked.png
+SHA1-Digest: FwxXDxPkjgchsxLnTrPQhdP3HBY=
+
+Name: res/drawable-hdpi/sy37_ca_bg.9.png
+SHA1-Digest: tiqVoyWKQWY6rgalqozjQyy2HxQ=
+
+Name: res/layout/sy37_dialog_share_fail.xml
+SHA1-Digest: lOti7EUwgO7MTsnRXKRmOEP9gGY=
+
+Name: kotlinx/serialization/json/JsonElementBuildersKt.kotlin_metadata
+SHA1-Digest: G+WfoSiXLTQX+OQtUgJ2WNeaIsc=
+
+Name: res/drawable-xxhdpi/abc_tab_indicator_mtrl_alpha.9.png
+SHA1-Digest: 0nreQ9JGT21y6H3wmDG6m1vmNdE=
+
+Name: res/drawable/hyberry_modify_nickname_input_bg.xml
+SHA1-Digest: 2MNfrIP129XrAisl/kaxwbNOPr0=
+
+Name: res/drawable-xhdpi/hyberry_floating_open_danmu.png
+SHA1-Digest: 8YhsvLwYV9JSl41Nf2zLntvr3HE=
+
+Name: res/drawable-hdpi/sy37_btn_kefu_back.png
+SHA1-Digest: xA/BzwcvfYnq7g8oStpWcrv7d/Y=
+
+Name: res/layout/sdk_game_tips_landscape_layout.xml
+SHA1-Digest: 69ZwEAAcpNAvlOhSHTQedWRU1GE=
+
+Name: res/drawable-xxhdpi/abc_scrubber_control_to_pressed_mtrl_005.png
+SHA1-Digest: uGSjtXNG1/NqmrhFrpnN+cLdEHs=
+
+Name: res/layout/layout_tap_toast.xml
+SHA1-Digest: pWG9XtVDOA6qabMHAvblgYiaoCY=
+
+Name: res/drawable-xxhdpi/sysq_ic_down_more.png
+SHA1-Digest: H6OZ038LS+eiNvKKzCgKaJoNSzU=
+
+Name: res/anim/in_activity.xml
+SHA1-Digest: Ak3XpWdejo+5ThQrafup1d/KnfQ=
+
+Name: res/layout/notification_template_lines_media.xml
+SHA1-Digest: QAo0bxFzSgChlsu9oHzXJQe5Ywg=
+
+Name: res/drawable/sy37_update_scroll_bg.xml
+SHA1-Digest: QqDOuFOu/UGSjVtI50tD/O7fjBg=
+
+Name: res/drawable/hyberry_delete_nickname_icon.xml
+SHA1-Digest: t5/LO6uNM+K693APUs559Sfyz7E=
+
+Name: res/drawable-xxhdpi/sysq_ic_test_level.png
+SHA1-Digest: ntqnG0IAFJIoVjh/d5wGbwsFhKQ=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_icon_tip.png
+SHA1-Digest: 2ryy0I5qyPwQBWNaVM7Zp4pOJl4=
+
+Name: kotlinx/serialization/json/JsonArrayBuilder.kotlin_metadata
+SHA1-Digest: voojQfNWzuZ8eMgaofXuqeAg10o=
+
+Name: res/drawable-xhdpi/hyberry_pay_bean_normal.png
+SHA1-Digest: +cntMqoM0kel66c16db455HMDrs=
+
+Name: res/drawable-xhdpi/hyberry_floating_voice_open_normal.png
+SHA1-Digest: +B8dWY0FAENJXsSIPxjILCv86pQ=
+
+Name: res/layout/hyberry_loading_dialog.xml
+SHA1-Digest: nGk9NkZpSd0aB2keY6NEHhSTjsY=
+
+Name: res/drawable-hdpi/abc_menu_hardkey_panel_mtrl_mult.9.png
+SHA1-Digest: bx0LnJOy2udCHZlhgTQ5MF1ylXA=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_half_black_36dp.png
+SHA1-Digest: vEJLmUKnbTQx7SdNZzIcFHWiueg=
+
+Name: res/drawable-xxxhdpi/abc_btn_switch_to_on_mtrl_00001.9.png
+SHA1-Digest: olS8gbovi+NV8EK5xujAEGUtpY4=
+
+Name: res/layout/hyberry_view_player_ui.xml
+SHA1-Digest: Ad7m+uVuCE38/r+B/0I5rYAAmjY=
+
+Name: res/layout/sysq_guarantee_dialog.xml
+SHA1-Digest: IEe84LgOYMpGtD/paAUZ1mCdXHA=
+
+Name: res/drawable/hyberry_shape_bg_white_60_radius_13.xml
+SHA1-Digest: xMV1Nkwv7Z2npijAkFcoJvUYMnc=
+
+Name: res/drawable/abc_ic_arrow_drop_right_black_24dp.xml
+SHA1-Digest: VJ1M+SHqn0EEczJS9YZLX5UOLPI=
+
+Name: res/drawable/abc_list_selector_holo_light.xml
+SHA1-Digest: GRpTfjp5E/y+rpBArlIxIXCn+lY=
+
+Name: res/drawable/sysq_bg_white_corner.xml
+SHA1-Digest: Rv3gtEz6JGJLveS7xxTYemDqSDA=
+
+Name: res/drawable-xxhdpi/sy37_ic_computer.png
+SHA1-Digest: NcetNX+p+Epr9358QDC5RZvspwU=
+
+Name: kotlinx/serialization/json/JsonDecoder.kotlin_metadata
+SHA1-Digest: 2BvuZ8kmLji/ULb2Honi5O1rhTY=
+
+Name: res/drawable-xhdpi/sq_icon_info_binding.png
+SHA1-Digest: WKZVUR+PeJZQ08AT3iUFaXIna+U=
+
+Name: res/drawable-xxhdpi/hyberry_floating_back.png
+SHA1-Digest: G2NMhgQc50YrUxljgQAtNtonA9o=
+
+Name: res/drawable/sy3y_regs_bg.xml
+SHA1-Digest: 5Kyhylfjuow2wdN/0LyX5kmSw7M=
+
+Name: res/drawable-xhdpi/sy_payweb_close_new.png
+SHA1-Digest: xDFFhLjCoU3qmyGaGsiBG5tyUuE=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_help.png
+SHA1-Digest: 4sQYLZlz+6TkiF2eeIGdXmTYMvc=
+
+Name: res/drawable-mdpi/abc_ic_star_half_black_16dp.png
+SHA1-Digest: eE8jUSUbKNYNrcQV5x9m+PFsfNg=
+
+Name: res/drawable-hdpi/sy37_icon_submit_1_simple.png
+SHA1-Digest: b2KsZdJStEKOEvVX5UT2pD6aN5A=
+
+Name: res/drawable-xxhdpi/abc_scrubber_primary_mtrl_alpha.9.png
+SHA1-Digest: xUuqGLRayLOu4uohwF7Ed06GxxU=
+
+Name: res/drawable-xxhdpi/abc_text_select_handle_middle_mtrl_light.png
+SHA1-Digest: vt3HbHGk8VA9dOqoXHwkSMEW3Rk=
+
+Name: res/layout/sy37_coupon_item.xml
+SHA1-Digest: N3HGPX5Ll7yK3R93+Zkgo6LgO+Q=
+
+Name: res/layout/sy37_item_send_view.xml
+SHA1-Digest: WyYnMSJmn6ieEkodfObzU7MBi38=
+
+Name: res/drawable-xxhdpi/hyberry_mic_ban_btn_pressed.png
+SHA1-Digest: iPth3ciAjM9wRSoF43HHTxielfA=
+
+Name: res/layout/sy37_demo_main.xml
+SHA1-Digest: Kwyf5iEle9uv6V5wJE1uPzMnC5M=
+
+Name: res/drawable/sy_sq_dialog_login_btn_bg.xml
+SHA1-Digest: BviQ4vWDpBBFpJvwugh83DfIcTQ=
+
+Name: res/drawable-hdpi/bugle.png
+SHA1-Digest: Qj1JLG1ak7RObSGfhj1SITQd08U=
+
+Name: res/layout/hyberry_camera_echo_dialog.xml
+SHA1-Digest: hlHaZi8RfZLjz1MfzmAYuIrYrFE=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_black_48dp.png
+SHA1-Digest: DrqY7A0QpH+N9Xvx3GnoSbSf6XE=
+
+Name: res/drawable-xxxhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: b4ZW2Wa0RJ9V87ZXaq+sYEn8pwM=
+
+Name: res/layout/select_dialog_multichoice_material.xml
+SHA1-Digest: 8vVvaMQ1TP84Fid1BTVV0XroSls=
+
+Name: res/drawable-hdpi/sy37_img_loading.png
+SHA1-Digest: Xzd2hECnRGI5rXc/4bAhU4p8r9o=
+
+Name: res/layout-port/sy37_liveshow_chatting_view.xml
+SHA1-Digest: tAp0vlS9OfBnYiCdZjzbK5H4uHM=
+
+Name: res/drawable-xxhdpi/hyberry_component_start_live_btn.png
+SHA1-Digest: VUSqJHkRUVGOGOC5QPia+2iHL1Y=
+
+Name: res/layout/hyberry_live_alert.xml
+SHA1-Digest: eJMu4uxoACS210JxL8K8xvLnfNs=
+
+Name: res/drawable-hdpi/weibologin_icon.jpg
+SHA1-Digest: s9QvnKWllnRHmpYZ0FC9+daTtNs=
+
+Name: res/drawable-hdpi/sy37_icon_activity_1.png
+SHA1-Digest: 2Ac3FPBlL9ksTGLbbUmVXw9DtWE=
+
+Name: res/layout/sy37_charge_desc_layout.xml
+SHA1-Digest: hJ7dD1RP3UH9Hy5YefKlEUwbtVQ=
+
+Name: res/drawable/sy37_shape_r_2_f3f3f3.xml
+SHA1-Digest: kNS9AyduBtLwxn2VyE+ghSPNRQA=
+
+Name: res/drawable/sy37_reg_pressed.xml
+SHA1-Digest: rW08ZxcEdFjBmbFHqN0nT9K9X1Y=
+
+Name: res/drawable/water_mark.png
+SHA1-Digest: A+0q7k5YBlwKc/85fP9O6ZiIbMA=
+
+Name: res/drawable-xhdpi/abc_scrubber_control_to_pressed_mtrl_000.png
+SHA1-Digest: 3/zkaBiI1eRYWLdvNnpenkbR80A=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_room_item.png
+SHA1-Digest: d4dQHcEzvJOwPxGL34H30SDCoK8=
+
+Name: res/drawable-ldrtl-xhdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: KkCOVyimqKFamEgxxcR4n36HqJU=
+
+Name: res/drawable-hdpi/sy37_list_devider.png
+SHA1-Digest: DNBQXDKAQxZYH5R0VaO5NvAOnbc=
+
+Name: res/drawable-hdpi/sy37_binding_mobile.png
+SHA1-Digest: 8ncuQcdxHCReMxrdUnRW4RG+8+g=
+
+Name: res/layout/sysq_m_payweb_dialog.xml
+SHA1-Digest: XFPN1ZYZvVI3EID5VqcjrCNW6kM=
+
+Name: res/drawable-xxhdpi/sysq_bg_face_verify_help.png
+SHA1-Digest: ETS84fT9eAbwzc9JLc4zHv7VFXg=
+
+Name: res/drawable/hyberry_live_chat_contract_btn.xml
+SHA1-Digest: QEaQiObx66vq6DClYKQhqSI8ROI=
+
+Name: res/drawable/hyberry_kaihei_toast_bg.xml
+SHA1-Digest: fA3ZuJXLwObmwPmeR28ypyAGAyQ=
+
+Name: assets/image/smile/56.png
+SHA1-Digest: VbIe9yCNLdCnLamTCafFitZ/b2w=
+
+Name: res/layout/abc_tooltip.xml
+SHA1-Digest: aPVd767rYLMLIvXVhlF2UH4N0jo=
+
+Name: lib/x86/libhyrtmpupload.so
+SHA1-Digest: LQjOlAYtqQMTcPmEOSIbZU+uiyI=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_room_top_bg.png
+SHA1-Digest: qp+0Ua44U7kJKArrTu4nFr3zP2I=
+
+Name: res/drawable/sysq_shape_reg_success_account_bg.xml
+SHA1-Digest: kNS9AyduBtLwxn2VyE+ghSPNRQA=
+
+Name: res/drawable-mdpi/notification_bg_low_pressed.9.png
+SHA1-Digest: H5WGfrVJdLkAb3Nq1yOl+B6Sklw=
+
+Name: res/layout/notification_template_media.xml
+SHA1-Digest: 75TSainhKR76HujlrEeZ3eb7eCI=
+
+Name: res/drawable/sy37_base_liveshow_im_message_bg.xml
+SHA1-Digest: KYmEFV2OkV7+KKNOqPsOhKqbX0k=
+
+Name: res/drawable-hdpi/abc_ic_commit_search_api_mtrl_alpha.png
+SHA1-Digest: 0EXSHhadYA4b4QWoY6G976PBSNY=
+
+Name: res/drawable-xhdpi/hyberry_banner_land.png
+SHA1-Digest: QlxOqzNHp12HYoa5EQM/pRMMMss=
+
+Name: res/drawable/natural.png
+SHA1-Digest: nH78TDzfFukVvZmfkSK7TXsmIF0=
+
+Name: res/drawable-hdpi/sy37_down_0.9.png
+SHA1-Digest: /lAcnQOWoL/RDMw8BaTTmTawdFA=
+
+Name: res/drawable-xhdpi/sy37_icon_phone_large.png
+SHA1-Digest: wJenj4AuE20Qc8bOznxL8fDW5YA=
+
+Name: res/layout/sy37_item_share.xml
+SHA1-Digest: NzXxMASSq2U9mNE8IoV0rj3R2to=
+
+Name: res/drawable-xxhdpi/sy37_ic_progressbar.png
+SHA1-Digest: gZQhC6qoRBTXMHtNLW+rZZw5cdA=
+
+Name: res/drawable/sy37_base_liveshow_player_drag.xml
+SHA1-Digest: kISD+eA7Gnq5rr04KRQo4bRd/Mw=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_selected.png
+SHA1-Digest: K0fGTtnEUY89YjwD8FBPUi2oHD0=
+
+Name: res/drawable-xhdpi/sy37_wm_img_move.png
+SHA1-Digest: rM3O2eC3yAlNDo91HH2Mb9kXcVA=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_im_room_online.png
+SHA1-Digest: nqR2DbO09vV/fxjuN4mSJzqXC0s=
+
+Name: res/drawable-xxhdpi/abc_list_divider_mtrl_alpha.9.png
+SHA1-Digest: tC6uw2w2e+vYOuhd45mTIYRtoKE=
+
+Name: res/layout/sy37_base_progress_dialog.xml
+SHA1-Digest: iFdBc6UEJCZyrUKHkpKPUlP5J2w=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_keyword_1.9.png
+SHA1-Digest: En0IacHlz0XDD/7csSP6DyXnnsM=
+
+Name: res/drawable-xhdpi/syfx_ic_back.png
+SHA1-Digest: dfYZpqoYY1yRG8PWU2dCv8qvEJk=
+
+Name: res/color/abc_primary_text_material_dark.xml
+SHA1-Digest: sfeGQyhT4WLRHb2ZBpj2AQfovU8=
+
+Name: res/layout/hyberry_small_window_preview_guide_down.xml
+SHA1-Digest: a2VDM8F6kWb5x4tRvUPtMZr6zBg=
+
+Name: res/drawable-hdpi/sy37_reg.png
+SHA1-Digest: WJnvo7j3Koz8E1cWsV0xmzx/TqU=
+
+Name: res/drawable-xxhdpi/hyberry_delete.png
+SHA1-Digest: R+HnDQO7zIINeQImPD/2Wjac1Oo=
+
+Name: res/drawable-xhdpi/hyberry_phone_normal.png
+SHA1-Digest: u/887g+LVWhZmD5mNGPUyhd3zuA=
+
+Name: res/drawable-xhdpi/hyberry_banner.png
+SHA1-Digest: aMnFqfA0lbSzjzYP5QTdpiDlX/w=
+
+Name: res/layout/sy37_web_view_layout_web_tool_bar.xml
+SHA1-Digest: HJ8trwHj7yZn/LHbv7YA9Y/u5PY=
+
+Name: res/drawable-hdpi/sy37_bg_grew.9.png
+SHA1-Digest: 7rb9KLbKEW1IYmHVa86/tvwmgtI=
+
+Name: res/drawable-mdpi/abc_text_select_handle_right_mtrl_light.png
+SHA1-Digest: /UdQaVYZ8zUgxE1oxoZAgBhZznw=
+
+Name: res/drawable-xxhdpi/abc_btn_check_to_on_mtrl_015.png
+SHA1-Digest: 9H9KaQnMz6/cQ//b13EiYOSlavM=
+
+Name: res/drawable-xxhdpi/sy37_ic_logo.png
+SHA1-Digest: BZjH0+oWuvfFSyDCr+DMQ6B+q8s=
+
+Name: res/drawable/sy37_btn_float_shake_status.xml
+SHA1-Digest: qXt1Kj1AnJry3psOncWyU6qqijU=
+
+Name: res/drawable-xhdpi/sy37_icon_alipay.png
+SHA1-Digest: LZ3fkoNCJpszL4AScepyruFb71I=
+
+Name: res/layout/sy37_account_change.xml
+SHA1-Digest: Wz7Hg7ZK8qVE3R2iG0KfmFl8YwE=
+
+Name: lib/x86/libmmkv.so
+SHA1-Digest: vVbj4XzCwy0rt8dqxjW1eP4QQKw=
+
+Name: res/drawable-xxhdpi/sy37_bg_authcountdown_show.png
+SHA1-Digest: C9qOQzqWfMVw/SflDCGNSwpGPAM=
+
+Name: res/drawable-xhdpi/hyberry_floating_voice_open_pressed.png
+SHA1-Digest: xM/IkRrLpo7N6uOHQkx2r6Na+NA=
+
+Name: res/drawable-mdpi/abc_switch_track_mtrl_alpha.9.png
+SHA1-Digest: rTHukcoQfAYNlQDOlIvULzNkydU=
+
+Name: res/drawable-night-xxhdpi/sysq_ic_logo.png
+SHA1-Digest: 6zz/5i/UyWJ8DG4romsipjCyNsE=
+
+Name: res/layout/sy37_liveshow_float_cover_view.xml
+SHA1-Digest: UF4VBghCVsPJIyBWcJsBVWiOHMU=
+
+Name: res/layout/sysq_face_valid_dialog.xml
+SHA1-Digest: fTMJuc4Eu1u87xDDv77oL6N072Q=
+
+Name: res/drawable-xhdpi/abc_ic_star_half_black_36dp.png
+SHA1-Digest: TlbyZYv9H1HCXgUpxYDLUFphgco=
+
+Name: res/drawable-xxhdpi/abc_btn_switch_to_on_mtrl_00012.9.png
+SHA1-Digest: kBG1gtv3r0AKtRMQRJeeGdtStSk=
+
+Name: res/drawable-hdpi/abc_ic_star_half_black_16dp.png
+SHA1-Digest: CUT2XWRQr/Xq7WyZFXb1VY8VsXY=
+
+Name: res/layout/live_alert.xml
+SHA1-Digest: yGhZLA+4HM0DgKqkpgz8p7MeXrU=
+
+Name: res/drawable-xhdpi/hyberry_floating_subscribe.png
+SHA1-Digest: kvEmPO3ZfLj9JUlRwMhiiLEce7Q=
+
+Name: res/drawable-hdpi/sy37_ad_item_del.png
+SHA1-Digest: PAOqFVOXIFPtCUOm5/ImOF5rBGM=
+
+Name: res/drawable-hdpi/sy37_alipay_info.png
+SHA1-Digest: 5+m3cossSnqRF2iqeuoozyCxBxs=
+
+Name: res/drawable-xxhdpi/sy37_ic_float_shake_uncheck.png
+SHA1-Digest: 1oPv3tSaxLqGnVHG2Of5mfSNVLQ=
+
+Name: res/drawable-xhdpi/hyberry_item_live_list_mask.png
+SHA1-Digest: HQvGkuEVY2DncTwRABMa8VEw3wM=
+
+Name: res/drawable-xxxhdpi/abc_ic_menu_selectall_mtrl_alpha.png
+SHA1-Digest: 6gP2ce9f+KbbrWH1yni2RQJ6N7c=
+
+Name: res/layout/sysq_dialog_login_view_multi_select.xml
+SHA1-Digest: V+fe1nRwpAuJF4w93HSdf95Y/9M=
+
+Name: res/color-v23/abc_tint_default.xml
+SHA1-Digest: iNTJ32a9Zm0zl82rw8uh0r/6O8o=
+
+Name: lib/arm64-v8a/libtapsdkcore.so
+SHA1-Digest: qQ4zR8z5kRuALPY82v1eet6zSAc=
+
+Name: res/drawable-xhdpi/ic_reg_wechat.png
+SHA1-Digest: FhFrpFeCPUeKNSAN925eNN/kj+k=
+
+Name: kotlinx/serialization/json/JsonBuilder.kotlin_metadata
+SHA1-Digest: brAlib+4foh4McPkVntu2v/vMCg=
+
+Name: res/drawable-xxhdpi/sysq_bg_red_dot.xml
+SHA1-Digest: dAIuLWUQ1Kjj5sfk7PAvC8vBEbE=
+
+Name: kotlinx/serialization/json/internal/ComposerWithPrettyPrint.kotl
+ in_metadata
+SHA1-Digest: MBzUsO4Eai5X6HpI91UIyxv/Ax0=
+
+Name: res/drawable-mdpi/notification_bg_normal.9.png
+SHA1-Digest: Wl4jBkhtPS9E+JkWaS0GOyoMbuw=
+
+Name: kotlinx/serialization/json/internal/JsonTreeDecoder.kotlin_metad
+ ata
+SHA1-Digest: XFcLuk9/GVfW17RtAJ5/xAlScLs=
+
+Name: assets/image/smile/27.png
+SHA1-Digest: lJUJmP6PFbz5FpmenCoh8X1ZFyQ=
+
+Name: res/drawable/abc_ic_search_api_material.xml
+SHA1-Digest: NywdMbqfVTLNl7E2WkvEoPp3stM=
+
+Name: res/drawable-ldpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: g5Foh11sKBxDXbZV7NsQgj8E8ck=
+
+Name: res/drawable-xxxhdpi/abc_text_select_handle_right_mtrl_dark.png
+SHA1-Digest: kJLi936oeb25teKkEremcox/3ac=
+
+Name: res/drawable/tooltip_frame_dark.xml
+SHA1-Digest: v0fQYsW/duXr9KxeLoOB03WQuJM=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_ic_imlist_open.png
+SHA1-Digest: Y1egT2kwypwCsUrWfiQJidmoSaU=
+
+Name: lib/x86/libmarsxlog.so
+SHA1-Digest: c2l2uesByN9TCfBUmG+cvRDLeqk=
+
+Name: res/drawable/sy37_coupon_select_rb_bg.xml
+SHA1-Digest: yK9n+LQaEq2BHe3m5dX0fYnBs48=
+
+Name: res/drawable/sy37_btn_back_bg.xml
+SHA1-Digest: jLf3V0CEtOgXeCIgWpIV/61SUJA=
+
+Name: kotlinx/serialization/json/internal/JsonWriter.kotlin_metadata
+SHA1-Digest: sk5zYA+1kLGqD8vyCqLjdG6wjvI=
+
+Name: res/drawable/sy37_open_qq_bg.xml
+SHA1-Digest: h4qKCsG2i3AF8LWYUnLYJXQnAi0=
+
+Name: res/layout/sy37_s_login_view_360.xml
+SHA1-Digest: CJHqCdFgbAm7UfHO6jIU9eye994=
+
+Name: lib/arm64-v8a/libhyaudioengineencode.so
+SHA1-Digest: sSlFx55ebWPMVnczbHCEr03azOg=
+
+Name: res/layout/sy37_dialog_permission_preview.xml
+SHA1-Digest: skrt5L7wuscV1hegy1R8r6/dYt8=
+
+Name: res/drawable-xhdpi/sy37_bg_pop_content_left.png
+SHA1-Digest: rOqc9XwUzL60VHeBYWELePhgV9c=
+
+Name: res/anim/abc_grow_fade_in_from_bottom.xml
+SHA1-Digest: q1SzsNpiyHxuq9hEliRJm7951Cc=
+
+Name: res/drawable-xhdpi/notification_bg_low_normal.9.png
+SHA1-Digest: dnObiFrk1DvtR5VGgJWQwE6oNeo=
+
+Name: res/drawable-hdpi/abc_ic_menu_paste_mtrl_am_alpha.png
+SHA1-Digest: 8WvbdoCrL2PJGcrNI8XfzZGZATM=
+
+Name: lib/x86/libhyaudioengine.so
+SHA1-Digest: Efn/pOpotB9R+VQIPsopTjepgbY=
+
+Name: res/drawable-xxhdpi/icon_presenter_avatar_default.png
+SHA1-Digest: 7CEeoUdqFFyc+786yBQ7kqkNGVU=
+
+Name: res/drawable/sy37_shape_customer_pop_bg.xml
+SHA1-Digest: LydTVzwhEnjRaRxt0wvVHFklOpc=
+
+Name: res/drawable-xhdpi/hyberry_home_btn_normal.png
+SHA1-Digest: QYOwvTm8N3mpHDRlswIYFlR+zqU=
+
+Name: res/drawable-xhdpi/hyberry_mic_ban_icon.png
+SHA1-Digest: pef1yrBxex0zehMhxYHurYXFogY=
+
+Name: res/drawable-xxhdpi/iv_modify_nick.png
+SHA1-Digest: yFymetq3dZ4P8REyXnI2rObIN4c=
+
+Name: res/drawable-mdpi/sdk_assistant_arrows_right_ic.png
+SHA1-Digest: XAgaBQTceJEPZfS/7sqthreqxlc=
+
+Name: res/drawable-hdpi/abc_textfield_default_mtrl_alpha.9.png
+SHA1-Digest: Jn3DcE6rkBI1bdVuBYRzJaIPwdU=
+
+Name: res/drawable-xxhdpi/hyberry_unlogin_icon.png
+SHA1-Digest: r6ilu8vhehrx6+KFIjjtMxk0qXk=
+
+Name: res/layout/notification_template_media_custom.xml
+SHA1-Digest: uC2ySPrAh994iw2j1OfZLKle9gY=
+
+Name: res/drawable-hdpi/abc_btn_check_to_on_mtrl_015.png
+SHA1-Digest: iefx7KwKzIYxGt3v7lgAfGw97SU=
+
+Name: res/drawable-hdpi/sy37_kefu_user_et_bg2.png
+SHA1-Digest: +28HM0H2RMSXZ3nnULauHxp8q/g=
+
+Name: lib/x86/libhycrypto.so
+SHA1-Digest: zZFV9nd4qihpNoua3hGNMLnsYcg=
+
+Name: kotlinx/serialization/json/internal/DescriptorSchemaCache.kotlin
+ _metadata
+SHA1-Digest: UajGyAvVKYXzkm/hrE5LA8B0ZIo=
+
+Name: res/drawable-mdpi/notification_bg_low_normal.9.png
+SHA1-Digest: sUXBSDmIwrVhXMAYtsmpMAdZsVM=
+
+Name: res/drawable-xhdpi/ic_reg_phone.png
+SHA1-Digest: GDraSZuishVfZJwlrZvcigwqfEE=
+
+Name: assets/image/smile/54.png
+SHA1-Digest: T5IpeiF+gXPDwCzP8Z0BWI2OSqk=
+
+Name: assets/image/smile/11.png
+SHA1-Digest: tXQQxNAlGcM15oWIkk+4vcxusfY=
+
+Name: res/layout/abc_action_mode_close_item_material.xml
+SHA1-Digest: dEXpUtGeVzsP1sMLNxA0s4W9KFc=
+
+Name: res/drawable-hdpi/sy37_user_pwd_eye_close.png
+SHA1-Digest: TutkEfUSJKyti/VRMHTemtXUBKI=
+
+Name: res/layout/sy37_net_error_view_port.xml
+SHA1-Digest: pgQhStjmt14B4AnXGhXVBu3AnMM=
+
+Name: res/drawable/background_bubble_bottom_left.9.png
+SHA1-Digest: w4xpoq/FvRr4Ba5EjhnQJbR3Ph8=
+
+Name: res/drawable/sy37_progress_horizontal.xml
+SHA1-Digest: IPzpXs5KLz6yw+YlhW7kpErjNoE=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_ic_danmu_close.png
+SHA1-Digest: Ee9uzT/q80+hhGEonzB/7eJfp1c=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_gift_detail.9.png
+SHA1-Digest: tsFDQZ4uM9fEIJwDVdHuqe7zE/Q=
+
+Name: res/drawable-hdpi/sy37_icon_default_head.png
+SHA1-Digest: 8gUJhbv6G+iod/694LL2Rwglgpo=
+
+Name: res/drawable/hyberry_pause_live_bg.png
+SHA1-Digest: 0z+46UZQugVOL+CGlrLg4OlZ/7U=
+
+Name: res/drawable/sy37_btn_liveshow_send.xml
+SHA1-Digest: xLQGid6gdH4Bmtw46maMmNGATlE=
+
+Name: res/drawable-xxhdpi/sy37_webview_loading2.png
+SHA1-Digest: mT3NElqYuh0kVv4fvMX447dSKFc=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_progess_f.png
+SHA1-Digest: vVv9QJApLDtF07PQfGo2YQgi5JA=
+
+Name: res/layout/abc_activity_chooser_view.xml
+SHA1-Digest: +xb0NcelFXEtGNOUtRI3kajkMME=
+
+Name: res/drawable-hdpi/sy37_icon_confirm_1.9.png
+SHA1-Digest: qOEkR8jm6pt5LKp1C+trYyb89gQ=
+
+Name: res/drawable-xhdpi/sy37_icon_doubt_new.png
+SHA1-Digest: H696ep+mWzatbyIaPbBLyN4m5Ow=
+
+Name: res/drawable-xhdpi/sy37_bg_pop_content_right.png
+SHA1-Digest: yXIMwYSWws6+xb1z80HJmNRGgU4=
+
+Name: kotlinx/serialization/json/internal/StreamingJsonDecoder.kotlin_
+ metadata
+SHA1-Digest: AFsCXv7gB+x64Eanuslkfg0wBTE=
+
+Name: res/drawable-hdpi/sy37_my_gift.png
+SHA1-Digest: 76xqhtSFyQjcDFwfay25pJRwidQ=
+
+Name: lib/arm64-v8a/libhyquic.so
+SHA1-Digest: vqTAoosT2KX6tcTRQyruq2u6+fw=
+
+Name: lib/arm64-v8a/libthemis.so
+SHA1-Digest: opW9yC/+xZ40bp2pE3vep1CDpoA=
+
+Name: res/drawable-xxhdpi/sysq_ic_check_face_verify_selected.png
+SHA1-Digest: waC7YlnWwSzIVHhB4Zx9QGKyBXE=
+
+Name: res/layout/sy37_dialog_permission.xml
+SHA1-Digest: Bp41778GEbSc1BDkT44BCgoNPxw=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_mibao.png
+SHA1-Digest: OqXe8MRLD0VUkV+5UhpxCu9Y84Y=
+
+Name: res/drawable-hdpi/sy37_btn_blue_bg_1.9.png
+SHA1-Digest: QABNtHcVr+LmlgR1RKM75Dec0jQ=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_left_tab_unselected.png
+SHA1-Digest: 9OX6o9vhhEM3AmZMBHgGzloCJdw=
+
+Name: res/drawable/sy37_web_view_default_shape_load_bg.xml
+SHA1-Digest: v83GUl+/QVO7pFaCEaJH9gEdpVE=
+
+Name: res/layout/sy37_coupon_layout.xml
+SHA1-Digest: coHb5qXwwbsNyxzcdVEtUaLiQQQ=
+
+Name: res/drawable/sy37_shape_white_radius_2.xml
+SHA1-Digest: tR8aLUEzKW7x76GjjbZuPlELI0Q=
+
+Name: res/layout/sy37_show_screenshot_dialog.xml
+SHA1-Digest: wApT80suAnHq0QOR3zza7Tse4HQ=
+
+Name: res/drawable/sy37_bg_progress_load.xml
+SHA1-Digest: 1uiKGS45kVgLAKWCKXwsJG9jlMA=
+
+Name: res/drawable-xxhdpi/sdk_assistant_home_logo.png
+SHA1-Digest: P9FWOKFDT9sTyAg3N2bt57NZT/s=
+
+Name: res/drawable/sysq_shape_reg_success_dialog_bg.xml
+SHA1-Digest: VyxPXpY+8UD5Zuw+rt4LjcbsJ2I=
+
+Name: res/drawable-xhdpi/sy37_pop_bg_right.9.png
+SHA1-Digest: wuxgHKOdb6/dnFMfbwcFhNOCYII=
+
+Name: kotlinx/serialization/json/internal/AbstractJsonTreeEncoder.kotl
+ in_metadata
+SHA1-Digest: 78QXGuXIFHZjGRvaJ+41XiTanP4=
+
+Name: res/drawable-xxhdpi/sy37_ic_float_shake_tips.png
+SHA1-Digest: Gz06klE+j5xQRg9f/q7QJ8aElJg=
+
+Name: res/drawable-hdpi/abc_list_selector_disabled_holo_dark.9.png
+SHA1-Digest: WdLWZsAj9VXxNdfCo4B2Kj3oJpw=
+
+Name: res/drawable-xxxhdpi/abc_tab_indicator_mtrl_alpha.9.png
+SHA1-Digest: e/btu/tjJgEcJNpXWk/EOrcTKYA=
+
+Name: res/layout/sy37_float_menu_item.xml
+SHA1-Digest: SWDaBA1u85sX4Z67u0sGk1fnPG0=
+
+Name: res/layout/sysq_face_success_activity.xml
+SHA1-Digest: q3xUQlK0XID8tWVffhWZ+C2jyU8=
+
+Name: res/drawable/hyberry_end_live_btn.xml
+SHA1-Digest: QtPtDdIg9Rx6EezU/nvJYiymDWw=
+
+Name: res/layout/sy37_web_view_layout_dialog.xml
+SHA1-Digest: JdaXTnjKmKCEhk/BzviZxVC4cIs=
+
+Name: res/layout/sy37_choose_view.xml
+SHA1-Digest: XN5N70vdMEhsre+yd/uiV1JsW2Y=
+
+Name: kotlinx/serialization/json/internal/JsonExceptionsKt.kotlin_meta
+ data
+SHA1-Digest: jOEnM+iE8znBRpChrY4Fz4CCjec=
+
+Name: resources.arsc
+SHA1-Digest: GrdVRcSx+U8lhus7DN7F7cvm/Xo=
+
+Name: res/layout/sy37_web_view_layout_sq_web.xml
+SHA1-Digest: MxMHTKobnO+Bw3ypTut73WeZYNQ=
+
+Name: res/drawable-xxhdpi/hyberry_floating_video_water_mark.png
+SHA1-Digest: fI3iJP0jwKoxBEXIikoUOmNFgcc=
+
+Name: res/drawable-xhdpi/abc_textfield_search_default_mtrl_alpha.9.png
+SHA1-Digest: rHmDjTc+dpOdTJ4J9t00ZR1OYMc=
+
+Name: res/drawable-xhdpi/sy_fx_bg_login_phone_pwd.png
+SHA1-Digest: dKKIPUyRlL7TBkXOOavzbcRj/tQ=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_dialog_join.png
+SHA1-Digest: ChMEL25LdzsilL1EX+yZ9GU0tUQ=
+
+Name: res/drawable/abc_list_selector_background_transition_holo_dark.x
+ ml
+SHA1-Digest: S33JNCK1suTwvK5+wXnyex1EVaU=
+
+Name: assets/ark.config
+SHA1-Digest: weSuUXh5LV8pIr9TfyCkonv1eD0=
+
+Name: res/drawable-xxhdpi/abc_list_pressed_holo_light.9.png
+SHA1-Digest: h36cSPMr+CvpAec9gEI3/gsFeqA=
+
+Name: res/drawable-xhdpi/abc_cab_background_top_mtrl_alpha.9.png
+SHA1-Digest: myUcLaacm4qT8sivkAHSIR8eFrs=
+
+Name: res/drawable-xxhdpi/hyberrry_empty_list_icon.png
+SHA1-Digest: WqMBvqC+WYLk9svxDIn5n5v8IH4=
+
+Name: res/color/abc_tint_spinner.xml
+SHA1-Digest: FSN8GoEGjUMP72+lOr579+MuZtY=
+
+Name: res/drawable-xhdpi/hyberry_end_live_bg.webp
+SHA1-Digest: sdXtBTEhieGAot7YST/kdjO7RPI=
+
+Name: res/layout/sy37_s_login_view_welcome_social.xml
+SHA1-Digest: Eba70PHoHMrJvKQc0Q4H4tC280w=
+
+Name: res/drawable-xxhdpi/sy_fx_bg_login_fast.png
+SHA1-Digest: kv/T3YhVubt7p/Z62MuniIMDE4k=
+
+Name: res/layout/sy37_kefu_modifyperson.xml
+SHA1-Digest: Aodut1d3ZQU1fEhXNs3AwVjoBFI=
+
+Name: res/drawable-xxhdpi/test_age.png
+SHA1-Digest: 6UrN359YXyGexprrChOXXhvpGHY=
+
+Name: res/drawable-xhdpi/sy37_net_error_view_bg.png
+SHA1-Digest: iy1CYTQsB5UbGRVSIaC/wEP3Ilg=
+
+Name: kotlinx/serialization/json/internal/JsonStreamsKt.kotlin_metadat
+ a
+SHA1-Digest: SRtawGlA/owJSxpvzPRGJGzMDRM=
+
+Name: res/drawable-anydpi/sdk_assistant_bar_arrows_left_black.xml
+SHA1-Digest: 3Ob6H2f2oGH3xL1LghlOc2g5bLI=
+
+Name: res/drawable-hdpi/sy37_binding_account.png
+SHA1-Digest: dIGJOb7gvhRdQLgz5tC6pbdSjI4=
+
+Name: res/drawable/hyberry_item_live_list_cover_bg.xml
+SHA1-Digest: izApprp7vJTaAwwmVXjG6QJEHq0=
+
+Name: res/anim/abc_fade_in.xml
+SHA1-Digest: 5S5xj8/vR5FgWjfKY+I5I1tVXkU=
+
+Name: res/drawable-ldrtl-mdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: V9XmG49+bwDotRbKy5ohprnX7bE=
+
+Name: res/drawable-xxhdpi/hyberry_audience_count_icon.png
+SHA1-Digest: mx2cyB02EQP+zf7Q2Zm5/kcUN6k=
+
+Name: res/drawable-hdpi/background_edit_focused.9.png
+SHA1-Digest: xMutH+FL8QFHRomSIWtFS9pPAHU=
+
+Name: res/color/abc_search_url_text.xml
+SHA1-Digest: eOF42A0/NfeKuXbREoVhuCsj55s=
+
+Name: res/drawable-hdpi/sy37_icon_gift_finish_1.9.png
+SHA1-Digest: WqUDeFrTtTgBA6lLOJ20yYq5Bd8=
+
+Name: com/j256/ormlite/core/README.txt
+SHA1-Digest: 3JYGSX5lPn4zEegWfUgLQPiLpVk=
+
+Name: res/drawable/sy37_permission_dialog_white_bg.xml
+SHA1-Digest: teMgrxhPe4BNewFaMj+s7UQvj+E=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_icon_small_close.png
+SHA1-Digest: /RjAtzGG0Dq/lIEXaTWG3kWiPR4=
+
+Name: res/drawable/notification_icon_background.xml
+SHA1-Digest: vQBJaeJrpEcOjRDkOh2U2OTLRHw=
+
+Name: res/layout/hyberry_layout_network_error.xml
+SHA1-Digest: ifiXDexdQ/qGxzIrTJ/6TnowOJM=
+
+Name: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
+SHA1-Digest: Zyskm/+Jn6RpKJguN7Ai2JvKIgA=
+
+Name: res/layout/sy37_kefu_gift_detail.xml
+SHA1-Digest: XUNSmreQ2Db8+/aPC/Kn1yvhbSQ=
+
+Name: res/drawable-xxhdpi/abc_ic_star_black_16dp.png
+SHA1-Digest: TnhZoMoFP0WZ5LAuQsFxNCmLjoI=
+
+Name: res/drawable-xhdpi/sy37_wm_move_hide_trance_left.png
+SHA1-Digest: VDCM1qwlUxUoYXBcuehCNZR5lYY=
+
+Name: res/drawable-hdpi/sy37_binding_email.png
+SHA1-Digest: wfrOIr61scmA0webB7IxEcCXbuo=
+
+Name: res/drawable-mdpi/abc_btn_check_to_on_mtrl_000.png
+SHA1-Digest: qe+ICJ9YZCpsND/P5NwzFuqCIhI=
+
+Name: res/drawable-xxhdpi/sy37_base_liveshow_player_close.png
+SHA1-Digest: +AbWwdmjgEW/GJlrYLrVYtoLJkU=
+
+Name: res/drawable-xhdpi/hyberry_continuelive_btn_pressed.png
+SHA1-Digest: AHacmEkVLFtQAUiL0WCxYP1ZUS8=
+
+Name: res/drawable/hyberry_home_btn.xml
+SHA1-Digest: mSm3fOOqCLSTXMtQYHK6PwHYj9E=
+
+Name: lib/x86/libhyaudioengineencode.so
+SHA1-Digest: XYnm4j425pOn6+p2E+RAVVclb4o=
+
+Name: res/drawable-xxhdpi/hyberry_floating_voice_open_pressed.png
+SHA1-Digest: Pjm9DqGa724EgGUsKUoO2gOezjo=
+
+Name: res/drawable/sy37_shape_login_btn_bg_orange.xml
+SHA1-Digest: Q0uQqzYTQrB+6NUrSKaz+6+StSM=
+
+Name: assets/image/smile/30.png
+SHA1-Digest: 9bgdIf1O9hobnZ2MtJPkboPuBEs=
+
+Name: res/drawable-hdpi/abc_popup_background_mtrl_mult.9.png
+SHA1-Digest: JsaiBsEdZROnnHo5fV3qOVFEblc=
+
+Name: kotlinx/serialization/json/JsonDslMarker.kotlin_metadata
+SHA1-Digest: bxXVFoGDRB0Eh1QV3nPvm5UoWac=
+
+Name: res/drawable-hdpi/sy37_bg_reg_by_phone_simple.png
+SHA1-Digest: skzztheAMD4csoX2Ka1S2kcZqBU=
+
+Name: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFact
+ ory
+SHA1-Digest: NZutgXM1VN70m5xDsTtKjrcsYuw=
+
+Name: assets/image/smile/1.png
+SHA1-Digest: A8fnvcAYzdD03dbCZ2+Se40T+qE=
+
+Name: res/drawable/sy37_shape_white_radius_4_pressed.xml
+SHA1-Digest: TjTA6yie7DvS6CqrO02x80KGOjI=
+
+Name: res/drawable-xhdpi/abc_ic_commit_search_api_mtrl_alpha.png
+SHA1-Digest: cuCm0r2aUkpTLk+CBNaHogZtLwQ=
+
+Name: res/drawable-xxhdpi/hyberry_msg_preview_aaronli.png
+SHA1-Digest: cY3Gpn0SlZhnoVHMIsK9e3x6b/Y=
+
+Name: res/drawable-xxhdpi/sysq_pop_delete.png
+SHA1-Digest: z7Xj1vdYbhWRoLgZTD/W74q7QzA=
+
+Name: res/drawable-ldrtl-xxhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: 36wC/l9OkZGeDIMJl1HYFjXp4u4=
+
+Name: res/layout/notification_template_part_time.xml
+SHA1-Digest: 8q/GI9CbKak1JVXPUnThfZfb870=
+
+Name: res/color-v23/abc_btn_colored_borderless_text_material.xml
+SHA1-Digest: soQoA9vVwic6FfTcxKG1Q4mGuRA=
+
+Name: kotlinx/serialization/json/internal/JsonTreeListEncoder.kotlin_m
+ etadata
+SHA1-Digest: 47iyOhcOtWb8t3rekygDAM8nALM=
+
+Name: res/drawable-xhdpi/sy37_checkbox_checked.png
+SHA1-Digest: ZsiFTAr9PtuSQWGxOrsDyZP9g5k=
+
+Name: res/drawable-xhdpi/hyberry_pause_live_bg_land.webp
+SHA1-Digest: yWSGGiKTF8Z2YJIUxnYKf3Q/jyE=
+
+Name: res/drawable-ldrtl-xxhdpi/abc_ic_menu_copy_mtrl_am_alpha.png
+SHA1-Digest: la0mp3gGb9aMVTgTvEHl9fEgHSE=
+
+Name: res/drawable-hdpi/sy37_user_set_delete.png
+SHA1-Digest: qfG2q/5kbbRJ5cWbQnF/GKVL7fE=
+
+Name: res/layout/hyberry_layout_small_window_land.xml
+SHA1-Digest: WoAPQhxHcQtVBzIRY75jQwC9lZc=
+
+Name: res/drawable-hdpi/abc_textfield_search_activated_mtrl_alpha.9.pn
+ g
+SHA1-Digest: ooibx1Nw2wVRqtZZ9uCTOgYQJLk=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_news.9.png
+SHA1-Digest: U4zwv2n4WKvIVJNVatTaNpxi8vU=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_input.png
+SHA1-Digest: gs9yie3zcY03Q/HJy5quMKGvp3Y=
+
+Name: res/layout/sy37_layout_sound_float_window.xml
+SHA1-Digest: l6k9xt9JcV2rpq2OVoFWX7WYFto=
+
+Name: res/drawable/sy37_pay_btn_bg.xml
+SHA1-Digest: KVnWrcJC6wTWHjYb5DSsQCNZpvE=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_bg_room_list.png
+SHA1-Digest: AmxVEtCd2UKBs636Q3xJgyW/mjE=
+
+Name: res/drawable-hdpi/sy37_half_ap_bg.png
+SHA1-Digest: 6oXJFF9xQPo/t7Cs30RvF1AQj7Y=
+
+Name: res/drawable-xxhdpi/sy37_base_common_loading_bar.png
+SHA1-Digest: B5ncSV7pkekv8y89PKKM69UQCsE=
+
+Name: res/drawable-hdpi/tip_bg.png
+SHA1-Digest: uYd8qBFE/0AZ2HM7wetuBc+jazA=
+
+Name: assets/image/smile/13.png
+SHA1-Digest: YgTi6KHob5cWH5vusDKQccr6IwI=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_select.png
+SHA1-Digest: eeCSA8799O+DHGSsFEf3oDdqMx0=
+
+Name: res/drawable-xxhdpi/hyberry_back_icon.png
+SHA1-Digest: Gaeav/c4T2QGDFTiRDdwv0+NuSs=
+
+Name: res/drawable-xhdpi/icon_share.png
+SHA1-Digest: 8VTQ5+D9j9TW4fRWMcXrh1VZm28=
+
+Name: kotlinx/serialization/json/JsonKt.kotlin_metadata
+SHA1-Digest: cTRZIA9Bx6ySadzgftwSoleX/GE=
+
+Name: res/color/sy37_text_dialog_selector.xml
+SHA1-Digest: rl805QFnU+j14Oi6NfCclbv4UIw=
+
+Name: res/drawable-xhdpi/ic_privacy_uncheck.png
+SHA1-Digest: vGM15yEXxzrrrJw/udZ4ubxXZQo=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_gift_detail_content.9.png
+SHA1-Digest: mHWmgRZj1z66LIuc55HfVmocia0=
+
+Name: res/layout/sy37_adapter_service_down.xml
+SHA1-Digest: 196OvLOjcJ0vYDs4G6EOmto27yI=
+
+Name: res/drawable-xhdpi/hyberry_start_live_btn_small.png
+SHA1-Digest: XWbf7zvTFw6xgz7hkujhpkT790M=
+
+Name: res/drawable-xxhdpi/sysq_ic_account_list_down.png
+SHA1-Digest: UtYa+QIm6sVrYB/mWi5jPlf0hvg=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_refresh.png
+SHA1-Digest: u6CjWN0d/oveAv0P/HnYCAc/fGQ=
+
+Name: lib/armeabi-v7a/libyoume_voice_engine.so
+SHA1-Digest: BZVO4Y2RGzI3ZlcccTHTh1NJ5ow=
+
+Name: res/layout/sy37_s_one_key_reg_dialog.xml
+SHA1-Digest: QWjro/5VZrgL9IG6vRHWEK3XsII=
+
+Name: res/drawable-xxhdpi/hyberry_modify_nickname_pay_selected.png
+SHA1-Digest: wIwNCeWZGN5AH6qQR2AchC9mJkw=
+
+Name: res/drawable-hdpi/sy37_load_outer.png
+SHA1-Digest: KE+xV2hyxOzYav+XAZ+kX/RTUng=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_keyword_0.9.png
+SHA1-Digest: Ttr44VJeSmritqcTaC7Pr2+tRNM=
+
+Name: res/layout/sy37_item_choose_view.xml
+SHA1-Digest: R80v4+D0z4w8g+4eTKqCHJULeG4=
+
+Name: res/drawable-xxxhdpi/abc_text_select_handle_right_mtrl_light.png
+SHA1-Digest: MSvCQ0Eqa9MYOfop+isSTvssU+A=
+
+Name: res/drawable/abc_ic_go_search_api_material.xml
+SHA1-Digest: i26HXpK2KAre6NAHweCVYZC97UM=
+
+Name: res/drawable-xhdpi/hyberry_unlogin_icon.png
+SHA1-Digest: auFlhS8FU6Mms0QrSC3T7VX15QM=
+
+Name: assets/image/smile/15.png
+SHA1-Digest: lI5lyCiipnsGNUHX9E/zsi3prAg=
+
+Name: com/taptap/sdk/okhttp3/internal/publicsuffix/publicsuffixes.gz
+SHA1-Digest: +bdceAw9yQ7uKnkFzDSoze/ZLGc=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_strategy.png
+SHA1-Digest: YH1JQNrSh+QkrkV9DX1RVUabYvA=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_record.png
+SHA1-Digest: kSAjdovCgqhP72ddmFAIeZC25PA=
+
+Name: res/drawable-xxhdpi/hyberry_pay_bean_selected.png
+SHA1-Digest: fuLuQMe7+aKO49v2w4ENSbICjtw=
+
+Name: res/drawable-xxxhdpi/abc_scrubber_control_to_pressed_mtrl_005.pn
+ g
+SHA1-Digest: 6g1sb8ZqjW7nIrkEG+DxpzNkW5Q=
+
+Name: res/color/sy37_text_color_findpass.xml
+SHA1-Digest: mShf+C21wEypUCH+NKUW5YXgA4Y=
+
+Name: res/drawable-xhdpi/hyberry_start_live_btn_large.png
+SHA1-Digest: XWbf7zvTFw6xgz7hkujhpkT790M=
+
+Name: res/drawable-hdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: aljPP39kIjQv2NUvaoyL4St29UA=
+
+Name: res/drawable-hdpi/sy37_icon_submit.png
+SHA1-Digest: eTz4F2hS5kV3jpDnBXsfP85Oaak=
+
+Name: res/drawable/hyberry_continuelive_btn.xml
+SHA1-Digest: voEPM+xKGHLk0lEePuHUF+DDHpQ=
+
+Name: res/drawable-xhdpi/hyberry_banner_large.png
+SHA1-Digest: QRWNB8qLSL+5Bs1RhVvTKinVJMQ=
+
+Name: res/drawable-xxhdpi/hyberry_home_btn_normal.png
+SHA1-Digest: 4rsVnAzDtbCEZG2yPeBnZAy4y3M=
+
+Name: res/drawable-xhdpi/hyberry_kaihei_open_btn.png
+SHA1-Digest: bmtEKZqyrfAQrjL52tTDT3bxGIs=
+
+Name: res/drawable/text_cursor.xml
+SHA1-Digest: waCJEIUnwtmDFSkoLZlLZE098k0=
+
+Name: res/drawable/hyberry_fragment_bg.xml
+SHA1-Digest: sEFUlEU5YJF7wrmI+tV6AG2f/UY=
+
+Name: lib/armeabi-v7a/libhyaudioengineencode.so
+SHA1-Digest: PHiHb0JrLLUCif2dbaH2qxbpbKc=
+
+Name: res/layout/sy37_s_login_dialog.xml
+SHA1-Digest: x4MMNUKCg/Cu8VvbykOo61Za/PQ=
+
+Name: res/drawable-hdpi/sy37_secure_code.9.png
+SHA1-Digest: 79PKd+PR7Dn15OCFK8ys6ow6abI=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_labor.png
+SHA1-Digest: JjqTevrXWllmB6jXb3ITQYuhAdg=
+
+Name: res/drawable-hdpi/abc_list_focused_holo.9.png
+SHA1-Digest: wk6cEvrtWMT8mvBMI5G6yVaA7aY=
+
+Name: kotlinx/serialization/json/internal/JsonTreeMapDecoder.kotlin_me
+ tadata
+SHA1-Digest: J7QAWzwpXRJfPl0KPUWEetqZ3Ag=
+
+Name: assets/image/smile/23.png
+SHA1-Digest: wU32ANfasCK9ISgCJeI+VbnTdGc=
+
+Name: res/drawable-xhdpi/abc_ic_star_half_black_16dp.png
+SHA1-Digest: bJnaPUkuEDhsvIaeIGSAO9n8ckk=
+
+Name: res/drawable-xxhdpi/sy37_scan_code.png
+SHA1-Digest: aipMFWINlo89rXGtQmysNIi0R14=
+
+Name: res/layout/abc_screen_toolbar.xml
+SHA1-Digest: MnIHiKdsCfzIPIy241tzHoFZgrI=
+
+Name: res/drawable/abc_btn_borderless_material.xml
+SHA1-Digest: AJY2CbtuBTpqQF5xDxnHlSbnqr0=
+
+Name: res/color-v23/abc_color_highlight_material.xml
+SHA1-Digest: 0tGL+pcnrIfOnrE6XlPa0LXLf68=
+
+Name: res/layout/hyberry_layout_resolution_window.xml
+SHA1-Digest: xUU9qs0RK50FNIfKm6U6DjTcwNA=
+
+Name: res/drawable/sy37_liveshow_bg_sound_float_left_semicircle.xml
+SHA1-Digest: 2fbCz0MPwFdc425KY0d80BgPNGw=
+
+Name: res/drawable-hdpi/sy37_update_btn_no.9.png
+SHA1-Digest: rwiUSvWMWg3i+7mzkxaoAAWjtQ8=
+
+Name: kotlinx/serialization/json/JsonNull.kotlin_metadata
+SHA1-Digest: Dd8WBm//Cc1+JoIrMdZvE77nMuA=
+
+Name: res/layout/sysq_wechat_reg_success.xml
+SHA1-Digest: bZYf2FxQPUAJlD6aK43MF+XQzdY=
+
+Name: res/drawable-xhdpi/sy37_icon_has_account.png
+SHA1-Digest: hWJGzaVtJI1kJHfofBb4zjXl75M=
+
+Name: res/drawable/abc_tab_indicator_material.xml
+SHA1-Digest: iVnYu0iyCsaqFnHqnEwlkVxuPAA=
+
+Name: res/drawable-hdpi/sy37_update_progressbar.xml
+SHA1-Digest: 8yPCgrm+xZUl/az23JxEyg/qI9Q=
+
+Name: kotlinx/serialization/json/internal/PolymorphicKt.kotlin_metadat
+ a
+SHA1-Digest: 1Paf1UKMld6FHYTEWblZuc1Qt+s=
+
+Name: res/layout/hyberry_pub_tool_message_preview.xml
+SHA1-Digest: EJafsqX5Bn289IzrEIp5dLeXzpk=
+
+Name: res/drawable-hdpi/sy37_merchant_title_info.png
+SHA1-Digest: 2oH0w3nHxEgxDTRPZhi+andsJcI=
+
+Name: kotlinx/serialization/json/JsonObjectBuilder.kotlin_metadata
+SHA1-Digest: quko6cm7WvJAR9L07BCdN49wGEw=
+
+Name: res/layout/hyberry_layout_common_top_bar.xml
+SHA1-Digest: S37EOxLLVUjYZDVk+RdvvV8h8yI=
+
+Name: res/drawable-xhdpi/hyberry_huya_logo_notext.png
+SHA1-Digest: 79zW9SYvNdRaETZ6Zguzq8OSACQ=
+
+Name: res/drawable-xxhdpi/hyberry_pauselive_btn_pressed.png
+SHA1-Digest: Fgf6pyooAilx7UJbV2sWSXlx6Jw=
+
+Name: res/drawable/sy_fx_dialog_login_btn_bg.xml
+SHA1-Digest: IT9MHnWg0akqAO1GuYs3adow+vI=
+
+Name: res/layout-port/sy37_item_choose_view.xml
+SHA1-Digest: NgjZQK/vHxMHmHrqMGyBn4idj24=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_room_list.png
+SHA1-Digest: J8rhsWv5KqR6wcRs1085m9miEy0=
+
+Name: res/drawable-hdpi/sy37_my_wallet.png
+SHA1-Digest: xD6I0wY+xxGRldSRQWnypFXL0N4=
+
+Name: res/layout/hyberry_item_resolution_list.xml
+SHA1-Digest: RonuJVV0vj9Vhz7kNKDT5KLkWD8=
+
+Name: res/drawable/abc_vector_test.xml
+SHA1-Digest: +wPtXDnGTRkwqzxGW5gP5UoXf7Y=
+
+Name: res/drawable/sysq_white_corner_bg_10.xml
+SHA1-Digest: bhfsJSCyrZzyvIB2X2eigP0lnk4=
+
+Name: res/drawable-xxhdpi/abc_scrubber_track_mtrl_alpha.9.png
+SHA1-Digest: rsdUoHJxq/CcGqFOaGPbTJ8wJ8s=
+
+Name: res/drawable-xhdpi/sy37_icon_coupon_un_select.png
+SHA1-Digest: vrv8HK1I5ZfC/C1JTt7VthDlATY=
+
+Name: res/layout-land/hyberry_activity_webview.xml
+SHA1-Digest: 9ApelNMYGuhGFIhqJdn/endfP44=
+
+Name: res/drawable-xhdpi/abc_btn_switch_to_on_mtrl_00001.9.png
+SHA1-Digest: qa7pacTJKvEKuXlFpWJE1C6CWzQ=
+
+Name: lib/x86/libhyaudioenginecapture.so
+SHA1-Digest: wsNE0E1c5TJw9rtGUwDuLR70G6k=
+
+Name: lib/x86/libhyquic.so
+SHA1-Digest: 0bCt98SBX7/JQEO0CyDL6C8PO3M=
+
+Name: res/drawable/sy37_update_scroll_bar.xml
+SHA1-Digest: leZNZkPolnDs+OSC9sjplKxgQts=
+
+Name: res/layout/sy37_web_dialog.xml
+SHA1-Digest: Ce9QwhbZbgMtT1h3BIJHmq1QNQc=
+
+Name: res/drawable-xxhdpi/abc_popup_background_mtrl_mult.9.png
+SHA1-Digest: 0jwzTMvjBw5pjef/WYs6540C0/4=
+
+Name: assets/h5_qr_back.png
+SHA1-Digest: AnmGB5aRKo04jZWsZKigiQKRV5M=
+
+Name: res/drawable/abc_btn_radio_material.xml
+SHA1-Digest: 3WiPu0uTRUp5ED/J/4xQXcTWZWU=
+
+Name: res/layout/sy37_progress_dialog_simple.xml
+SHA1-Digest: icnNeaa9DjghyjoZgr877ebGJgA=
+
+Name: res/drawable-mdpi/abc_btn_radio_to_on_mtrl_015.png
+SHA1-Digest: i9FCRVHt7QbKkrsplJGYqSSANkM=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_message_b.png
+SHA1-Digest: meZRbyuoHMgeU6xcGC7rc0Ggdeo=
+
+Name: res/layout/notification_template_big_media.xml
+SHA1-Digest: A+pV15clQFgUgsASvRbULxI2mzU=
+
+Name: assets/libwbsafeedit
+SHA1-Digest: OH251A/kagTXRI4Gcgo5wu+PhLU=
+
+Name: res/layout/sysq_dialog_audio_permission_tip.xml
+SHA1-Digest: Hp1If4D4xofe3xWFsjjQnUWLLpA=
+
+Name: res/drawable/sy37_liveshow_bg_chatinput_long.xml
+SHA1-Digest: 77nsOadW3jlm2FHbQ88LhBrPi5M=
+
+Name: res/drawable/abc_cab_background_internal_bg.xml
+SHA1-Digest: hY+uvTVt215v95lqdwJwINIftQY=
+
+Name: res/drawable-xxhdpi/hyberry_code_selected.png
+SHA1-Digest: WfNUTT0iMQFkBTAq/RikQG7UG2w=
+
+Name: res/drawable-xhdpi/sdk_assistant_bar_arrows_left_black.png
+SHA1-Digest: HMUDJ6uv9+v3pLf/zVBn+DHE+1A=
+
+Name: kotlinx/serialization/json/internal/JsonTreeEncoder.kotlin_metad
+ ata
+SHA1-Digest: 0D5+7AFDv8hvTSjfDUSq2IzNVlI=
+
+Name: res/layout/hyberry_activity_player_portrait.xml
+SHA1-Digest: HC/FrkqKLK/naehO26YUaVG1Y7Y=
+
+Name: res/drawable-hdpi/abc_scrubber_primary_mtrl_alpha.9.png
+SHA1-Digest: bX6n4OUEjVSiTGp+RSaan1TveSo=
+
+Name: kotlinx/serialization/json/internal/JsonIteratorArrayWrapped.kot
+ lin_metadata
+SHA1-Digest: zyZWbwIH9n+/EiJMa4Itn3OFTpM=
+
+Name: lib/x86/libhydeviceid.so
+SHA1-Digest: eTfJrRatJczoE22c9QGEccMf5RI=
+
+Name: assets/fonts/fzcsf_37.TTF
+SHA1-Digest: UOY+f0tYeRbZ5EUqf75Ml/O++Yc=
+
+Name: kotlinx/serialization/json/JsonLiteral.kotlin_metadata
+SHA1-Digest: jJa6z6UZbGur/G36K9MkhH/HS7o=
+
+Name: res/drawable/summer.png
+SHA1-Digest: kUF6FgKScRkQPZRxR4Vr/Fwhr6Y=
+
+Name: res/drawable-hdpi/abc_list_selector_disabled_holo_light.9.png
+SHA1-Digest: PcXH+PORyMVJ9kexXIHEGQOSM08=
+
+Name: lib/armeabi-v7a/libthemis.so
+SHA1-Digest: iDkFV56fcWQt5E9zHSrQZHaoTwc=
+
+Name: res/drawable-hdpi/mtp_huya_notification_icon.png
+SHA1-Digest: R9ij3DZfLYkyYeWxdLBJl5V80u4=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_bg.png
+SHA1-Digest: 0qI+prAp7N8lBUG/MAA852JLFhw=
+
+Name: res/drawable-hdpi/abc_scrubber_track_mtrl_alpha.9.png
+SHA1-Digest: vm8LHDUBNzH5zwtFQHCS54dyJyM=
+
+Name: res/drawable-xhdpi/sy_fx_bg_login_account.png
+SHA1-Digest: dKKIPUyRlL7TBkXOOavzbcRj/tQ=
+
+Name: res/drawable-xhdpi/progress_loading_7.png
+SHA1-Digest: 3ehL2TNa4XDgwW+SPUg4+uLvNnI=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_card.png
+SHA1-Digest: V9blvnTMHeMt743i2/eX80URUMo=
+
+Name: res/drawable-xxhdpi/icon_share_press.png
+SHA1-Digest: ln5ro59QNyRU1DN1ufPjqgDrPoQ=
+
+Name: res/drawable-xxhdpi/abc_ic_menu_selectall_mtrl_alpha.png
+SHA1-Digest: immG58Mn+jJpWq3F2CTYfdXTMzw=
+
+Name: res/drawable-hdpi/abc_scrubber_control_to_pressed_mtrl_000.png
+SHA1-Digest: KcA4LKv9Xg0Y8I5a3ubJk9QPSjI=
+
+Name: res/layout/sdk_assistant_network_test_dialog.xml
+SHA1-Digest: kOwhLBT+VVkxKdE0PtraMF/WKxM=
+
+Name: lib/arm64-v8a/libmarsxlog.so
+SHA1-Digest: Az/xeh4pwgrirml19vCzK+I1TT4=
+
+Name: res/layout/hyberry_pub_tool_message_list.xml
+SHA1-Digest: hgqAON4kNSTyHOyI74UqV1P5Psw=
+
+Name: lib/armeabi-v7a/libhycrypto.so
+SHA1-Digest: xtkonElYUOWA86iz6JIOojcny14=
+
+Name: res/drawable-hdpi/sy37_bg_point_1.png
+SHA1-Digest: jn6+HlHfUoKAQC+C8BDajbyr0Rs=
+
+Name: res/drawable-hdpi/sy37_icon_service_0.png
+SHA1-Digest: 7cou3PikYMQGrZEMNV4Fxusgtmw=
+
+Name: res/drawable-xxhdpi/sysq_ic_account_new.png
+SHA1-Digest: szxz2E45vFIRY2Oj4WvPsbLk4kg=
+
+Name: res/drawable-hdpi/abc_ic_star_black_36dp.png
+SHA1-Digest: l1YRygWl8pmR0fSONntI4CnCJsQ=
+
+Name: res/drawable-xxhdpi/sysq_ic_account.png
+SHA1-Digest: R30ko/Jba16u1NuAjkjGnvl8UPE=
+
+Name: res/drawable/sy_sq_bg_login.xml
+SHA1-Digest: UheXc493EtUMTJKJ3Ez1ybL+fiU=
+
+Name: lib/arm64-v8a/libmarsstn.so
+SHA1-Digest: a4TeroLqghELb/GP0MH/PeM/qt8=
+
+Name: res/layout/sy37_item_liveshow_room.xml
+SHA1-Digest: t8ZNR2q7QD2UCt4ag2RiiGQb7bk=
+
+Name: res/drawable-xxhdpi/hyberry_start_live_normal.png
+SHA1-Digest: wIquuB2ivNh8CTBGCSvbLPnvZUU=
+
+Name: res/drawable-hdpi/sy37_btn_back_bg_up.png
+SHA1-Digest: q3qGzJlt60pLlE0vB7V1r/a2XRw=
+
+Name: assets/image/smile/21.png
+SHA1-Digest: JdmnNuSFhJjuCS1DbfxYaFEGk2Y=
+
+Name: res/anim/abc_slide_out_top.xml
+SHA1-Digest: DeBZdUhcf4jwXxVGfnivrtcbPbk=
+
+Name: res/drawable-mdpi/abc_spinner_mtrl_am_alpha.9.png
+SHA1-Digest: YON21p0IduHfx2/2DWd2gl/K6+Q=
+
+Name: res/layout/notification_action_tombstone.xml
+SHA1-Digest: 5RCROidgZS3LDw3gvxBQ4hEra6s=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_ic_top_tabitem_all.png
+SHA1-Digest: r5Q1QhGLS5d97KMnhINebmrZtNw=
+
+Name: lib/armeabi-v7a/libc++_shared.so
+SHA1-Digest: QSqIufqFobijpC+I67DPEj9/zdc=
+
+Name: res/drawable-xhdpi/sy_fx_bg_login_history.png
+SHA1-Digest: VsCGTZAwBLah8V+KpqCS/B+paeQ=
+
+Name: res/drawable/sy37_logview_forget_pwd_btn_selector.xml
+SHA1-Digest: fog4JR7MZpBPmWnpz9QqW76b9EQ=
+
+Name: res/drawable-xhdpi/neterror.png
+SHA1-Digest: t54+r/vYWmTAP9A/IBnBv85RAXw=
+
+Name: res/drawable-hdpi/icon_progress.png
+SHA1-Digest: JiYYM0J/nBNQV9OhpcqJibi1GRQ=
+
+Name: res/anim/sy37_pop_right_in.xml
+SHA1-Digest: 0xu0THf/1yWKTn5/MvquVT+UdsE=
+
+Name: kotlinx/serialization/json/internal/ComposersKt.kotlin_metadata
+SHA1-Digest: mQvOmK9YjfcG8c7cF/YfL+n8SzY=
+
+Name: res/drawable-xxhdpi/abc_menu_hardkey_panel_mtrl_mult.9.png
+SHA1-Digest: eg3Jekf54Dz1eJfsrx0LSURgWLw=
+
+Name: kotlinx/serialization/json/internal/JsonDecodingException.kotlin
+ _metadata
+SHA1-Digest: p84G2AAE/ir+nbmY6MZ+lXDKUaw=
+
+Name: kotlinx/serialization/json/Json.kotlin_metadata
+SHA1-Digest: m3KsVfaaqf9E77w8A7cf+TbBhYo=
+
+Name: kotlinx/serialization/json/JsonElement.kotlin_metadata
+SHA1-Digest: FdjYlOJCTaND1IelrMe3HXenJFs=
+
+Name: res/drawable-mdpi/abc_menu_hardkey_panel_mtrl_mult.9.png
+SHA1-Digest: z6TZhX4sGi1SG/RbHOQrQV45GNY=
+
+Name: kotlinx/serialization/json/JsonLiteralSerializer.kotlin_metadata
+SHA1-Digest: 4HH9ZQnJwZ3wOIXjn6aRK1ttltU=
+
+Name: res/drawable-hdpi/sy37_reg_01_simple.png
+SHA1-Digest: vhenIQU3YU3s1OXaZWUZspNi/vo=
+
+Name: res/drawable-xxhdpi/icon_close.png
+SHA1-Digest: +a9cielevdpBRGHPRwvFu3Gfvkk=
+
+Name: assets/image/smile/17.png
+SHA1-Digest: Xk0e3h0brIqY4jmzVrjvdyXNQ1s=
+
+Name: res/drawable-xhdpi/abc_ic_star_black_36dp.png
+SHA1-Digest: PHk61zRqf6D0+NgV5DAowumKYDM=
+
+Name: lib/arm64-v8a/libmsaoaidauth.so
+SHA1-Digest: Dz33zrLsmKOqGAMaEKnIar62pHA=
+
+Name: res/drawable-xxhdpi/abc_list_selector_disabled_holo_light.9.png
+SHA1-Digest: mRzdMFdfGEE7xghBsrHbqzT8M2w=
+
+Name: res/drawable-xhdpi/hyberry_icon_list_empty.png
+SHA1-Digest: mo/G5y7trNDdvEPFm+uYqmSzvMg=
+
+Name: res/layout/sy37_windows_pop.xml
+SHA1-Digest: Lp1KPnuz1dSCUYe5CxmOxu2tVRQ=
+
+Name: res/drawable-xhdpi/hyberry_delete_nickname_icon_pressed.png
+SHA1-Digest: Kg8RMIy6vwdOeW9/rXr9wBZcu00=
+
+Name: res/drawable-xhdpi/abc_ic_menu_paste_mtrl_am_alpha.png
+SHA1-Digest: BW+HxlEdt+GDk5y/j57c7HOcxXA=
+
+Name: res/drawable-hdpi/sy37_change_password.png
+SHA1-Digest: IQZXYd1xZVMjAzXCKuOfpfEWlfg=
+
+Name: res/drawable-xxhdpi/sy37_bg_bottomdelete_portrait_normal.png
+SHA1-Digest: Io2/o8OhAJZ1YNGCUPI88b9EcMM=
+
+Name: lib/arm64-v8a/libyoume_voice_engine.so
+SHA1-Digest: HFe5qPpys3tcD606xZpiJCTFftk=
+
+Name: res/drawable-hdpi/sy37_icon_update_close.png
+SHA1-Digest: B5Qnx7GaWO7IC+wMMcz0gLTFTB8=
+
+Name: res/layout/abc_action_menu_item_layout.xml
+SHA1-Digest: +6nxWI+KUYSqIDWoZkq+X5cz0Rg=
+
+Name: res/drawable-hdpi/abc_text_select_handle_left_mtrl_dark.png
+SHA1-Digest: Vgi5sEfMVSyu0nd6WWsvBST1nxk=
+
+Name: res/drawable/sy37_pay_confirm_ensure_bg.xml
+SHA1-Digest: lopmhwZZR8h7r/KEfJOa85eYRFs=
+
+Name: com/j256/ormlite/android/LICENSE.txt
+SHA1-Digest: A3L+oNgVTIV6ZjksmgXBeIWe7uU=
+
+Name: res/layout/sysq_face_fail_activity.xml
+SHA1-Digest: xcI0195W8CK1gSeQM/tPflxEOMo=
+
+Name: res/drawable-xxhdpi/hyberry_anchor_recruit_bg_land.png
+SHA1-Digest: e+NpYDi/xKniP7BUgQXXD6aC+Jw=
+
+Name: META-INF/services/javax.ws.rs.ext.MessageBodyWriter
+SHA1-Digest: nE4joHf340zTEN5s1Ka8p0GtOWs=
+
+Name: lib/armeabi-v7a/libmsaoaidsec.so
+SHA1-Digest: 8dD+kEtR+zJowSEcuKiRCsCbhuQ=
+
+Name: res/layout/sysq_dialog_login_view_wechat.xml
+SHA1-Digest: bH4dVOsToVPxMyV+PZ40YdONeZI=
+
+Name: res/layout-v22/abc_alert_dialog_button_bar_material.xml
+SHA1-Digest: fjuvyk/egdij8Gmu3olFieIuRtA=
+
+Name: res/drawable/sy37_kefu_submit_simple.xml
+SHA1-Digest: kAF5ccUrOZvZPlZ0SQbPcjC53Qg=
+
+Name: res/layout/sy37_layout_auth_tips.xml
+SHA1-Digest: 8c1YXeF49S6c3cQzH161UoDJsdM=
+
+Name: res/layout/sy37_account_dialog.xml
+SHA1-Digest: RRHacgG1IdUmiqO9di/iR2GtqPs=
+
+Name: res/layout/activity_chat_input.xml
+SHA1-Digest: SA3lo48IE/7Xi7edzVp0J2ljuRw=
+
+Name: res/drawable-hdpi/abc_cab_background_top_mtrl_alpha.9.png
+SHA1-Digest: syWeoj6ApCM+addV+eUkc74d2GM=
+
+Name: res/drawable-xhdpi/abc_textfield_search_activated_mtrl_alpha.9.p
+ ng
+SHA1-Digest: AOweHtQbNgMb++aATsl9g6duBWI=
+
+Name: res/drawable/sy37_update_down_btn.xml
+SHA1-Digest: YMwB5+QsqA36SRjMQXQ1qmfCRNs=
+
+Name: res/layout/hyberry_view_player.xml
+SHA1-Digest: OysIlAWdAhDOS2EuU88Mj30cYPY=
+
+Name: assets/image/smile/5.png
+SHA1-Digest: wuLeMtlJxVlRrXmVMoKQs5DL5Bg=
+
+Name: res/anim/abc_fade_out.xml
+SHA1-Digest: SLa9wb+Yz9NC5RLkywoRBeP03RQ=
+
+Name: res/color/abc_background_cache_hint_selector_material_light.xml
+SHA1-Digest: n4Bs1CJ0dNI7hYUr5vQRBeD1Yy4=
+
+Name: res/drawable-hdpi/sy37_web_view_img_title_back.png
+SHA1-Digest: bpwJuBiONDh126MVSr+wH2ZQP5Y=
+
+Name: lib/armeabi-v7a/libmsaoaidauth.so
+SHA1-Digest: ZYHVkUXmtwNKLGGshOXwW5Pavro=
+
+Name: res/drawable/sy37_shape_white_radius_10.xml
+SHA1-Digest: s6VgFYpDfcBwUsf8ueP31Tf/mq0=
+
+Name: res/layout/sysq_dialog_login.xml
+SHA1-Digest: CESpmVgW5IZOJzD6UdgHC8PSreI=
+
+Name: res/drawable-xxhdpi/hyberry_start_live_pressed.png
+SHA1-Digest: iYb/iVCe/NFgVx+Ir+9DRtv4oC8=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_room_people.png
+SHA1-Digest: nG/BNs1VlbHA/pApjTYxulzMzYE=
+
+Name: res/drawable-xhdpi/sq_icon_fix_tool.png
+SHA1-Digest: ybwANHgd1qMYdvb0Ro0nyV0SSu8=
+
+Name: res/drawable-xxhdpi/abc_list_pressed_holo_dark.9.png
+SHA1-Digest: F4ZprQrsXInAkkl1ioSdpt5mbPI=
+
+Name: res/layout-port/sy37_item_roast_view.xml
+SHA1-Digest: fbqlDpxNI3WGMo6BXChMUszpABM=
+
+Name: res/layout/sysq_pay_tip_dialog.xml
+SHA1-Digest: vGnbzGfsrMKD/9LlazaW0WKya4I=
+
+Name: res/drawable-hdpi/sy_payweb_close.png
+SHA1-Digest: B5Qnx7GaWO7IC+wMMcz0gLTFTB8=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_icon_top_back.png
+SHA1-Digest: kWHxuDW7Ee5saiH2wzrVaXwoTlo=
+
+Name: res/drawable-xhdpi/progress_loading_5.png
+SHA1-Digest: QN4RXxqEq57vo6aHN4WdbQZ11Lk=
+
+Name: res/layout/sy37_activity_share_demo.xml
+SHA1-Digest: Zso0G/OvKUdJS5NPvrCSTN2wX+Y=
+
+Name: assets/image/smile/34.png
+SHA1-Digest: AKUUkdIjWk+jmudqQb0vXollU0k=
+
+Name: res/drawable-hdpi/abc_scrubber_control_off_mtrl_alpha.png
+SHA1-Digest: E6zTTHiRd1XHP7n/Hbs8Ebaylnw=
+
+Name: res/drawable-hdpi/sy37_kefu_login_line.png
+SHA1-Digest: eqdRy2kO13+gZQmVL9Ry637c1l0=
+
+Name: res/drawable-xhdpi/sy37_pay_title_bg_port.png
+SHA1-Digest: L+1PvvsrJxKylI/qE1D+At4YcI4=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bottom_bg.png
+SHA1-Digest: tOEPRHLGSJen0PODSjeigK1+uyU=
+
+Name: res/drawable-xhdpi/sy37_icon_customer_float_left.png
+SHA1-Digest: G2hHutpdUwDRhV9hpKMLCRC1+pw=
+
+Name: res/layout/sy37_dialog_permission_preview_land.xml
+SHA1-Digest: skrt5L7wuscV1hegy1R8r6/dYt8=
+
+Name: res/drawable/sy37_kefu_reg.xml
+SHA1-Digest: Y75dnvshue0DyLbV0E01WXmjL2A=
+
+Name: kotlinx/serialization/json/internal/WriteMode.kotlin_metadata
+SHA1-Digest: /wPhfPGkO86iT/TNdtqsbvli3Us=
+
+Name: res/drawable-xhdpi/abc_ic_menu_cut_mtrl_alpha.png
+SHA1-Digest: L7foFsAeFoZ0qETXtrifyXk9H2k=
+
+Name: res/layout/sysq_pay_dialog_portrait.xml
+SHA1-Digest: kmPrjx1zI4TIv4LFhp1dzW6fxq0=
+
+Name: assets/image/smile/49.png
+SHA1-Digest: B8RrOFIL23XTLxXcOn8vuowd5dk=
+
+Name: kotlinx/serialization/json/internal/StreamingJsonDecoderKt.kotli
+ n_metadata
+SHA1-Digest: 6Kt0L60wJ+eP6D/Xmx1/2TDqiB8=
+
+Name: res/layout/sysq_pay_dialog_landscape.xml
+SHA1-Digest: sE8l6rO+9mBl7TQ8Gs3AeE9V2q0=
+
+Name: res/drawable-xxhdpi/sysq_ic_pay_wallet.png
+SHA1-Digest: eECo+zXcuJMcc8E8Ru49kEG/Y9k=
+
+Name: res/drawable/hyberry_live_chat_expand_btn.xml
+SHA1-Digest: FqyZreHlZNbBtprMhBGUeCO+crg=
+
+Name: res/drawable-xhdpi/hyberry_kaihei_notopen_btn.png
+SHA1-Digest: 1qGesVP3GCzoNU2E2O3NqnDRnu8=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_news.png
+SHA1-Digest: 0BgKVvtsEovrSnM5SZ07vgYYsA4=
+
+Name: assets/anim/list_page_top_light.json
+SHA1-Digest: MoexgJSBUIoWVfQ9KWbZ1qUgsJU=
+
+Name: res/drawable/sy37_reg_simple_normal.xml
+SHA1-Digest: 4WVf0QFsewiLm58fRNmu0OmlVVk=
+
+Name: lib/x86/libmsaoaidsec.so
+SHA1-Digest: WnpuZh3voss/zPr0wE5/vXQBw6c=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_iv_not_send.png
+SHA1-Digest: DWRRbTAsWp5070NWfBROLtA/25A=
+
+Name: res/drawable/sysq_bg_gray_corner.xml
+SHA1-Digest: qx/iLr20KSxqQysyPrFQ8V6pLC0=
+
+Name: res/color/sy37_text_reg_selector.xml
+SHA1-Digest: rAiJL/rscwcW/rkmhNA91iBW1ZI=
+
+Name: res/drawable/abc_item_background_holo_dark.xml
+SHA1-Digest: uCwkPEHWLniWnmQ+M1p3ttAmvH8=
+
+Name: res/drawable-hdpi/sy37_icon_to_left.png
+SHA1-Digest: UH24YqRLdPT97nT0nB9IUUMsW/Y=
+
+Name: res/drawable-xhdpi/hyberry_back_icon.png
+SHA1-Digest: x8jlxQL171jPraODjBhFJZlQKik=
+
+Name: res/drawable-mdpi/abc_list_pressed_holo_light.9.png
+SHA1-Digest: nw9U+Nt8beNARnnxkhhWMCSkCRM=
+
+Name: kotlinx/serialization/json/internal/JsonLexerKt.kotlin_metadata
+SHA1-Digest: 3a15OoKE6W6IF7IL9DaIcUx9LZg=
+
+Name: res/layout/abc_popup_menu_header_item_layout.xml
+SHA1-Digest: cdBnL+TQkfwRQbb/lVV6MQ+GB3E=
+
+Name: res/drawable-xxhdpi/hyberry_close_icon.png
+SHA1-Digest: ZefyX5Fgeplymx/MW+rqwxqPgWM=
+
+Name: res/drawable-xhdpi/hyberry_stoplive_btn_normal.png
+SHA1-Digest: eVwEVqtKf0zla+yyaV7Bi3E00Fw=
+
+Name: res/layout/hyberry_fragment_login.xml
+SHA1-Digest: 6cCNi6LVRthFTLOnO6UpxDsv0hU=
+
+Name: res/xml/mtp_file_paths.xml
+SHA1-Digest: ixxkl8BQNtNmutTRS+wUREAK9nc=
+
+Name: res/layout/huya_udb_login_webview.xml
+SHA1-Digest: zTaZMGpW5DA27Y/hfaHWf+BGaQk=
+
+Name: res/layout/sysq_account_item.xml
+SHA1-Digest: Yfd+r9dxjEO4coo4IuYh3b9kOOs=
+
+Name: res/drawable-xhdpi/sy37_pop_bg_left.9.png
+SHA1-Digest: aGzauFtepkCdW3sAXUeDDPz6jYg=
+
+Name: res/drawable-xxhdpi/hyberry_mic_btn_normal.png
+SHA1-Digest: h/KoMX2BVkObRNoA03iifUXhN9o=
+
+Name: res/layout/sy37_liveshow_chatting_view.xml
+SHA1-Digest: RGLTT/vnQcSDtccjih29ZlndYko=
+
+Name: res/layout/support_simple_spinner_dropdown_item.xml
+SHA1-Digest: Osquj1ns8WGN7m0uC8+uwenSCcY=
+
+Name: lib/arm64-v8a/libyim.so
+SHA1-Digest: wSZrK10/yqwWGAmuflCap7Bs2Os=
+
+Name: res/color/abc_tint_btn_checkable.xml
+SHA1-Digest: 3h1umsstIiIYOPcifv+9R64pXxE=
+
+Name: res/layout/sy37_adapter_service.xml
+SHA1-Digest: +9fs4N8EL+hlGWljrCMYif/S9QQ=
+
+Name: kotlinx/serialization/json/internal/JsonPrimitiveDecoder.kotlin_
+ metadata
+SHA1-Digest: GYXe+TQmVMFevS7MBmqjcy+GB/Y=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_icon_top_back.png
+SHA1-Digest: gpuC3EnlTUAHxM57/gMmxI8dJ2g=
+
+Name: res/layout/sy37_dialog_exit.xml
+SHA1-Digest: bgzJrVa5ybGaVzKGVRxtL6b1V8A=
+
+Name: res/layout/sysq_base_title_layout.xml
+SHA1-Digest: clWL+IG5ujdD0RAJb8NMxsSWTBY=
+
+Name: res/layout/share_confirm_dialog_portrait.xml
+SHA1-Digest: vHuihV+nN3B4b9/+/k1LlafjYmc=
+
+Name: res/drawable/sy37_update_notice_bg.xml
+SHA1-Digest: R6ZJsyoQVo+xj2Oa3fmDQfNyJeg=
+
+Name: res/drawable-xxhdpi/sdk_assistant_network_test_logo.png
+SHA1-Digest: v743T/+JKKhapMFagwVyBlOSWa8=
+
+Name: res/layout/sy37_tab_item_room_left.xml
+SHA1-Digest: dtqVkhuZEUW+ZT6PAflkn7rRvMY=
+
+Name: res/drawable-xxhdpi/sy37_liveshow_loading.png
+SHA1-Digest: REpjyMcZZAXUAFtS5TVcrBm6Mto=
+
+Name: res/drawable/sy37_shape_white_radius_4.xml
+SHA1-Digest: cI47v6rik5v1y5tIDttOAc2s/6Y=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_list.9.png
+SHA1-Digest: yAH0+qoVHo6mGiYkYw/7zlwxdB0=
+
+Name: res/drawable-xhdpi/hyberry_floating_send_msg.png
+SHA1-Digest: AoO5k917XPkdbtiQbTF6CoEOGbs=
+
+Name: res/drawable/sy37_divider_h_20.xml
+SHA1-Digest: L6DuJHGR8dPgsbNQBrwMwbSP7u8=
+
+Name: res/drawable-xhdpi/abc_ic_star_half_black_48dp.png
+SHA1-Digest: 5FpyD6gqwU5xpIAC80ULYrYSJvE=
+
+Name: res/layout/notification_template_big_media_narrow_custom.xml
+SHA1-Digest: O2XLQNDPgCp9liBxnKzu0vAkkno=
+
+Name: res/drawable-hdpi/abc_text_select_handle_middle_mtrl_light.png
+SHA1-Digest: GwBkVpFocua2skuTOQdu6vCV5z0=
+
+Name: assets/image/smile/19.png
+SHA1-Digest: NOAQPRG8Lwo2M7Qg/vlVdVyGSfM=
+
+Name: res/drawable/abc_ratingbar_indicator_material.xml
+SHA1-Digest: 5xSd/AWsTKdrOSKWH1d1vVomE64=
+
+Name: res/layout/sy37_doubt_guide_dialog.xml
+SHA1-Digest: RKhh9knUirQAZ8Lcx7lyVY64EMk=
+
+Name: res/layout/hyberry_fragment_live_list_land.xml
+SHA1-Digest: 8HhzpH9KpsJfkcbyxvk08mFvvbw=
+
+Name: res/drawable/hyberry_floating_player_loading.xml
+SHA1-Digest: qMIeNwV+xoNgDSc8rzLN5ZdG0Ig=
+
+Name: res/drawable-hdpi/sy37_kefu_user_et_bg.png
+SHA1-Digest: YTqOrkhzcxwiuARoKU77ToDAVAU=
+
+Name: res/layout/sy37_adapter_game.xml
+SHA1-Digest: d7KEIRHHAcw4GjW/GB1jsC7e3/0=
+
+Name: res/drawable-hdpi/abc_ic_menu_selectall_mtrl_alpha.png
+SHA1-Digest: HX9PBNClfl3Z88BcAxLXe1+QvSY=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_dialog_simple.9.png
+SHA1-Digest: pD3XAvABdPW0LKSBdw9sadV734s=
+
+Name: res/drawable-hdpi/sy37_d_icon.png
+SHA1-Digest: jfb+wEhreDzVHSK+GnGcBQ15BFA=
+
+Name: res/drawable-xhdpi/abc_list_selector_disabled_holo_dark.9.png
+SHA1-Digest: ehAUprTIZsh3hB2fjGkFzCY5BxY=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_horn.png
+SHA1-Digest: 6OFfESD7hTKtkvJgM4ao4oVZfKU=
+
+Name: res/layout-v26/abc_screen_toolbar.xml
+SHA1-Digest: qveKjhR/SzyiA+04/k4G/IDta1g=
+
+Name: res/anim/abc_tooltip_exit.xml
+SHA1-Digest: uS9+Y3ZWjhyFHwvngif1+UE7IK8=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_logout.png
+SHA1-Digest: 6n/7WW4RXZYKEcjWZKoByw0huYs=
+
+Name: res/drawable-xxhdpi/sy37_web_refresh.png
+SHA1-Digest: JYWiwYyvj5sNMfqbmLhHe+QmjHA=
+
+Name: res/drawable-xhdpi/abc_list_longpressed_holo.9.png
+SHA1-Digest: 3yIE5VYlBti48V+SVkTTX+bfFCo=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_gl.png
+SHA1-Digest: 4Lic1ZPyj4MTJ2kKFUknH1Az6EM=
+
+Name: res/drawable-xhdpi/hyberry_anchor_recruit_target_small.png
+SHA1-Digest: ZAEddvRQUdtEeFWgD7jTzq1vpfw=
+
+Name: res/drawable-xhdpi/progress_loading_3.png
+SHA1-Digest: IOu8AbmFS8NE76t2+TxRiIyiAUo=
+
+Name: res/drawable-xhdpi/sy37_icon_wallet.png
+SHA1-Digest: xAg7DeV212NcMTPl0fgDGZIoUeM=
+
+Name: res/drawable-xhdpi/sy37_net_wifi.png
+SHA1-Digest: 6gEmlrEW3+kH4Pxw36jigK0CS9w=
+
+Name: kotlinx/serialization/json/JsonElementKt.kotlin_metadata
+SHA1-Digest: XCBZVtquCnlgwKOzUO9KKzjuTYA=
+
+Name: res/drawable/abc_dialog_material_background.xml
+SHA1-Digest: L2fSaU7HsNtqnmjunMGpEs0MVlc=
+
+Name: res/drawable/sysq_login_btn_press.png
+SHA1-Digest: EWXNwpC6859PjkEI8uiN4sn1Ku8=
+
+Name: res/drawable-xhdpi/abc_textfield_activated_mtrl_alpha.9.png
+SHA1-Digest: 8mAbZZwaN/Absh166esbtgeTWDY=
+
+Name: res/drawable-xhdpi/hyberry_close_icon.png
+SHA1-Digest: TGQi1JkXquO54tieBfPav/yk5lw=
+
+Name: res/drawable-hdpi/abc_text_select_handle_left_mtrl_light.png
+SHA1-Digest: xikdq0MUk/db6+MwsR0wYysb7nE=
+
+Name: kotlinx/serialization/json/JsonTransformingSerializer.kotlin_met
+ adata
+SHA1-Digest: qB8fyVjYObnd4Ex9DUAUlDw36N4=
+
+Name: res/drawable-port-xxhdpi/sy37_liveshow_bg_room_item.png
+SHA1-Digest: 5l+SqlkXFEI0uo1mTvINwe0JPrQ=
+
+Name: res/drawable-xhdpi/notification_bg_normal_pressed.9.png
+SHA1-Digest: NE2Il1N9BtSD/Z7BY6cnA22mVSE=
+
+Name: res/drawable-hdpi/sy_icon_web_close.png
+SHA1-Digest: HX05qRNiutRZdjZbmfsUzqbwsFk=
+
+Name: res/drawable-xxhdpi/sy37_base_liveshow_players_dancing.png
+SHA1-Digest: Y1h8vu6Xz0bW0X7ytJVa23UnU44=
+
+Name: res/layout/notification_media_cancel_action.xml
+SHA1-Digest: AZn8QMxABpjE7RBtYYZlLvisX1w=
+
+Name: res/drawable-hdpi/sy37_web_view_img_loading.png
+SHA1-Digest: IwEH6kgZVwv3J1OJi99EGy0dFQo=
+
+Name: res/drawable-xhdpi/bugle.png
+SHA1-Digest: XcVkYiLS62tPlanwSdiYZAXtdx0=
+
+Name: res/drawable-xhdpi/hyberry_stoplive_btn_pressed.png
+SHA1-Digest: flqHEF8Ohrpfp1KGexR09aetsHA=
+
+Name: res/drawable-hdpi/sy37_p_bg.9.png
+SHA1-Digest: n2eR74i1bhrNSDUMkPurYogVxNs=
+
+Name: kotlinx/serialization/json/internal/JsonEncodingException.kotlin
+ _metadata
+SHA1-Digest: AqKbVirUhJll93EpHiCD7REi2hA=
+
+Name: lib/armeabi-v7a/libyim.so
+SHA1-Digest: z5zPjCkIQvDc+T4Pbpbbc11yUgM=
+
+Name: res/layout/sy37_paydialog.xml
+SHA1-Digest: eyg4xCbNOqxZLdOErtQgFEtjFGk=
+
+Name: res/drawable-xxhdpi/sysq_ic_wechat_login_v2.png
+SHA1-Digest: 1ewrUYHiY8pvuMmJI6W/MefwuzE=
+
+Name: assets/image/smile/3.png
+SHA1-Digest: s69CbqHLvIwo08UTnK9w6O9iab4=
+
+Name: res/drawable/sy3y_regs_bg_orange_bg.xml
+SHA1-Digest: PxRW1oNlNiyGod+diQr+O0lL9RI=
+
+Name: res/layout/sy37_base_item_liveshow_im_chat.xml
+SHA1-Digest: 5nSCCX9qvxZi8JaArlFLs6F8DhM=
+
+Name: res/drawable-xhdpi/hyberry_floating_close_danmu.png
+SHA1-Digest: 3G6u/re8Yogx4oghC8jB083B+yU=
+
+Name: res/drawable-xxhdpi/hyberry_floating_open_danmu.png
+SHA1-Digest: lU4ooYatVeDTLE5/btImcfdVDFk=
+
+Name: res/layout/sy37_account_item.xml
+SHA1-Digest: xTN2GcMev244DxUhCLA+ENGztWk=
+
+Name: res/layout/sy37_item_im_chat.xml
+SHA1-Digest: q18dvsF6eE4ogj5aRXW8ucB6OPw=
+
+Name: res/drawable-hdpi/sy37_btn_blue_bg_0.9.png
+SHA1-Digest: Vk8ZI3NA7dBiQgizaT7NzwtPDu8=
+
+Name: lib/armeabi-v7a/libmarsstn.so
+SHA1-Digest: Yw5Mx7vJ4Z6zt1uLcIYQaVaqSdU=
+
+Name: res/layout/abc_screen_content_include.xml
+SHA1-Digest: 0jp66UnYnEH6/fKIwLFy4l/oehY=
+
+Name: res/drawable-hdpi/sy37_update_bg.9.png
+SHA1-Digest: Na+pR/8wpnj/9Adv5xU0nR60GrI=
+
+Name: classes3.dex
+SHA1-Digest: DRYV/qxWSrFZZyOWXIzh9Ry1ejA=
+
+Name: res/drawable/sy37_bg_disable.xml
+SHA1-Digest: W6Mw/j/FnICn3VOjFXA/K7zxJY0=
+
+Name: res/drawable/sy37_reg_simple_pressed.xml
+SHA1-Digest: 8sujxQTYpt1+g9YCKAJoJCvMe/Y=
+
+Name: lib/arm64-v8a/libhyaudioenginecapture.so
+SHA1-Digest: h62y8GpQwHiut3A4Hx1rwRZaxaw=
+
+Name: res/color-v23/abc_tint_switch_track.xml
+SHA1-Digest: xnlTWsxtIDqaorAtFTGD3ibCciQ=
+
+Name: res/drawable-hdpi/sy37_m_icon_close.png
+SHA1-Digest: xA/BzwcvfYnq7g8oStpWcrv7d/Y=
+
+Name: res/drawable-xxhdpi/sy37_web_forward_disable.png
+SHA1-Digest: PAgWBhhJafEJ5cARh/YTb2MNZ1w=
+
+Name: res/drawable-xxhdpi/abc_textfield_search_default_mtrl_alpha.9.pn
+ g
+SHA1-Digest: jcPj6VwC31egCCr5xCNgnf1CgN0=
+
+Name: res/drawable-mdpi/abc_scrubber_primary_mtrl_alpha.9.png
+SHA1-Digest: mQGo86tHsIbbXUpwO9KRLegYyu0=
+
+Name: res/layout/select_dialog_singlechoice_material.xml
+SHA1-Digest: cu1XIEBqocgN39nvrGqMqgDrXrQ=
+
+Name: res/drawable/sysq_dialog_pay_btn_bg.xml
+SHA1-Digest: SRbzRLhKVLJ9oHQaJ8mrcY2ABM0=
+
+Name: res/drawable-xhdpi/fx_bg_login_phone_pwd.png
+SHA1-Digest: dKKIPUyRlL7TBkXOOavzbcRj/tQ=
+
+Name: res/drawable-xxxhdpi/abc_ic_star_half_black_48dp.png
+SHA1-Digest: q3wWeVKD/E+qjcvo3HpxBtNbngg=
+
+Name: res/layout/hyberry_fragment_line_list.xml
+SHA1-Digest: 1jwGDJK8fy6Sbzbct9Yno51Ei2A=
+
+Name: lib/armeabi-v7a/libndkbitmap.so
+SHA1-Digest: +k+nk4AJzlW6kqa61TBqH7l8ygs=
+
+Name: res/drawable-hdpi/abc_textfield_search_default_mtrl_alpha.9.png
+SHA1-Digest: w2M/6PsN/C8elViPL2mURvfV6j0=
+
+Name: res/drawable-xhdpi/sy37_icon_pop_btn.png
+SHA1-Digest: 5A4xS3vorTqB8B6WBTd74c67Y2Q=
+
+Name: res/layout/sy37_kefu_account.xml
+SHA1-Digest: XtAlYQmj0Bxb0XTcKRE5Lp4LhVc=
+
+Name: res/drawable-xxhdpi/hyberry_floating_send_msg.png
+SHA1-Digest: 84MvwUQVIV09Ffv3hhlS89Opkkg=
+
+Name: res/layout/sy37_pay_confirm_dialog.xml
+SHA1-Digest: PtX/So2mWSTzvZngGHzxDahroa0=
+
+Name: res/drawable/background_to_resume_selector.xml
+SHA1-Digest: hTaRROSyPBqaaK7GimnaKGnd4t0=
+
+Name: res/layout/sysq_custom_port_dialog_action_bar.xml
+SHA1-Digest: w56PFf4xdLvXNIT7VVtsn5diqVc=
+
+Name: assets/image/smile/47.png
+SHA1-Digest: o+0cphaYBQi0yUlBliBVBxDEzDo=
+
+Name: res/drawable-hdpi/sy37_bg_kefu_modify.9.png
+SHA1-Digest: slqYNaTy9BboTVwIs/iMaJYeSIU=
+
+Name: res/layout/sy37_adapter_message.xml
+SHA1-Digest: yIPt2nAlOhRk1oCv0pN/rQgWwFo=
+
+Name: res/drawable-hdpi/sy37_icon_kefu_uncheck.png
+SHA1-Digest: urTm3xwUMbzMkP12zdf1TtKMXfQ=
+
+Name: lib/arm64-v8a/libstlport_shared.so
+SHA1-Digest: 4bfkm0gQEg+LCeEgZSwI4Sg3E8w=
+
+Name: res/color-v23/abc_tint_btn_checkable.xml
+SHA1-Digest: qxQEyDGiiKc5O9/TFHG8XCejOio=
+
+Name: assets/image/smile/32.png
+SHA1-Digest: aUrWiBMcCX0BYHSm62tnhbZSZIs=
+
+Name: res/drawable-mdpi/abc_text_select_handle_middle_mtrl_light.png
+SHA1-Digest: FOpTH+3B1AfQCFYjVijy8KneZJw=
+

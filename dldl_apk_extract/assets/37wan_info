@@ -1,0 +1,5 @@
+#当前SDK版本号
+sdkverion=3.7.9.6.1
+
+#开启debug模式，打印log，1：打开，0：关闭
+debug=0

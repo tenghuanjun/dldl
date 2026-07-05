@@ -1,0 +1,42 @@
+# GitHub Actions IP 轮换 - Token 中继
+# 按需触发：本地 proxy 通过 workflow_dispatch API 传 uname/upwd
+# Runner 从全新 Azure IP 调用 s-api.37.com.cn，结果写入 Gist
+
+name: Token Relay (IP Rotator)
+
+on:
+  schedule:
+    # 每 5 分钟保活一次（仅记录 IP，不请求 API）
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      uname:
+        description: '账号'
+        required: true
+      upwd:
+        description: '密码'
+        required: true
+      request_id:
+        description: '请求 ID（用于匹配结果）'
+        required: false
+        default: ''
+
+jobs:
+  fetch-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fetch token via fresh Azure IP
+        env:
+          INPUT_UNAME: ${{ github.event.inputs.uname }}
+          INPUT_UPWD: ${{ github.event.inputs.upwd }}
+          INPUT_REQUEST_ID: ${{ github.event.inputs.request_id }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GH_GIST_TOKEN: ${{ secrets.GH_GIST_TOKEN }}
+          GH_GIST_ID: ${{ secrets.GH_GIST_ID }}
+        run: node token-fetcher-runner.js

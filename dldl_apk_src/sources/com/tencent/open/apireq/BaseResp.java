@@ -1,0 +1,66 @@
+package com.tencent.open.apireq;
+
+/* JADX INFO: compiled from: ProGuard */
+/* JADX INFO: loaded from: D:\dldl\dldl_apk_extract\classes4.dex */
+public class BaseResp {
+    public static final int CODE_ERROR_PARAMS = -2000;
+    public static final int CODE_NOT_LOGIN = -2001;
+    public static final int CODE_QQ_LOW_VERSION = -1001;
+    public static final int CODE_QQ_NOT_INSTALLED = -1000;
+    public static final int CODE_SUCCESS = 0;
+    public static final int CODE_UNSUPPORTED_BRANCH = -1002;
+    private int a = 0;
+    private String b = "";
+
+    protected String a(int i) {
+        return "Api call failed.";
+    }
+
+    public boolean isSuccess() {
+        return this.a == 0;
+    }
+
+    public int getCode() {
+        return this.a;
+    }
+
+    public void setCode(int i) {
+        String strA;
+        this.a = i;
+        if (i == -2001) {
+            strA = "Not login.";
+        } else if (i == -2000) {
+            strA = "The given params check failed.";
+        } else if (i != 0) {
+            switch (i) {
+                case CODE_UNSUPPORTED_BRANCH /* -1002 */:
+                    strA = "The QQ branch (e.g. TIM) is not supported";
+                    break;
+                case CODE_QQ_LOW_VERSION /* -1001 */:
+                    strA = "QQ version is too low.";
+                    break;
+                case -1000:
+                    strA = "QQ is not installed.";
+                    break;
+                default:
+                    strA = a(i);
+                    break;
+            }
+        } else {
+            strA = "";
+        }
+        setErrorMsg(strA);
+    }
+
+    public String getErrorMsg() {
+        return this.b;
+    }
+
+    public void setErrorMsg(String str) {
+        this.b = str;
+    }
+
+    public String toString() {
+        return "BaseResp{mCode=" + this.a + ", mErrorMsg='" + this.b + "'}";
+    }
+}

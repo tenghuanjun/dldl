@@ -1,6 +1,7 @@
-# 忽略所有文件
-*
-
-# 仅保留
-!mobile.html
-!.gitignore
+node_modules/
+dist/
+dist-electron/
+.npm-cache/
+src-tauri/target/
+src-tauri/_embed/
+*.apk
