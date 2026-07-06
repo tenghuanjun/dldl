@@ -265,6 +265,109 @@ Body (SignV3 签名):
 
 ---
 
+## 十一、还原原生登录缺少的核心条件
+
+> 当前 h5sdk 方案（cloudflare-worker.js）**已有部分**原生登录逻辑，
+> 但与完整原生 APP 登录相比仍有关键缺口。
+
+### 与当前 Worker 实现的详细对比
+
+| 环节 | 原生 APP | 当前 Worker (`sdkLogin`) | 缺口 |
+|------|---------|-------------------------|------|
+| 登录端点 | `https://s-api-secure.37.com.cn/sdk/login/` | `http://s-api.37.com.cn/sdk/login/` | ❌ 不同域名 |
+| SignV3 签名密钥 | `!/DIzcJLYE)@X7UC~b9Pn]}<eAr?|Wlw` | `APP_KEY`（`CR.wdPyFoanb6Thv...`） | ❌ 不同密钥 |
+| 密码加密 | AES/ECB + `CR.wdPyFoanb6Thv` | AES/ECB + `CR.wdPyFoanb6Thv` | ✅ 一致 |
+| D-Token | 请求头携带设备指纹 Token | **无** | ❌ **完全缺失** |
+| GameID | `1004620` | `1002997`（SDK_GID） | ⚠️ 待确认 |
+
+### 核心缺失一：D-Token 设备指纹 Token（最关键）
+
+D-Token 是原生 APP 登录**独有的鉴权维度**，当前系统中完全没有实现。
+
+#### 获取流程
+
+```
+收集 50+ 设备属性（JSON）
+  → GZIP 压缩（java.util.zip.GZIPOutputStream）
+    → AES/CBC/PKCS5Padding 加密（Key=IV="17d2ff30df8d2042"）
+      → Base64 编码
+        → POST http://afflatus.37.com.cn/afflatus/get_token/android
+          → 服务器返回 Token（有效期 3 天）
+            → 缓存 Token
+              → 登录请求 Header: D-Token: {token}
+```
+
+#### 需要模拟的设备属性（在 Worker 端）
+
+Worker 运行在 Cloudflare 边缘节点，能模拟的字段有限：
+
+| 类别 | 可模拟程度 | 说明 |
+|------|-----------|------|
+| 系统信息（os, os_version, country_code 等） | ✅ 完全可模拟 | 硬编码 Android 设备信息即可 |
+| CPU / Build 信息 | ✅ 完全可模拟 | 伪造一套真实 Android 设备的 build.prop 值 |
+| APK 信息（apk_name, version, install_time） | ✅ 完全可模拟 | 包里名 `com.m37.dldlsy.sy37`，版本从反编译获取 |
+| 设备标识（IMEI, MAC, AndroidID） | ✅ 可随机生成 | 原生默认策略就是在拿不到时生成随机值 |
+| Root/模拟器/ Xposed | ✅ 硬编码 `0` | 伪装成正常设备 |
+| 传感器列表 | ✅ 可硬编码 | 复制一份真实 Android 设备传感器列表 |
+| 电池/屏幕 | ✅ 可硬编码 | 静态值 |
+| 网络（ssid, bssid, ip） | ⚠️ 部分可模拟 | Worker 出口 IP 可变，WiFi 信息难以伪造 |
+| 业务参数（gid, pid, dev, uid） | ✅ 可模拟 | 与登录请求参数保持一致 |
+
+**关键结论**：Worker 端可以模拟 90%+ 的设备属性，因为原生 APP 本身的 fallback 机制也是用随机/默认值填充。**但实际能否通过 `afflatus` 服务端的校验，必须发包测试才能确认。**
+
+#### 不确定因素
+
+- `afflatus.37.com.cn` 端点是否仍在运行、是否已迁移
+- 设备属性 JSON 的精确结构（字段名、嵌套层级）未从反编译中完整还原
+- 服务端是否有额外的防伪造检测（如 IP 归属地、请求频率等）
+
+### 核心缺失二：s-api-secure 端点连通性
+
+原生 APP 以**明文 form-urlencoded** 方式直接 POST 到 `s-api-secure.37.com.cn/sdk/login/`，
+
+当前 Worker 中虽然已有 `SECURE_BASE` 常量（用于 Gateway 加密通道的 `get-url`），但尚未验证：
+
+- Worker 节点能否以**非 Gateway 加密**方式访问 `s-api-secure` 上的 `/sdk/login/`
+- 服务端是否强制要求 D-Token 头（无 D-Token 是否直接拒绝）
+
+### 核心缺失三：SignV3 签名密钥切换
+
+原生 APP 中 `SignInterceptor.java:37` 使用硬编码密钥 `!/DIzcJLYE)@X7UC~b9Pn]}<eAr?|Wlw`，
+
+当前 Worker 的 `sdkLogin()` 使用 `signV3(params, APP_KEY)`。
+
+**需要确认**：`s-api-secure` 端点上的 `/sdk/login/` 接受哪个密钥签名的请求（可能是硬编码密钥，而非 APP_KEY）。
+
+### 核心缺失四：GameID 确认
+
+| 来源 | GameID | 用途 |
+|------|--------|------|
+| 分析文档（AppkeyHelper 映射） | `1004620` | 原生 APP 登录的 `gid` 参数 |
+| 当前 Worker（SDK_GID） | `1002997` | 当前 sdkLogin 使用的 `gid` |
+| 当前 Worker（GAME_GID） | `1003279` | 游戏入口 URL 使用的 `gid` |
+
+原生登录时 `gid` 用哪个值，需要通过实际发包确认。
+
+### 实现优先级建议
+
+| 优先级 | 事项 | 依赖 | 风险 |
+|--------|------|------|------|
+| **P0** | 实现 D-Token 获取流程（模拟设备属性 → afflatus → 缓存 Token） | 需实测 afflatus 端点 | 高（端点可能不可用） |
+| **P0** | 切换 SignV3 密钥为硬编码密钥 | 无 | 低（纯代码改动） |
+| **P1** | 切换登录端点为 `s-api-secure` | 需实测连通性 | 中（可能有 IP 白名单） |
+| **P2** | 确认并修正 GameID | 需实测 | 低 |
+
+### 总结
+
+| 类型 | 内容 |
+|------|------|
+| ✅ **已具备** | 所有算法（AES、SignV3、GZIP）、所有密钥、设备属性字段清单 |
+| ⚠️ **可推断但需验证** | 设备属性 JSON 精确结构、签名密钥选哪个、GameID 用哪个 |
+| ❌ **必须实测** | `afflatus.37.com.cn` 端点可用性、`s-api-secure` 直连连通性、D-Token 是否被服务端强制校验 |
+| 🎯 **突破口** | 先用真实账号在 Worker 端构造一次完整原生登录请求发包，观察服务端返回的 `state` 和 `msg`，即可判断哪些环节是必须的 |
+
+---
+
 ## 附：关键源码文件索引
 
 | 文件 | 内容 |
