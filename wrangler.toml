@@ -5,6 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 account_id = "7160279964fc33ef7afdc22ac2bd7c66"
 
-# 定时刷新过期账号（每3小时，仅主Worker）
+# 定时刷新过期账号（每30分钟，仅主Worker）
 [triggers]
-crons = ["0 */3 * * *"]
+crons = ["*/30 * * * *"]

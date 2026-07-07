@@ -785,120 +785,151 @@ async function refreshExpiredAccounts(env) {
   const results = { scanned: 0, refreshed: 0, errors: 0, detail: [] };
 
   try {
-    // 验证连接：先查前3条看数据结构（含upwd检验RLS）
-    let resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url&limit=3', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const sample = await resp.json();
-    console.log('[cron] 样本:', JSON.stringify(sample).slice(0, 500));
-    results.detail.push({ sample });
-    
-    if (!Array.isArray(sample) || sample.length === 0) {
-      console.log('[cron] 查不到任何账号');
-      return results;
-    }
-    
-    // 查有url的（url不为空字符串且不为null）
-    const withUrl = sample.filter(a => a.url && String(a.url).trim());
-    console.log('[cron] 前3条中有URL的:', withUrl.length);
-    if (withUrl.length === 0) { results.detail.push({ error: 'sample_no_url' }); return results; }
-    
-    // 实际操作：查全量在代码里过滤
-    // 查全量有URL的账号，按创建时间升序
-    resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url,url_created_at&url=not.is.null&order=url_created_at.asc', {
+    // 查全量有URL的账号，按创建时间升序（最旧的优先）
+    let resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url,url_created_at&url=not.is.null&order=url_created_at.asc', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     if (!resp.ok) { console.log('[cron] 查询失败:', resp.status); return results; }
-    
+
     const accounts = await resp.json();
-    
     results.scanned = accounts.length;
-    console.log('[cron] 有URL的账号总数:', accounts.length);
-    results.detail.push({ totalWithUrl: accounts.length });
-    
-    // 统计过期情况
-    let expiredCount = 0, missingCreds = 0, hasBothCount = 0;
+
+    // 筛选过期账号（>=60h），按最旧优先
+    const expired = [];
     for (const a of accounts) {
       const t = a.url_created_at ? new Date(a.url_created_at) : null;
       const ageH = t && !isNaN(t.getTime()) ? (Date.now() - t.getTime()) / 3600000 : -1;
-      if (ageH >= 65) expiredCount++;
-      if (!a.upwd) missingCreds++;
-      if (a.upwd && a.uname) hasBothCount++;
+      if (ageH >= 60 && a.uname && a.upwd) expired.push({ acc: a, ageH });
     }
-    console.log('[cron] 过期>=65h:', expiredCount, '缺密码:', missingCreds, '有完整凭据:', hasBothCount);
-    results.detail.push({ expiredCount, missingCreds, hasBothCount });
-    
-    for (const acc of accounts) {
-      // Debug: 记录账号信息
-      const urlTime = acc.url_created_at ? new Date(acc.url_created_at) : null;
-      const ageHours = urlTime && !isNaN(urlTime.getTime()) ? (Date.now() - urlTime.getTime()) / 3600000 : -1;
-      
-      if (ageHours < 65) {
-        console.log('[cron] 跳过(未过期):', acc.uname || '?', ageHours.toFixed(1) + 'h');
-        continue;
-      }
-      
-      if (!acc.uname || !acc.upwd) {
-        console.log('[cron] 跳过(缺账号密码):', acc.id, 'uname:', acc.uname ? 'YES' : 'NO', 'upwd:', acc.upwd ? 'YES' : 'NO');
+    console.log('[cron] 过期账号:', expired.length, '→ 分发给 dlapi Worker 并行处理');
+    results.detail.push({ totalWithUrl: accounts.length, totalExpired: expired.length });
+
+    if (expired.length === 0) return results;
+
+    // 分批发给 dlapi Worker 并行刷新（每个 Worker 处理 7 个）
+    const BATCH_SIZE = 7;
+    const DLAPI_COUNT = 99;  // 使用全部 dlapi-1 ~ dlapi-99
+    const batches = [];
+    for (let i = 0; i < expired.length; i += BATCH_SIZE) {
+      batches.push(expired.slice(i, i + BATCH_SIZE));
+    }
+
+    const workerResults = await Promise.all(
+      batches.map((batch, idx) => {
+        const workerNum = (idx % DLAPI_COUNT) + 1;
+        const workerUrl = `https://dlapi-${workerNum}.tenghuanjun.workers.dev/api/batch-refresh`;
+        console.log('[cron] → dlapi-' + workerNum + ' (' + batch.length + '个账号)');
+        return fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accounts: batch.map(b => ({ id: b.acc.id, uname: b.acc.uname, upwd: b.acc.upwd }))
+          })
+        }).then(async r => {
+          const text = await r.text();
+          console.log('[cron] ← dlapi-' + workerNum + ' status=' + r.status + ' body=' + text.slice(0, 200));
+          try { return JSON.parse(text); }
+          catch (e) { return { error: 'JSON parse failed: ' + text.slice(0, 100) }; }
+        }).catch(e => {
+          console.log('[cron] ✗ dlapi-' + workerNum + ' failed:', e.message);
+          return { error: e.message };
+        });
+      })
+    );
+
+    for (const wr of workerResults) {
+      if (wr.error) {
         results.errors++;
-        results.detail.push({ id: acc.id, error: 'missing_credentials' });
-        continue;
+        results.detail.push(wr);
       }
-      
-      try {
-        console.log('[cron] 刷新:', acc.uname, '过期:', ageHours.toFixed(1) + 'h');
-        const result = await doLoginCore(acc.uname, acc.upwd);
-        
-        if (result.ok && result.token) {
-          // 更新 Supabase
-          const patchUrl = SUPABASE_URL + '/rest/v1/accounts?id=eq.' + acc.id;
-          await fetch(patchUrl, {
-            method: 'PATCH',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              url: 'https://dldl.50pk.com/login.php?' + new URLSearchParams({
-                gid: result.entryGid || '1003279',
-                pid: result.entryPid || '46',
-                token: result.token,
-                time: result.entryTime || '',
-                sign: result.sign,
-                appVer: result.appVer || '134',
-                platCode: result.platCode || '37wan',
-                IMEI: result.IMEI || '',
-                isPcLauncher: 'true'
-              }).toString(),
-              app_token: result.token,
-              app_sign: result.sign,
-              url_created_at: new Date().toISOString()
-            })
-          });
-          results.refreshed++;
-        } else {
-          const errMsg = result.message || '未知错误';
-          console.log('[cron] 刷新失败:', acc.uname, errMsg);
-          results.errors++;
-          results.detail.push({ uname: acc.uname, error: errMsg });
-        }
-      } catch (e) {
-        console.log('[cron] 异常:', acc.uname, e.message);
-        results.errors++;
-        results.detail.push({ uname: acc.uname, error: e.message });
+      if (typeof wr.refreshed === 'number') results.refreshed += wr.refreshed;
+      if (typeof wr.errors === 'number') results.errors += wr.errors;
+      if (wr.detail && Array.isArray(wr.detail)) results.detail.push(...wr.detail.slice(0, 5));
+    }
+
+    // 兜底：如果全部分发失败，主 Worker 亲自刷新前 7 个
+    if (results.refreshed === 0 && results.errors > 0 && expired.length > 0) {
+      console.log('[cron] 分发全部失败，主 Worker 兜底刷新前7个');
+      const fallback = expired.slice(0, 7);
+      for (const { acc } of fallback) {
+        try {
+          const result = await doLoginCore(acc.uname, acc.upwd);
+          if (result.ok && result.token) {
+            await fetch(SUPABASE_URL + '/rest/v1/accounts?id=eq.' + acc.id, {
+              method: 'PATCH',
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                url: 'https://dldl.50pk.com/login.php?' + new URLSearchParams({
+                  gid: result.entryGid || '1003279', pid: result.entryPid || '46',
+                  token: result.token, time: result.entryTime || '', sign: result.sign,
+                  appVer: result.appVer || '134', platCode: result.platCode || '37wan',
+                  IMEI: result.IMEI || '', isPcLauncher: 'true'
+                }).toString(),
+                app_token: result.token, app_sign: result.sign,
+                url_created_at: new Date().toISOString()
+              })
+            });
+            results.refreshed++;
+          } else {
+            results.errors++;
+          }
+        } catch (e) { results.errors++; }
+        await new Promise(r => setTimeout(r, 3000));
       }
-      
-      // 每次刷新间隔5秒
-      await new Promise(r => setTimeout(r, 5000));
     }
   } catch (e) {
     console.log('[cron] 异常:', e.message);
   }
-  
+
   console.log('[cron] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误');
-  results.detail = results.detail.slice(0, 30);  // 限制日志大小
   return results;
+}
+
+// dlapi Worker 处理批量刷新任务
+async function handleBatchRefresh(request) {
+  let body;
+  try { body = await request.json(); } catch (_) {
+    return jsonResponse({ ok: false, message: '请求体必须是 JSON' }, 400);
+  }
+  const accounts = body.accounts || [];
+  if (!Array.isArray(accounts) || accounts.length === 0) {
+    return jsonResponse({ ok: false, message: '缺少 accounts 数组' }, 400);
+  }
+
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+  const results = { refreshed: 0, errors: 0, detail: [] };
+
+  for (const acc of accounts) {
+    try {
+      console.log('[batch] 刷新:', acc.uname);
+      const result = await doLoginCore(acc.uname, acc.upwd);
+      if (result.ok && result.token) {
+        await fetch(SUPABASE_URL + '/rest/v1/accounts?id=eq.' + acc.id, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: 'https://dldl.50pk.com/login.php?' + new URLSearchParams({
+              gid: result.entryGid || '1003279', pid: result.entryPid || '46',
+              token: result.token, time: result.entryTime || '', sign: result.sign,
+              appVer: result.appVer || '134', platCode: result.platCode || '37wan',
+              IMEI: result.IMEI || '', isPcLauncher: 'true'
+            }).toString(),
+            app_token: result.token, app_sign: result.sign,
+            url_created_at: new Date().toISOString()
+          })
+        });
+        results.refreshed++;
+      } else {
+        results.errors++;
+        results.detail.push({ uname: acc.uname, error: result.message || '未知错误' });
+      }
+    } catch (e) {
+      results.errors++;
+      results.detail.push({ uname: acc.uname, error: e.message });
+    }
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return jsonResponse(results);
 }
 
 // ==================== 主入口 ====================
@@ -933,6 +964,11 @@ export default {
       if (url.pathname === '/api/cron-refresh') {
         const result = await refreshExpiredAccounts(env);
         return jsonResponse(result);
+      }
+
+      // dlapi Worker 批量刷新
+      if (url.pathname === '/api/batch-refresh') {
+        return handleBatchRefresh(request);
       }
 
       // 获取 IP
