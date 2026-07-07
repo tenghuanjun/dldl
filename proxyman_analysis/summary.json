@@ -1,0 +1,1569 @@
+{
+  "total": 138,
+  "secure_count": 22,
+  "nonsecure_count": 116,
+  "gateway_key": "soC2GAr8jN2fsbry",
+  "gateway_algorithm": "AES/CBC/PKCS7Padding",
+  "non_secure_requests": [
+    {
+      "id": "23485",
+      "method": "CONNECT",
+      "url": "https://ta.shan-yu-tech.comta.shan-yu-tech.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23486",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record?d=sdk-apix-secure.37.com.cn&r=PSmx9&s=d68a23e4ae3315a224846d374c342b96&appid=100001&type=A",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23488",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23489",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23490",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record?d=s-api-secure.37.com.cn&r=047j1&s=e94341bb8689b3b188adc6d1a1021144&appid=100001&type=A",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23491",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record?d=sos-service-secure.37.com.cn&r=yFpS4&s=a6daabc1d8bb85dd23bf01142ee80e1d&appid=100001&type=A",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23492",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record/ext?gid=1003279&pid=46&sversion=6.1.5&gwversion=4.6.8&version=136&dev=dafb9ed848bfb38263104581f43e2dcf&r=FWDCT&s=a9a3b49bd258f3099703d0f13f29dbe5&appid=100001",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23493",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record?d=m-api-secure.37.com.cn&r=FG7Hn&s=b932166e216678166054d8c43be5255b&appid=100001&type=A",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23495",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23496",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23497",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23499",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23500",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23501",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23502",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23503",
+      "method": "GET",
+      "url": "http://httpdns.tgcome.com/record/batch?d=message-api-secure.37.com.cn,imgcs.s98s2.com,ta.shan-yu-tech.com,im-api-secure.37.com.cn,track.37.com.cn,37.com.cn,blank,mpay-api-secure.37.com.cn,atj-api.akbing.com,spay-api-secure.37.com.cn,live-api-secure.37.com.cn,us-api-secure.37.com.cn,bugless.shan-yu-tech.com,room-api-secure.37.com.cn,validate-api-secure.37.com.cn,gamehub-api-secure.37.com.cn,api-adservices.apple.com,sdk-api-secure.37.com.cn,user.37.com.cn&r=IJqZf&s=1ab6cfe9a51da6fe2cb7a1a4517ca7f5&appid=100001&type=A",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23505",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23506",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23509",
+      "method": "GET",
+      "url": "http://app-liefer.37.com.cn/app/push/param?apk_name=com.m37.dldlsy.sy37&gid=1003279&pid=46",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23510",
+      "method": "GET",
+      "url": "http://app-liefer.37.com.cn/app/client/config/get?gid=1003279&pid=46",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23511",
+      "method": "POST",
+      "url": "http://iert.shuzilm.cn/report?v=1.0&e=1&c=1",
+      "status": {
+        "phrase": "Forbidden",
+        "strict": false,
+        "code": 403
+      }
+    },
+    {
+      "id": "23513",
+      "method": "CONNECT",
+      "url": "https://dig.bdurl.netdig.bdurl.net:443",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23515",
+      "method": "CONNECT",
+      "url": "https://analytics.oceanengine.comanalytics.oceanengine.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23515",
+      "method": "CONNECT",
+      "url": "https://dypnsapi.aliyuncs.comdypnsapi.aliyuncs.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23517",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23518",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23519",
+      "method": "GET",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/sdk_log_task?sversion=6.1.5&gname=%E6%96%97%E7%BD%97%E5%A4%A7%E9%99%86&os=ios&sign=0f1c0a50194d4bfad7901af1e0a129b8&pname=com.m37.dldlsy.sy37&gid=1003279&timestamp=1783403417&dev=dafb9ed848bfb38263104581f43e2dcf&pid=46",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23520",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23521",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23522",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23523",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23524",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23525",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23527",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23527",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23528",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23529",
+      "method": "GET",
+      "url": "https://bugless.shan-yu-tech.com/v2/common_config/batch_get?timestamp=1783403417&gname=%E6%96%97%E7%BD%97%E5%A4%A7%E9%99%86&mod=tiny&type=schedule_report&gid=1003279&sign=0f1c0a50194d4bfad7901af1e0a129b8&keys=46_1003279%2C46_default%2Cdefault%29&os=ios&sversion=6.1.5&pname=com.m37.dldlsy.sy37&pid=46&dev=dafb9ed848bfb38263104581f43e2dcf",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23530",
+      "method": "POST",
+      "url": "http://iert.shuzilm.cn/report?v=1.0&e=1&c=1",
+      "status": {
+        "strict": false,
+        "phrase": "Forbidden",
+        "code": 403
+      }
+    },
+    {
+      "id": "23531",
+      "method": "CONNECT",
+      "url": "https://amp-api-edge.apps.apple.comamp-api-edge.apps.apple.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23532",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23533",
+      "method": "POST",
+      "url": "http://idaa.shuzilm.cn/report?v=1.0&t=iaa",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23536",
+      "method": "CONNECT",
+      "url": "https://api-adservices.apple.comapi-adservices.apple.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23538",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23538",
+      "method": "CONNECT",
+      "url": "https://ca.iadsdk.apple.comca.iadsdk.apple.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23540",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23541",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23542",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23543",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23544",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23545",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23546",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23547",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23549",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23551",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23552",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23553",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23555",
+      "method": "CONNECT",
+      "url": "https://beian-game-report.akbkgame.combeian-game-report.akbkgame.com:443",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23556",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23556",
+      "method": "CONNECT",
+      "url": "https://beian-game-report.95k.combeian-game-report.95k.com:443",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23557",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23558",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23560",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23560",
+      "method": "CONNECT",
+      "url": "https://atj-api.akbing.comatj-api.akbing.com:443",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23561",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23562",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23564",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23565",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23567",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23568",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23569",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23572",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23573",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23574",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23575",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23576",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23577",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23579",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23580",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23581",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23583",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23584",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23585",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23586",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23587",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23588",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23589",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23590",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23591",
+      "method": "CONNECT",
+      "url": "https://analytics.oceanengine.comanalytics.oceanengine.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23592",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23593",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23594",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23595",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23596",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23597",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23599",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23600",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23601",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23601",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23602",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23603",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      }
+    },
+    {
+      "id": "23608",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23609",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23610",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23611",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23612",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23613",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23614",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23615",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23616",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      }
+    },
+    {
+      "id": "23617",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23618",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23619",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      }
+    },
+    {
+      "id": "23620",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    },
+    {
+      "id": "23621",
+      "method": "CONNECT",
+      "url": "https://imgcs.s98s2.comimgcs.s98s2.com:443",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23622",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      }
+    },
+    {
+      "id": "23623",
+      "method": "POST",
+      "url": "https://bugless.shan-yu-tech.com/api/bugless/",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      }
+    }
+  ],
+  "secure_requests": [
+    {
+      "id": "23487",
+      "method": "GET",
+      "url": "http://sdk-apix-secure.37.com.cn/server-info-service/get-url?Ox2MgWCPDQK39jVNbC4rvYpbmVIcY_eG40YsG9nNZde6IwepE4X1h02EIpumvTMF3P3Zf-Vl3CArijTkB6fBw_MHVgmFPc-OEisybdlN4AeWkybJcXmyLzLg-rhBOrTIkjzKdaNvnI3T4L_DXcd_wsCP3OCZprqp8LqNJ1iRtnoZW6KTx9IKjuGjlQ9wStwm1QSEq8Fn_O1zc8BX-_Np5P6MNU08esw2l0CTGCBly0LlyHHxaKsOz2T2Lec7-VW6quHXaA-AxpwS3zBhcwQKJ8dCXxVn3YRDXioaSzK7xTXpmHXpAgqmjCfj72a_DGyzHtghiUvJKarNK_1-JVRun2VIQOd7iUb2000vW-XeHCkmUWdaFWojWcoEHzUlkDhzG-IC9GedUrQYfENhFXjxmRTFoXCTjMXZmyS83zg4CYPTW3bsMPg0zfSWSCkxz2eLh8b2c6zGbUpu6hKDIHbPSXYDPupGj_Q_0QisqqfIUTlH5mxXBDBvaKlddaO2ZKsLBteyrEQ1Tuq1LMpplI_1GJzQ71V92HDbEkFaS3D8FT3dgW0bhJ78ojnbeD_xmZW0glX7WiQ5coX8OLfB9mXGyy99Pi691K0JxNfm-mX3KqpK43xSoK0xCdlO2Vpk-YnXSfQV6qHVhHrUzSMRQsGaJwTyR_r6jRhdIKDa66_SFYUeC4lHaN23CXlWBDhpO_6TLDRnj6eR6DiIyyGYI2SDKptcop20WSeqIQZG8KsNtxp9fC_NHuE4naHWw6O4zd1hsxmeYwQhq9F4P6BtCUG_hQ1X3KZotjJv3z6oElvLr9TP-LqPW8ZbACOuy-WsWoIXEcRZS1JZuB0uv0MhKeInwKqLYyMYRZm8R80p2IjJAYg7IwC8xhf5xAwNvb4p05VE_XrbuVLyzVtYcUdEafveORIw51Az1SU3PStRGg3CN16C1sWe38x_fi-PB2bySTSNoRLlk6AcxyYOk8TGjZCs3wAP1R_tsVujZcy8BHMR0pfUT452cYyyfl_JpxxlyOM3lcXIbE64uf76sK5JHV7vjT7KXvewUi7z8WW1akC_e433GCHWbryEDA7YuBBRwFGnPgu9s5jPzvkOmrCR9EyjOrb7IPqKZ5SQCrBg1mqTnKMNqyTQo3dcldStkAss6cQPBa6Q8BQIPj5gYSnygi36g_qUmt-STDJisx1-rTlKO-Hbq0zTgLYuz58CgSxdyAiw",
+      "status": {
+        "code": 200,
+        "strict": false,
+        "phrase": "OK"
+      },
+      "x_nonce": "885dfe4bb0e21db4537c...",
+      "x_version": "1"
+    },
+    {
+      "id": "23495",
+      "method": "CONNECT",
+      "url": "https://sos-service-secure.37.com.cnsos-service-secure.37.com.cn:443",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      },
+      "x_nonce": "",
+      "x_version": ""
+    },
+    {
+      "id": "23498",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/entrance",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      },
+      "x_nonce": "20067a1db8955f7d743a...",
+      "x_version": "1"
+    },
+    {
+      "id": "23504",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/user_protocol",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "d6284587efc58149c31c...",
+      "x_version": "1"
+    },
+    {
+      "id": "23507",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/appstore_adapt_price",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      },
+      "x_nonce": "de52e56562aa7cc17a62...",
+      "x_version": "1"
+    },
+    {
+      "id": "23508",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/shan_yan",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      },
+      "x_nonce": "bbe50eed8677e7818254...",
+      "x_version": "1"
+    },
+    {
+      "id": "23514",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/game_product",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      },
+      "x_nonce": "3c03fa3b5d423fb3485a...",
+      "x_version": "1"
+    },
+    {
+      "id": "23516",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/sdk/active",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "d66d7a054249332c38a4...",
+      "x_version": "1"
+    },
+    {
+      "id": "23534",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/go/sdk/popups/active",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "55866367e9ca14ce4a1f...",
+      "x_version": "1"
+    },
+    {
+      "id": "23535",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/age_appropriate_conf",
+      "status": {
+        "code": 200,
+        "phrase": "OK",
+        "strict": false
+      },
+      "x_nonce": "55cc08b93ebaa4a577c7...",
+      "x_version": "1"
+    },
+    {
+      "id": "23539",
+      "method": "GET",
+      "url": "https://s-api-secure.37.com.cn/api/sapi-service/v1/gamedomainnamefiling/game_url_list?fzaO-Y3-iejBAha4zdB1xTGLx9eKh71rDKBTAtCVQqRxodRX8Po8HQayGzoar7ECUBhXaiEd5LGDdk6gPLSfGuFOuE6Ecl9Smsoh-hHjRCWKfQTJvFdXbjoyXsfgEyOCFOO-Gydfuj-A3XZr0rYUF0x1WT-rR52JfBTLumreQHihl8JhcdFoxUd__pAjyeNTOEhfaFR4CyOdalAbiqlOW7_T9TqPIIZVg6SoXAQf57QzI7aVJDwUhrkUsfOF4-64u6Bw9dzkiv0EZWDqmhleMnJdqH2-JKPZLQJPBASC79MoE4DGUcz2OSVrs34TyxgYCuTWCmNmJd1K8UhjPFjxY9Zibg3B4JewviOz__1XkJgHIzE-73PYEMEF0Je2B0Ykppf5QHOjB8sT2VzlPReeVFbThhj7tR4sBDqL7kTxbPfO2dotQPCUBxgyXCn_4GB_NsbbqKqd8mJVjU06QnmDIa1l2eaaMHMgHsnFTQOFyzIFQRn5yEBN7oH8wHkmIAoDKf_OQv2HbvlhrXxpHGznoojKMrsyWdP4TriCI4041EpZ1cBEUG9sO6RBX8peJosfdiXwF5CKoJnvOMeiSVuOgNUQH134gFWC_1dv5FRnGBH_b6-Uu1E_eZzwyyRTp3cNaEsO5rxdrSecytaLipFcWqLG993f52jLUGaQMXHQ5pFL4h8eaxM7PhdbTlNJ6r7uAbCV8tajn758Kpa7OlTT_Sr0_omhySEXBssJFpWhofFoLxJT5Ra2ZAyvWAdw5fQ392mvIiVWuH2wKpCIV1Su4JM3a4DLMz-qLWuTR4l5NfF4ANtLFZf9dRvuNsTGV-aRARkPpkqmfBM07W9kp0p2resfTRPjZPKZkGgQ113V7AzUd73RnXxjBeTPtUW8z9c4Wf9ztxPg_EZsSRk5trwGF_o7tMS4ghQ_pBXhAg1lbVkyKPAVxlqMlrp4HZuPPNbpd_LSQsxyn6wRFgFigOTgwWOednr50mLjCxFbYUnPPFV_y0pJsvLZCNzJn_471CiCiIVqJ8rn7c89NusyB62un5fi2xDhR7y7eINfXEPDtV5hAydfmRe_JNG50JbCyNTezI7KqUqnGcJPf1vFWWTzszalzinysRvZr0SYzAUVPJQ2T6OvAje5l_JdPKlG2RZHjeLYUZmNUoCEsTdkd88GfqTrGmDsTtFuZyyksUUzlriydIoLZo_J_NBRlc6DWs_y-6EUhg9JoNvnNh9ZUAM-In2RPgivXzaNTI9oIZ4ldRGqELjUGL8ZCUd_qAyqTN9oyrk3-RnHiraPlamvsAe_2O9mnuKK-ZOrhcc_npmtSEksopzcsGAjeo3fM2kqABFdEAs1nPhQpU4aeN3SoIs55A",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "bbfd32c2cec522be7328...",
+      "x_version": "1"
+    },
+    {
+      "id": "23548",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/age_appropriate_conf",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "881f59c2dcee96acf489...",
+      "x_version": "1"
+    },
+    {
+      "id": "23550",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/sdk/active",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      },
+      "x_nonce": "c5d183eaa35f4f9a766f...",
+      "x_version": "1"
+    },
+    {
+      "id": "23563",
+      "method": "POST",
+      "url": "https://s-api-secure.37.com.cn/go/sdk/quick_login",
+      "status": {
+        "strict": false,
+        "phrase": "OK",
+        "code": 200
+      },
+      "x_nonce": "8f0200c9ff984c87850d...",
+      "x_version": "1"
+    },
+    {
+      "id": "23566",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/antiindulge/pcheck",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      },
+      "x_nonce": "38492fa46ce1b14f510b...",
+      "x_version": "1"
+    },
+    {
+      "id": "23570",
+      "method": "POST",
+      "url": "https://m-api-secure.37.com.cn/go/sdk/popups/login",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      },
+      "x_nonce": "2252d614240fda76811d...",
+      "x_version": "1"
+    },
+    {
+      "id": "23572",
+      "method": "CONNECT",
+      "url": "https://validate-api-secure.37.com.cnvalidate-api-secure.37.com.cn:443",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "",
+      "x_version": ""
+    },
+    {
+      "id": "23578",
+      "method": "GET",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/v2/float_window?JdSiMLoTAdPmzQXSZbOYY32OvtQnPd7Brv7IAiW66rXIgOnk2nI8Lb3jV2UQHorcBRUOQE-YLp-sA4bM_ILwgQ7dGk3f0RNWTlCiysxLvEQ0l-oXBxW3yR2BSbOYKrgnP3jHDrhrAn_Rxr4jOC6SaUFfXJ1iFEllmGMojKBguhwH7T9juHGruzrgfRg8oZR4-ff11QMH9EshwaVgYo8kLYPmfXJ78FMG2xZVgNKgZm4Nfhg1d2X6gAtH8lsDUQ2A4jKZlPAZhoXkCB2YgSUdw9QyaG_D3nVgV1dMoMjHf49bV73fzmhfjuRpiJ23xWDrao2xooEV4p6eU7IcxP5ExJjafL-AFCEZSHZD5tSmrbz3VZlm0BHK50sUv6D3iMmjeFv28NJSmBwOgEhOl2w73u1ZIraak7Zj_aQNq5HjULRGlNe3TgT3p2EUFFJJVHSNsWnOH_-KIYYeqdY9r-C4jrbq6rMyREZxiAi7SIKH8pOXM27L-5kfRqRAaH8wDYyUkS55UwtPeOJGS89ydrqTagTHFtMHTMvf5YSxGSDwIxjOcoczWWeR2ThPXvbUOSPVgmlliHnRePhitn6mUaM60VnVtQvl2r9H-QDFXKNP6drQ_fFgRBTmA2cFzS9IxXqXiw6KY2FgqCyiZAARRGWYfihqLRh2JlC_rv6KBra7USsrbhn088SJwi5LJGrKQqvCh_sjf-oWe4rTsRQuVgx5vR9mQcth7QPBxMMdhoH84IA12uD29sZfLqSoSxhj8UudXAyUebb3Cqpwi0hNPuWNiRbGTTkEsNhUBxqwbqLd9eSPEj2wpI9HlgL44r2x2Fa_uzVVxSzoqLi39imBfkUp_CTJod_2CrgkNe2KwiS-QNPSD6dPepK5gQfPsL8sG-ZPdw75HFLQsQ4GKsAXIXuD5g",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      },
+      "x_nonce": "cb1da72052118cd0d48f...",
+      "x_version": "1"
+    },
+    {
+      "id": "23582",
+      "method": "POST",
+      "url": "https://sdk-api-secure.37.com.cn/api/ai-play-assistant/v1/control/config",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      },
+      "x_nonce": "b27f7c3d691735d5d1d7...",
+      "x_version": "1"
+    },
+    {
+      "id": "23605",
+      "method": "GET",
+      "url": "https://us-api-secure.37.com.cn/userinfo/getAvatarList?PB1FfKXrz_mgqotWPqZhO32N2FbvDlKNgvl1N3ThQphFI_5KvW9m8E_3eBjbhNF0G3kuyS7fmtmoJQ5xeHF-engu1Ov2_Q-NiEqp4up8dLiJ4sEG6SinjmrrvbQhAa8Cc4wTDOLqgZjunyhsS-lbARcISJwlf7SkLzY0STrtCPGAtOhrzguG17c85mU4thmEahpIjxUhFsTspZQ_05Y9MT52UMNrlfngQRIzX48uX_87dH_GTi3KZDPIksyBaZkiB0tyvvuT_OADOz9LsoQigNTMOSUTB7exSLdG2eah8LLCUD-RtsHiRYoE1LCLH4q8peOFfxPpfJ1HweXTwSWHS4aQ62l14orYtbre9M8JUzPSYnyFhAnC9ep2FAnQVYXxtZXLoxJBxF9tKqRo1JuJSx2yfrBo3ZupSRTDtpzXT6tD8JtQyvbIXxmd-X_Nyv6Z",
+      "status": {
+        "strict": false,
+        "code": 200,
+        "phrase": "OK"
+      },
+      "x_nonce": "c4f6ad015ffc6b6a6ada...",
+      "x_version": "1"
+    },
+    {
+      "id": "23606",
+      "method": "GET",
+      "url": "https://message-api-secure.37.com.cn/api/message-state-api/v1/red_dot/quantity?CRnIkZ1YduCUnnqXPFYCTXp4TP4vNCibppZC2jVJz2EH3Un__X4C2m7AmFddSC-kcJyI4GGojU7g9mXuhs2rWLI_YYHzoqVw_jqc0wE3xzTGEeTXESKd4jaIsdgQJzJfRFHfRRd9mZi7BcifLezyQVQ3Yqo45sWtXCfow2T4iA1gbYwxO1Rp52bBH2Rxw55IlByvBViJka0GpAzXsZ1-lVUFc0DJZgC5PoNyFzEqDxZbz9C62j1FlanTQJp38ZsEE-ZCb4cVZAgaRnMX1Fs-F7sLYPAFmCJzHQZmxxhLVHuSU9iN8OSKkdhZ9lMaqf_DAOhsZseOQLRfIPKuSmUyi5jYxyXlGT7Uf68NrgHQmGCpT1bb9CvByQllYSnEmHK29KfqfaOFj59XmJ_Nw4n714sfVJbeedwVlvhpk26IqsBnfmL7H9GJ0JkMP_DsVDqpSbL2KOELPyNaVRVjJYRXFFIDQACNhVskjagoMHI55asH7L8MgD75Naq2oFJs-W59nyzqMZA1v7A1anQZ-1WhZlq5JHox_qavHnVx2jrSeGWLzWpbbgbf_yJFkWhA_8GYYF2a01SsvnpSLll3ZKUpoOiO4q52u31HrQmlTqlKwi1Sp8DbOBnHvIDUbrO_rCouXs2BdXH-rlxP9C0PW8A2JDt9tKIb6dkbe5SHM2p8o3TjFDVQ5kq16p0aposrGqE52nkRvWzuaZArklPhIMZGEvHqUFKIg4f69tLxDGiPMSZvbdf0IJZpBzyyy493KrFpQ-PQexX_LCCd6Z3OALgH2SAqxb26zLp1JxmKDfZhdBQPOzh31T_6_VGt2UyJhJek",
+      "status": {
+        "phrase": "OK",
+        "strict": false,
+        "code": 200
+      },
+      "x_nonce": "66d1b254c47bab53a5b0...",
+      "x_version": "1"
+    },
+    {
+      "id": "23607",
+      "method": "POST",
+      "url": "https://message-api-secure.37.com.cn/api/message-state-api/v1/red_dot/sdk/get_warning",
+      "status": {
+        "phrase": "OK",
+        "code": 200,
+        "strict": false
+      },
+      "x_nonce": "74f791146e187bc9b7bc...",
+      "x_version": "1"
+    }
+  ],
+  "decrypt_attempts": [
+    {
+      "id": "23487",
+      "url": "http://sdk-apix-secure.37.com.cn/server-info-service/get-url?Ox2MgWCPDQK39jVNbC4rvYpbmVIcY_eG40YsG9nNZde6IwepE4X1h02EIpumvTMF3P3Zf-Vl3CArijTkB6fBw_MHVgmFPc-OEisybdlN4AeWkybJcXmyLzLg-rhBOrTIkjzKdaNvnI3T4L_DXcd_wsCP3OCZprqp8LqNJ1iRtnoZW6KTx9IKjuGjlQ9wStwm1QSEq8Fn_O1zc8BX-_Np5P6MNU08esw2l0CTGCBly0LlyHHxaKsOz2T2Lec7-VW6quHXaA-AxpwS3zBhcwQKJ8dCXxVn3YRDXioaSzK7xTXpmHXpAgqmjCfj72a_DGyzHtghiUvJKarNK_1-JVRun2VIQOd7iUb2000vW-XeHCkmUWdaFWojWcoEHzUlkDhzG-IC9GedUrQYfENhFXjxmRTFoXCTjMXZmyS83zg4CYPTW3bsMPg0zfSWSCkxz2eLh8b2c6zGbUpu6hKDIHbPSXYDPupGj_Q_0QisqqfIUTlH5mxXBDBvaKlddaO2ZKsLBteyrEQ1Tuq1LMpplI_1GJzQ71V92HDbEkFaS3D8FT3dgW0bhJ78ojnbeD_xmZW0glX7WiQ5coX8OLfB9mXGyy99Pi691K0JxNfm-mX3KqpK43xSoK0xCdlO2Vpk-YnXSfQV6qHVhHrUzSMRQsGaJwTyR_r6jRhdIKDa66_SFYUeC4lHaN23CXlWBDhpO_6TLDRnj6eR6DiIyyGYI2SDKptcop20WSeqIQZG8KsNtxp9fC_NHuE4naHWw6O4zd1hsxmeYwQhq9F4P6BtCUG_hQ1X3KZotjJv3z6oElvLr9TP-LqPW8ZbACOuy-WsWoIXEcRZS1JZuB0uv0MhKeInwKqLYyMYRZm8R80p2IjJAYg7IwC8xhf5xAwNvb4p05VE_XrbuVLyzVtYcUdEafveORIw51Az1SU3PStRGg3CN16C1sWe38x_fi-PB2bySTSNoRLlk6AcxyYOk8TGjZCs3wAP1R_tsVujZcy8BHMR0pfUT452cYyyfl_JpxxlyOM3lcXIbE64uf76sK5JHV7vjT7KXvewUi7z8WW1akC_e433GCHWbryEDA7YuBBRwFGnPgu9s5jPzvkOmrCR9EyjOrb7IPqKZ5SQCrBg1mqTnKMNqyTQo3dcldStkAss6cQPBa6Q8BQIPj5gYSnygi36g_qUmt-STDJisx1-rTlKO-Hbq0zTgLYuz58CgSxdyAiw",
+      "req_decrypted": "QUERY: \u0005\u0015�'\n���z�0R�\u0015��4J�\n����A�����#]í̡��l}ӷ9N9�;�G�\\�\n\n��@$\u0018�����l<��eX���\u0018��q�zm�ֳ��m�.��e\u000f\u000bc�\u000f'�R\u0010���rq\u001b��m�S�\u0019���oʳ8oa�F\b1���o~�:����:��)�X���Gn���Wn�A�<\u001c<Ś��k��tJ�ã�\\.���kz\u0012�cb\r\u0010\u0018#F�c�\u0005�Oo�s�\"Q�5`c�zD�S�K��#�����zV�\u0012��\u00021m{�YtP@��\u001d�]\u0007�Ì����>\u0002�ޔ�g\fҔ�Y�.\u000f��nW\u0019��B�%�>�\u0003Mj�-\u0015p\u000fr?��|�t�����39�59�ъf=��̖*(:�9bոxm������\u0001�\u0013�xO{�K�kTt4n��\u0004��,��6w��\n��~%�uM�ٚ�#�#+|���=��ɯ�'d��.\u0012\u000e�\u001e\u0005�3���7�ߥ?��l��y�<53'v`h��Q���\u0005�t����s���v�I��.���\u0006��\u0017\u000f�`�PZ\u001b�I(�KMqb\u000b�\u0016h=����8\u001c���\u0003ڋ�l\u0010h��ۡ0��`K��E�ߨ�{a���+�t涇wJ��Bz��\u0002\u0003�\u0011��n�$z\b�\u001f�\u0011\u000b�sZ��}�|�ݐy�!\u000f.]��.��\u000b\u0003���;�x�8cm�?�m\bϱǹ<�Xj���\u001a�\u000f&zT�n\u0012����٘���s�\u001cF��\r��.�ݟ�A��8eC�ioi\u001e��cN�w��\u001b�\u0016\f����@\r:\u0001�.^�M\u001fn\u0001�������;�X9�h�3io\u000e�\u0013z�߫�����t���°��R\r����)��m��&]�\u0006\u000e����\u001a윔H\u000b��:\u0017���\f_�/I���\u0016����KB�\tD�\u00040�+���oy�AL��bF���F��R�6W�\u0016@\u001c�\u0013H��m>\u000f�3�\u0019\u001f�\u000b��\"��x�hF���3i,1��/���XNw����w�j�������9C�\u0018\u0011�{\u0016�\u0017�~�P��\u0019�\u000b�\u001b�l�]\\�V��g\t�;S񃌲������˵�W�=\b\u0017�\u001c�.��e�w�|]��U",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23495",
+      "url": "https://sos-service-secure.37.com.cnsos-service-secure.37.com.cn:443",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23498",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/entrance",
+      "req_decrypted": null,
+      "resp_decrypted": "�s�Б����091\u00109�kC�nu�\u0001�\u000b[G]>!��\u0004�l'\u001cg���<ż�,��,�\"0tMg�T\u001a4�\u0018)��\u00167�?\u000b&��G�;���r�<�9Yɟ�\u001c�\tj���\ncHѿn�Zr�ْ/\u001b�0ߨ\u0006~\u0014�{\u0017Y��`F�1鹛�\b~��\u0005\u0006�b\r�x��hG�]��i���Y��@�w�\u0004\u000bM��j�����\u0002Y_��^�z\\�=I��\u0018�D\u001c�r���|\u0018�\b��\u001d�礆��梎E9\u0002_a��~���_\u0006��:c�+hF\bN��%��\u0016l�&��ppu;G�\u0013�R9\u0011d�j?\u0013\u001ah�O�F&y�L,�\nU�\t�\u000eN�\u001d�5\u0010��2�R�\u0000*y\u001e\u001e���Ҁ�9��xQ��_��첒<�\u0012Q�\u001a�SO\u001bF��U�#\n�\u001c�CYcĳ\u0007\u0018�^(�V*|S6�ph�d�9=�灰�\u0010�Wn\\\u0001\u0002\u001fB��)�ƫ\u0017#\u0001���9;�*�ܯ�.!���K���\r��\u001dݟ0�9:p\u0018\u0011g0����ω�Z\u001c��\u001c����Ӵ\u0013rhʏ΍�q�K�)�!28v��S���X�H2LZ js=&��<�9�//����\u001cێ�\b���R��l\u0019��Ңf�\u0017q�B�o.\u0012\u0015B��5��\u0002�Ei�>���\u000e�l�yL�J\u00115�;Gr\u0003'�\u0011\u0006�t\u0013����\u0000�ٍAZ�m͔|�ʹ݄��N]���2�*��\n�Y�S\u000e-ys\u0012Xى��C�����8䲂j;�z_A�\u001d��\\���ef�R:>��#�{)Z\\L5W�����ܶ��t\u0005�\u0014�wjJj�4�F\u0005�\u001f٥�\u0002\u0002VO���*�\u001b=Oea}U�*�O+\r��\u0012�ӏ�"
+    },
+    {
+      "id": "23504",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/user_protocol",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23507",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/appstore_adapt_price",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23508",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/shan_yan",
+      "req_decrypted": "\"���\u000f�C��\u0006���Ͳ�\u000b�c�ά\u0007���\u0002�f#�\"�;�IB�w\u001c1��05(��\u0002u��$����Er����� �&\u001f{M\b\u0004m�$�o����P\u001f\tP�d�5�)��'R6��Ȟ\u0019|}\\\u000e��\u0017F�ɓ&V�O�]\u0015H,wO�kI~��\u000f�\u0010>i\u001e�:�Ӵi���\t5�\\��6�.jp-IL�\u0019��\u0006�\u001b��\u0000\u001d��\u0007s�\u0012�\u0005\u001f��:x��p�\u001e:[\u0003��P:%ۯ 3g\"���lзt\u0005��\u0014\u0005��ƞ\u0006\u0001w\u0013���w��\f�UD�X�YxD�hEY�\u0012�\u001ck\u0014u\u0005�F�s\n�7��4��\u0018�2&��=�r$hR��]k�M���0TWV\u00067����^y\t\u001d�\"�i2�\t�H:Ф�|�Yϵ��\u0014\u0000���sm�ƅ��v�Z�\u0014��߷�c�?U\u0002����\u0016Nw#�g\f��\u0012�B¿��^�ޕk*Ny���~��2�9���\bܱe�$c�I�8���y9J�/�jM\"+���Ne����+ \u0004�:�2ۜ{�`��w��5q�V�&�\nl\"$�r��)�T��TT����n�Ub�Ѡ|��cz\u0017��'\tV�\u0015Ih���H\u0016BYOR�<�'IF\u0006�;WL\u001f\u0017����Q��o�Z�9C�\b�Ǵ�|S^���\t�nc\u0019�G����n�Y�e�\u0019�#�œ\n\r��y[%�o\f\u0003聮�_���-|5��طj�p�3j\u000f�\u0014\u0010�� f]d�A���j�j�2\u0002r��\u001d��s����,��K�ǂ�\u0010v�A���c�̔i*�d82�Ym!��qkj)��[���7�X8G���F\u0018��Р��q��$f9f�;U]UȵL��d:V\\\u0007�t?Kr�xx�\u000e�ge����{gb�0��`>\f$���\u0007E\u0015���y�h�M{\t�e�׋4��ʋ�:޻\u0000�\u001cD��d0��[5\u0006��jyN���\t�\u000f����S\u0001�!\u000f�\\�ߓ\u000e��m��\u0006D��\u0011�rz�������Ͻ\u0010q����qM���.�~�(�;5>�;�\u001a4���1\u0003�7t\\\u0003\u001b\u000b�A��\buc4b\u001e*�WeS��\u000b�a\u001dΌ��0����'`�[��&�$��_�x�]��3��\u0011h\u001f��m�2Ι�~��d\u0003=�0阉�ƭ�IB� ڥ�L\u001e@�7��\u0018��\u0014���W�G���s\\�����Bs�J��L\u0012=tFŉ����8�\u001aN\u0001R�G��W\u000f��:�\u0016\u0017�\u0012\u001a�)O7�G��f�A\u0003(�=̝e\r\t�cXgx�_nf�m�7�R#h&QP+\u0000p��s���~[\u00003�\u0002����d���\u001d��}�g�3���k&��'\u0004&���c\t�̆x�6�p�S\u0006�'o��d�\u000b/�S�I�K���şj\u0000��<���P\u0007�Ԓ����3�\u0005\u000e�^$�\u0004,���z\u001f���F�A��@6�\u0011�}y��D�4�+�˼��c�\u0017����5IT̢a�����-�\t܂XVV��K!�PcXu�xѺ�?x*�z�^��E�C0���\u000b���2�5f,><�/�L$�=:\t����\u0005��t����a�]~\u000b|,J\u000b�:��{ �Sc�\u001eH��\f\u0018\u0015��U6��%{��\u0000�gN��mE�\u0014��\u0019\u0012\u0012�\u000e.�4v��u͓Gm�\u0001��\u0013z�����G�I&bh�Gb\u0012�\u0010[}��f�w5�:]�`�\u001c�7�\u001d�}",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23514",
+      "url": "https://m-api-secure.37.com.cn/go/cfg/game_product",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23516",
+      "url": "https://m-api-secure.37.com.cn/sdk/active",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23534",
+      "url": "https://m-api-secure.37.com.cn/go/sdk/popups/active",
+      "req_decrypted": null,
+      "resp_decrypted": "��\u001f�IsmK1ô\u0002������\u0017s�CY\u0019�����\u0007P�\u0010Tx���o�\u001fj�-�\fl���\f�!\u0012A\t�a|_���"
+    },
+    {
+      "id": "23535",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/age_appropriate_conf",
+      "req_decrypted": "rQ\t��q�|EtA�P�\u0004A|;\b�*a�\u0015E�=���\u0012[��88�3~u�l\u0011琊Ta��\u001ef�\u000bSa L��\u001e\f>{zq\u0003���\u001d��Y��'���Ns{�0\u000e���Gzr������H�V�SXD$e\u0013e �\u0016��)�}�E/Gw�\u001c���S�̘2s9K����\u001d�z2(t�\n��dtw�p\u0005�A�ނ�����2_�Y\u001a��4�U�ܰ�>�Zf��[ç\u000e��\u000fzV�\\,\u0002b�MY'_H�<5x\u0015yi��0�\u001f\u0012\u000f�\u0012���\"���DV�S��ȟX���\u0012����7��*�",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23539",
+      "url": "https://s-api-secure.37.com.cn/api/sapi-service/v1/gamedomainnamefiling/game_url_list?fzaO-Y3-iejBAha4zdB1xTGLx9eKh71rDKBTAtCVQqRxodRX8Po8HQayGzoar7ECUBhXaiEd5LGDdk6gPLSfGuFOuE6Ecl9Smsoh-hHjRCWKfQTJvFdXbjoyXsfgEyOCFOO-Gydfuj-A3XZr0rYUF0x1WT-rR52JfBTLumreQHihl8JhcdFoxUd__pAjyeNTOEhfaFR4CyOdalAbiqlOW7_T9TqPIIZVg6SoXAQf57QzI7aVJDwUhrkUsfOF4-64u6Bw9dzkiv0EZWDqmhleMnJdqH2-JKPZLQJPBASC79MoE4DGUcz2OSVrs34TyxgYCuTWCmNmJd1K8UhjPFjxY9Zibg3B4JewviOz__1XkJgHIzE-73PYEMEF0Je2B0Ykppf5QHOjB8sT2VzlPReeVFbThhj7tR4sBDqL7kTxbPfO2dotQPCUBxgyXCn_4GB_NsbbqKqd8mJVjU06QnmDIa1l2eaaMHMgHsnFTQOFyzIFQRn5yEBN7oH8wHkmIAoDKf_OQv2HbvlhrXxpHGznoojKMrsyWdP4TriCI4041EpZ1cBEUG9sO6RBX8peJosfdiXwF5CKoJnvOMeiSVuOgNUQH134gFWC_1dv5FRnGBH_b6-Uu1E_eZzwyyRTp3cNaEsO5rxdrSecytaLipFcWqLG993f52jLUGaQMXHQ5pFL4h8eaxM7PhdbTlNJ6r7uAbCV8tajn758Kpa7OlTT_Sr0_omhySEXBssJFpWhofFoLxJT5Ra2ZAyvWAdw5fQ392mvIiVWuH2wKpCIV1Su4JM3a4DLMz-qLWuTR4l5NfF4ANtLFZf9dRvuNsTGV-aRARkPpkqmfBM07W9kp0p2resfTRPjZPKZkGgQ113V7AzUd73RnXxjBeTPtUW8z9c4Wf9ztxPg_EZsSRk5trwGF_o7tMS4ghQ_pBXhAg1lbVkyKPAVxlqMlrp4HZuPPNbpd_LSQsxyn6wRFgFigOTgwWOednr50mLjCxFbYUnPPFV_y0pJsvLZCNzJn_471CiCiIVqJ8rn7c89NusyB62un5fi2xDhR7y7eINfXEPDtV5hAydfmRe_JNG50JbCyNTezI7KqUqnGcJPf1vFWWTzszalzinysRvZr0SYzAUVPJQ2T6OvAje5l_JdPKlG2RZHjeLYUZmNUoCEsTdkd88GfqTrGmDsTtFuZyyksUUzlriydIoLZo_J_NBRlc6DWs_y-6EUhg9JoNvnNh9ZUAM-In2RPgivXzaNTI9oIZ4ldRGqELjUGL8ZCUd_qAyqTN9oyrk3-RnHiraPlamvsAe_2O9mnuKK-ZOrhcc_npmtSEksopzcsGAjeo3fM2kqABFdEAs1nPhQpU4aeN3SoIs55A",
+      "req_decrypted": null,
+      "resp_decrypted": "���bty�m,�-\u001d�շ��{$���ٽ�_ǻH����\u0018�;��0����\u0010��<���\b�����7\t�[w��UIveO\n��t\u0006P�K\u0006����QA���<��\u001b�0\u0006��I��8�v�E\\4-�-\u0000,�\u001d�I\f\u001c�\u001ddP�M�tb�m�k�ܺ�ق�\t�=L���1�27[�޲x�<����q\u0017�?\u0002u��'��a񰄛�N\u0019�6��b�i0g4��Ӑ.��p=�ERc�\u001b\th���b\u0018�F�\u001f���Gj�J$VH\\���ђ}u�Yq�0�H�Rʺ>Pы�'��"
+    },
+    {
+      "id": "23548",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/age_appropriate_conf",
+      "req_decrypted": "�$�Iʧm� �$���1�)�6�J�%4ңF�gQF�6���|��B��� ��\u001b���%\u0014\u0013K�\u0007W�C:���E\u001d���J_\f&·�3�viq\u0005�pl���i8L�\u000fZ��ȫTeQs$\u000bRs�M�\u001a֎˾g\u001bz�u���a\u0007�\u0000F�4d{ӑ\u001d�#�7V\u0015U�L�*#��c�t�\u000eݰ\u0010(���X\u0006K\u0010P�\b�\u000b{\u001c�)U�\u0000\u0012ǿ\u0019_�|g������\u000b�)�^\u0010��w�<]�\f\u001bf��\f��\u0016�>Gեj:�Z\r\u001a9�47«q�=6�L��\u0012\u0014B$\u0017��oSh�S�U9�",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23550",
+      "url": "https://s-api-secure.37.com.cn/sdk/active",
+      "req_decrypted": null,
+      "resp_decrypted": "T��}(���\u0016s�/(�Z�X�E)Z,\"�z�o�\u001d\nB�5�����b{}\u0010~\u001c@>f�g����g��\u0019w\u001b2�R�q\r�^�\u0002\u001c0{)\u000f�y{}0�\u001f�v�a��\u000f�:�*\u0017F����\u0005\f|\f\f\u0003�\u0013�Rg���O%��8P�!ɢy!~\u0007:\u0018�\u0011�#ߒ��\u0011��\"{�d*�\u0015�\u0013�\u0007@\u0001�~�%��f�5�^h�o�\u0012�\u0005@\u0002���׊1F\"�6�����\u0001�>�x\b�/3Cח\u001f�����\u0006��B�uc�D@²:��㠋fݚe��5�#�{<gWN\u0000�hW{7�\u0014�M�;� ���|��7�,\u0019���O�%\\���n��j=�(.��\u0018c�\u0010/\u001b>\u0006��\u0018�l�\f7b�w��p\u001bi`�U�<���JnH��'C��m�2C>4��la教-��*��A\u0013:�V\u0016��p���h9(��+�\u0013酩��9:��j�+�4_��j�\u0003�jS՛�U\u001a�S\u001cC��!\u0005�I�)�̵��A\u0000�hM�T�:B�n��;,3C�(��ﺪא�\u001b�\u0003�\u0012�w�\u0005�\u00148;�(��݉�~�hY�\u000b���JY\u0016��R}\u0014M\u0000p|\u0017�d������Qͻ�E���ć�)�sm\u0016\u0019-�)h\foJB�\u0010{�\\�da�p�\u0016nrG���L�\u0014$B�t ��p��E��W\\-\n��x\u0000s\u0000)�#�\u0010\n�\u0015O\b�����Ѿ\u001b�E8��!c��H�\u0019�v،\u0000X����.\n���`�H_�sV��W��k�f.�p7�r0��K-���%�(�m�!��È��\n��\n�ß̡�آ�U�5��\u0006,\u0018o�l�JV\u000e�H8ȡ�Kp˫�]1E0�!�+�\u0017ʄ�9W\u0004\u0005&��XE@+���B\u000b�M��nL\\K9$q���:��|_\u0017t�!���d�\u0016���ng�ɱ��O.�`�^Κ�\u001e��Jb��Ic�F\u0017\u0013BV\u0012��n^�x��۞��S\u0011\u0004���?��>'� G�DX-�,�\u000f[6\u000e�\u0001��t\u000f�Lk�k��b�e�,\u0014�\u001b�\u001d�s��(������#ð�S��8��\u0006}�\u0012�Z�Z�ek��=z�<\ff�eEmX��B��f�\u001e���|Ǳ\u0010�\u0006��ʖ^c�d'�=��rd�\u0018PŞ\n���>v\u001a\u0004\u000e©י��\u0002m\\�ɫ޼K)Y��\u001c\u0015�fK;B�t�0�\u001a�y{\u0013P\u000f|�X`�}����A\u0005\u0003\fX�\b���X�\u0001P�\u0004L�M�� �+2�\u000b\\�Ƞ�&�����\u001c\u00196��ڡ�\u0003Z�\u000fgk�7#\u001el�Ő:??$�\rx��(�;�ݍ�xh�M`z�ZK\u0012�e��3\u0002�PH唅\u0014hq\u0006\u0013\u000e@���Ն}9�4��8p��u���\t5f�@,G��U��\"���E'\u0012�\u0004S\u0012Kr,\u001c\u0005\u0005[�ug{~��!(\u0015S�@��\u00014�1\u0004+kpk��\u0019h\u0011O�*\u0005n��\u0003��.�¢\r�R+J\u0011\u0006�,v/����Y-\u0000���]�>V`��r5�\u0012J+�^4Xǿ#(ɶ�3e'�\u0001.��mP/�{�`���ݭ��J�\u001a��Q\u001c��wnm{\u001a6�@G�i\u001f�\u001eB�(��X*�ڌ�EY���k#���ua)\u001aP��1Y��P<���@��\u0013�d\u001eX��\u0011ۭ�\u0014ԣ��Ԥ���Ȉ\u0014$^��_�\u001dM\u000f��T�D�\u001a�\nw���\u0019c����\u000b\tu�\r��vf�t�6���?�@T������W\u0006F�g�zl�\u0007�\u0012\tv��N¬��1��{��\u0004�f!\u0000R�\u0005���UÖ�A_ήQo�\u0014��!*��\u001e�\u001d!\u001f5Z�T\u001cG=C=nle\u000f����I��\nc�Ӟ]�\u0019��0OZ�bm\u000f��\u0006\tT��ϫƢ�g��Ch��𓕇R_Yo�\u0014._L\u0013�\u0015`�}��G\u0004\u001d[�R\u001f@d�ˊ�6\u0002��CR=x[Q��tsm�\u0015�G\u001b\u0015�aB�/ߩ�\u001bS2��\u0006�\"q��� h�>�)9('����\u0004��nסxr���;�E]��B\u000b��\u0018���y����{Ώ�\u000f�zq��\u0004=�9�E��!}�\"�ё~Y\u0016C�i<\u0010Q�\u0011\u000b� ��\u0017sH�,K�(��X�\u0011f�T\u001ab㮤q��ZK�@ۗ�\u001eq\u0001�\u0011ŮBź\b��0NBj\"��Rrk\u001a\u0015&�\u0013KZ\u0007�����ѝ��D��bmk�QJ��v�=���%>\u0002�\u000b\\\u00139��m�t�^<\"�mp\u001d#\u0014N\"�d�$\\3\u0019����l�.Ϻ|\u0019�\u001e�\u0013�E}���E��I��/�)�\r7��\n��H�\u0004�\u001b�m��\u0011G��\u000f\u0017��8֭=3K\u0017���i�7)��j+�z\fI�s���~\u0019�-P�+\u0014퍯��玄�ln_͞n*���\u00064��Z��'���\u001a)�%!�3\u0014���4��O��`��\u001f�UJ^\\�\u0016b\u001fq���Z��\r\bY'��\u001bg�y�AvTk\u0002���wa��1V�\u001bWg\u0015�$1?uM��\u0005� �<�B���\u001f�b����ԟDA�G(��.��,��\u000b@Z�;�����,��\u0000�{�Ȕ'o���\u0014\\pẀ]��ћ�yL�\b����q��\u0013�BQO'\t\u0017���·��%�/\u001fd�юK�ƛ�mŚ\u0010�x�����Vr'\u00059�����T��M�w�\u0019��r�\t�\u001b�}2�G~\u0015<��+���V\u0018��S�\u0011��U�\u0006\f�-yu�\"�t\u0017�C�\u0013(v#�?��͍Y�.�kn\u0006�p��p~Y�����$黃N��\u001c��\u000e�:�)x_����Sh�\u0010\u000e���,Ä5��\u001c>fC�.\u0007c\u001aB�\u001e\u000e�xbT�M�\u0004��2���߈6��Mԥ���ٜ Y��\u0004�=;*#�k�W\u0014A���S��\u0011\u0003g&\u0007�i�.E\fY�\u0001�c\t\u0015-<H\b�(=4�j����Ѯ\u0018k�?\u0017�@�\u000b=��p��Ln����K\u0006�����l� ��k����\"��\u0016p���g�1Va������z\u0016q5f�7~�#�pa.@��%c\r~�,�ө\u001e�j�,`�J��5DV^\"e]�]\f�%R�\fd�#C�*��\u0016۱�v��D�G30]\u0000\f�X�Xc������{���K��b�\u0013�|2z�q�R�&���b\u0002.Fn\u0006\u0011\u0000\u001c\u0000.�r�[�\u001ba�@�Ae�G��͎CX��ay˗\u0001�<-�u�s�*�� ���@��S�?��!��\u0007*S�\u001b�Y?�ۦA��֯��C�=X;�A[.��\u001dKV|�囘���\u0011n�WS��'����d?���K�F�4�C6b���u\u001e0��\u0015�k���P��\u0004�5c���@��Ka��\"80l[\fԢaD�̀A+�.\u001a�|�\\�A\\i�pd@����;|��i\u001c�6\u0004|t��(\u001d�V��8+if���>��b��� \t0���T��m���'��'\u001c�\u0017���h\u001am~��\u0003k\u0018Ҙn�9քf\u000e+��1�ٻ17�\r\u001bT�\u0015\u0019Y��,ڲ��\u000b\u0011t�\u0012\f����S\u0000�DV`�\u0006��b9�\u0016|�xݾ�9)w�p\u0000�&B�\"s'��\u000e\u0013���H���G�\u0016�\t�\u0011\u000f.ӤN�{\n��\u0001�v\u0003\u0006�0���p�`h\u0012��\u0015pF��콘�\fp��\u0000޴���r�8����+�\u0019�~\u001e�Kꮿ�\u0017t�c\u0010-\u0010�:\u001dn�;N_G)I�~���T\u0007S�g�}?��4M���Wj#�(M��l\u0018��z\u0006)�zK\u0018�ĈL�lF�1�M���<��\u001eXG�\u0016��c\u0016�^'+�((P ��8��0pX\u0001�I�i�\f���\u000b�k\u0002��`����-��<5\u001a�/�\u0000�F&4�x\u0003���p�;�8�V�֕\u001fO\u0019\u001c���j�XE\u0005�\u0013u\u0017\fl}�o=\u0019�\u0007�\u0002�\\\u0001&��+\u001b�sK��wR�Q��\u0012�v��#�3گ���C�\u0018�h�9\u001ba�uf�k\u0014��ؑ��&K\u0007�B�5%����t�U1��d�R`FX���v�h\u001a�3h\u0012z9l���\u0010v\u001b\u0001(�WVd���Q��:\r6\u0006ǂ�1\u0015��˝�u3��I\u001d�0��f/�v~���e�{O\u0017�3ǡ�LO\u0016�U#�\u0006\\̉�\u0003�|W\r���vܓ\n\u0000^\u0006�\u0016\\j"
+    },
+    {
+      "id": "23563",
+      "url": "https://s-api-secure.37.com.cn/go/sdk/quick_login",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23566",
+      "url": "https://m-api-secure.37.com.cn/antiindulge/pcheck",
+      "req_decrypted": null,
+      "resp_decrypted": "�\u000e\u0005F�\u001f\u000eg\u0006�6X%�sn�6Z�zP\"�-3O�5��������{J�71)͘jm���\u0018��\">�\u0011>l�y�ݯ�\"�e\u0010�b�8�S�\u0013?aW����v\u0017<�\u0006��i��F�ݰ���)\u0005+�(���O�\u001c��<�\u0005VSl�2�G��R\u0013զFC\tт�U\u0003L�\u0002W���{��A�T\u0002\u0013w�s�(�\rI�C�n�1���-�2|�\n�>)���$�!r>��PKĶJ�\u0013\u0000L\u0004���O�-<Jƴ\u0004�S7A��2�\u0013�\u0012z\u000b�\u00012��2_�W�s\u000b�\u001d��CD\"X�j3����.�uC��V�\u0018�H\u0017=\u0014�3�XD�4ޅ���\u0012\f5�jE3@\u0006\t\r\u0002�;M=��\u0013O�\u0013\u0019i�$)\u0011k�\u0018��1�~ᩰ:Q\u0014U�\u0019W\\��=JW��$�`f�f4��#�#h\\#��s\u0013�\u0012F:\r'\b\t�\u0010d�}�`e�\u0004�4�VM�.]A*^,u�X'�o�c�q\u001b\n���c�5��\u000e�\u0011�%=#��=�\u001f�������s�ti�\u001c�G��c����=U�1ӌ�9�/��\u0002�Y�3�\t���$\u0005�^�i\u0006c\u0016[\u001aPj�pBiE�\u0007��g�U�t��׏ť��\u0010^�\u0019�#�l�=�M-+L�\u0001z#�H,��i�\u001b|\u0005�ώ�����@�I����{�m�k���e�Q*�F�B:^E\u0000�g\t�Ҷ�z��]�9u��Vf7�\u0015��:K3��e��0\u0000����Nk�U�k;�'�˧(z{�ع�qt1\r�\u0014Q�f)Җ�C��h0���\u0015O��T1�3��_Ţ\u001aI�V��Y��+��5�H\u0006ʁ�}��j���\u0019�j\u0010\u001d|f\u001f�\"(&6\u000b4�'[�\u001d�V\u000bU\u0001z���P�i�w�\u0015u\u0002\\�\u0001~Fy<9��G�\\�(eˁ�)j8<d�;S��v�\u0014�s4rPΈ\u0013<\u0011u*\u0017:�'�\u001d+�3p�\r�p�,�\b]�\u0013��A�+��o\u0004p��<L�n7�����a4��?\u000f��)�\u0018p�ǜ�`ѝ�+�WI�F��IΣ?0\u001b7��H�\u000eTA#�\u0001$ޢ^9X\u001d\u0013\u0004�\u001a?�\u0019�\u0006�\u0019&\u0010�p��e��ca�c���u�|�\u0002o�@����z��\u0000'7E\u001dA�0|�\u0004�9!!�wj�u6t ĝ���\u0004\u0007!lŨ(�!�j-M\u0010��E�\u0011�WBXӡy;b����d\u0005繜���DX\u001d\u0002�\u001ag�z\u0010[\r~=�[\t��j���{�\nJ����\\\u0010�\t����\u001f��۹*,:� ԡ\u0015�>��O���]�\u001eVV=Vdk<s�3�\u000b�J4#��^�#�.k5��Q0�.��\f<:�UΦ\u0012��b�\r�\nMR��� цN\\�;>\b�\u0018��6\u0000d�/�Jf��\u0006�}�P}.2\u0019�0��Mk4�̐��X�����}��.��2Q��D�\u001a\f/�׋R\u0002\u0014�D�%8�#^\u001d\u0018��)���N�p\u0016�\u0015î�F\u000eV};w\u001fg�/\u001d��(\u0019�\nX�竦�}�st\u0006�\ni�J|K�y\u0006�\u00023<��!���&��um̄�i4�$P~���h�T�pP���p\u0001BU��\u001c���2�D�߭;kv�C�5j)��\bv*������sRJKWV���Λ\u0019����d�ÇT�S%c�γ\u0014���Io\u000ei��ǭ�71\u0001[yK�_\u0011�sY��\u001fs\u0018˖:n\fX�\u0018C��z��!��m�`4I\u001f\u0006�8�\u000e\u0019\u001c\u0014�\u0018)_Z��?���u�g\u0016�-\u0004�\u0018u)\u0016����ޯ�+�Y�sR�H.�H�����xH��N\u0005��t�b�q��M�\r����%\u000e\u001eG)�h;��\u0019\u0006K��%�i\rn��,\u000b��FWꯡ]'f.\u0018!A���o#;��?Z(/���R������ƃm\u001c\n��:п�܍\u0011Z�<� ��\u0007V�C����>N��\u0007�?xLϫ���!�^�,G�D��i�:�T#��C���C@\u0007\u0002Ȭ\t�=&�\u0016��\u001d��\u0004��'�g\\j����\t�\u000f\u0018�=6����X�穒i\u001d|�\u0003�#쁓8�#p���\u0007\u0016<@]\u0016�*8p����T�\u0013 \u0013\fʔnҸ-�d�\n�@��SUyZ{\b)�f݂�8;?7}�8y���s��<z,k�b�u}Icu�nM�/�:[m�\u000b߈\u0007�\u0013C\u0001�3\u0002z��7a�`\u001ej��6���\u0001~n�c��\r�*�\u001az]\u0001�Q��]G�fǺ��R��\u0017��\"C|�� �¸�S�C��\u00065L\nDWa���v\u0017��쵇(x�. <\u0004D�\u0015XY�@a�a}\u0015\u000f���\u0013`��w�1�#��\u001c\u0015byp\u0013Q]�\u0018U\bB�w��ҵ��b��;�\u001f*S��;lm\u0016�P�pg;\u000b}?��\u0004Sc�l��ͅ���z݂a���|�\u0019����K�\\�f�%?�\u0001�������q@��\u0010ȓ�鯪�\u0012\u001d�t0n��4�rä�?:B]W���:�\u001d���\u0005���o��&��.�ڕ{$\ny�#�/�|\u0000\f>\f�\u0007���x\u0016E��\u0002���9){���ޗ���xŕ\u001bd����`9J��P�M�#eD��k��c$\u0010���,�����Rc�On��p:����9ې�`�\u001a�op��\u0005�ᄻ�\"fT���\u001d\u00063v��U\u0015��\u000f\u000e�����]X!C9�3\u0018ʝk\u0010n\u0017�\u000fS�C��\"��(�&%\u0010�Ѝ�A\u0007\u0007\u0006\u0004\u0002_+�Hs(�f��\u001b���l����{�9�\r\t���\u0019��n'#\u001b��W�xk&\u000bS�\u001dJo2�"
+    },
+    {
+      "id": "23570",
+      "url": "https://m-api-secure.37.com.cn/go/sdk/popups/login",
+      "req_decrypted": "�~l۳�����8\u0004ȡ���N/&��Ţb��:v͜�2�\f�\u0012+!�\u0017\"5\t��\u001f�\u0016�a����F\u001a�\u0016��v5j�h\u0003���.J\t�u�\u001e\u0006\fU�0���\u001b���k)\u000bH0lF�(�2\u0014]8H\u001awY��-)5*��N�����\u001b�v�|\"T炅\t<�^\u000f3Ea+���\u001bcRPt\u0014�\u00121����\u0006U�4z]\u0010@�Vĸ\u001c�'�\nBuy�Lڱk��T�uNC���|�\n\u0016Xc�<�$�E�6\u0005�\u0019|\nZ�j{�Sz�6w\u0006`8\u0017�SH\u000er\u0014\u0002�3y�M1\u000b?��<�;�\u0016}��e�g'�9Y\u0002n���V��V>e�����ez�6\u000bA�@�\u00072��n�E��\u001d\u00076�9\u001c�\u00176B1^^�]6��hlm�an0��\t&\u0000@6��ƿ\u0014\u000bc\u0019�\u001e�����I�ӟ���\"@k�}\u0002b\u0016�09ZU˼$��L�?$P1I�[L�0.� 2�ACq�Dt�)Q�E�+iT�\"�\u0000�4i�'��������{���j�&�����$�vXg�*�\u0006 \t��\u0019v�\u0017Μ�E�F�?��Hې�\u00047_b�g�0��Qz������:�H\u0005ѝLm0#\u0019q�\u001e.ݼA�8�nî<sQ�n|�\u0015\u00001st>��\u001d��!��\u0013\\ �\u0018\u0000ĸ,��vG�\u0000d�щ�\u0010��t��:)ZX�_>%�\u0000��w\u001b\r���b+�����\b���\u0016��^�c�o���0հ�z\u0004�;���n˵�<D,��\u001b\u0015��f?7L�ɍK\u000b���<�!^۞n\u00061\\�`��P�10�.��0~I�\u0011�\u000f-\u0019��Y\tz\u0015�%��\t$���/��m�\u0014\f��N�.A$g��\u0006\u001f|�t�.\\�\u000b�\f���\u0004z\u0001\u0001\u0019HOS�����q4w��2gK0��\u0012^J�3��g\u0006\u0004~\u001c�9\u0007���0\u0016t�\n�� ����̝50�Q����a�ƌ��&`\"\u0004�B�\u001fq�\u001b�A�\u0011|��;������H��\u001c���\u000b�\u0000u$>��o��V�p��g�J~���Zb\u0013l�kiNą�\u001d\"$ꨪS*-{��D��Tp\u000fH\r�U0ц\u000e\b�M]��&|��\u0003\bG\u0005+��$�\u0013�S^,\u0001���-+#��\nc/�\u0010�]А)���i�ե��Po8�A\u0007�\"�я\u0004��:}��`\u0007^��H,Y��f����ꄞ�w��VJ��^�:)��7eӹ�.ٴM�\u001fq��/�\u0010�t�\u0002����\u0001oy�'���(��8�\u0014A�$���h��E�缴���z\u001dH��\b�F��Š��UyX�RcAF\u001eey� z�x�\u0016�n*�G�#[�\u001a~��#\"\u0011�\nCL��aTxV\u0002�\u0003:\ng\u0016Ⱥ��X��64�D�0��;4)�!�C%&�ԛ_m�g�\u0005�A#{,$\u001d@���{�B���L�;z#es��[�\u001d��w~u�+�\u001fjg/$:��� vB��DAi�+�����l5\u001esəi�\t�h\u0007�\"��y�Y�$��6�\u001d���ܸ\u0016��wZ����@\u0003mpV�Pq`�7�[;������LsBv�B\fm7�2�8�l4�TfߛX���W\u001b\u0006v���_\u0010.<��vn\"�\u0003�,\u0004�|\u000e����5�e\\n\u0015\u0015=㖲h�/M&~O�h\u0006�{�;�� r{9U��+�v�f]�]���{��Yj�&25�Ag�\"@�ȷj������ǫd�Z\u001f4YW����E\u0019i5'y���\u001e�\u001a�k\u000br\u0007�(��@�n�c\u0004\u0006=u\u0013\u0018�񌍢\u0014WjX����N3.\u0007�A���\n�S�ֿ/��I�=S\n\u0019��Ȓ�\u0006�\u0005\u001d��\u0010?� �@�K�����n���[����\u001f��c�\u0014�=y��\u001d���.�\u0014&�Ex�\u0002q�/{��%,�I��SK�\f��ĵ\u001c68w,I\u0019�*!���(�ƑRA��pK*9�FU`R�\r̍\u000e\u001d\u0012DH���b��A�\u000f[�\f�`H�\u0016O\u0012`��\u0017J�j\u0015G�u��?l�V�Oa�i�� ���q��$�`(��\u001bY;ޕz�\u0006��zR\u000e,\u001e�t<a�v�u�D3�\u0010\u000b�ʠ�lduF�\u0018SG�*]\u001b )�r\u0018��Tu\u0016�\r�R}�\f!#�C��JE=��|p�G�]��\u0013�]\"�%�uy�T\r\u0013??^%��jM���C�d�\u0004?���ř/M;G�\u0014��K{A\u001c@d�ȷ�|*��z�VT08\u0011ل���\"�\f7�\r�9�\u001e`�C��T\u0006�\u0000�=�\n�|�:�p�^�5΃�<2&a\"-C\u001f�6�8=�n\u0018J�I��\u0019a�o6�� �@�H��;\np�e�e[<�Q�w*!�\t~�LCʍ=�\u001e�]�\u0002\u0001�A؄\u000f\u001cwS\u001cyl�",
+      "resp_decrypted": "\u0018o��\\i��'��\u001a��G�u\u001b�B\u001b�E�ms\u000fT��f]&�\u001fyQ��ψ\u0016fq%��\u000ey��>mC�^��C�\u0012U"
+    },
+    {
+      "id": "23572",
+      "url": "https://validate-api-secure.37.com.cnvalidate-api-secure.37.com.cn:443",
+      "req_decrypted": null,
+      "resp_decrypted": null
+    },
+    {
+      "id": "23578",
+      "url": "https://s-api-secure.37.com.cn/go/cfg/v2/float_window?JdSiMLoTAdPmzQXSZbOYY32OvtQnPd7Brv7IAiW66rXIgOnk2nI8Lb3jV2UQHorcBRUOQE-YLp-sA4bM_ILwgQ7dGk3f0RNWTlCiysxLvEQ0l-oXBxW3yR2BSbOYKrgnP3jHDrhrAn_Rxr4jOC6SaUFfXJ1iFEllmGMojKBguhwH7T9juHGruzrgfRg8oZR4-ff11QMH9EshwaVgYo8kLYPmfXJ78FMG2xZVgNKgZm4Nfhg1d2X6gAtH8lsDUQ2A4jKZlPAZhoXkCB2YgSUdw9QyaG_D3nVgV1dMoMjHf49bV73fzmhfjuRpiJ23xWDrao2xooEV4p6eU7IcxP5ExJjafL-AFCEZSHZD5tSmrbz3VZlm0BHK50sUv6D3iMmjeFv28NJSmBwOgEhOl2w73u1ZIraak7Zj_aQNq5HjULRGlNe3TgT3p2EUFFJJVHSNsWnOH_-KIYYeqdY9r-C4jrbq6rMyREZxiAi7SIKH8pOXM27L-5kfRqRAaH8wDYyUkS55UwtPeOJGS89ydrqTagTHFtMHTMvf5YSxGSDwIxjOcoczWWeR2ThPXvbUOSPVgmlliHnRePhitn6mUaM60VnVtQvl2r9H-QDFXKNP6drQ_fFgRBTmA2cFzS9IxXqXiw6KY2FgqCyiZAARRGWYfihqLRh2JlC_rv6KBra7USsrbhn088SJwi5LJGrKQqvCh_sjf-oWe4rTsRQuVgx5vR9mQcth7QPBxMMdhoH84IA12uD29sZfLqSoSxhj8UudXAyUebb3Cqpwi0hNPuWNiRbGTTkEsNhUBxqwbqLd9eSPEj2wpI9HlgL44r2x2Fa_uzVVxSzoqLi39imBfkUp_CTJod_2CrgkNe2KwiS-QNPSD6dPepK5gQfPsL8sG-ZPdw75HFLQsQ4GKsAXIXuD5g",
+      "req_decrypted": null,
+      "resp_decrypted": "UdT�T$}�w]hf�v~B\u0000�\u0019x��\u0011E�d�j��\u0013!ɫ�\u001a�Wh6�\u0007H�\u001f�����E��\u001a:��\u0003Ì\u001cn�e s�Ij8\u0010\u000b\u0002�\u0017�m��qF������\u0000�f�U�xmi�^�B�K[�\u0019y�!�t>�\u0010idZ�vF�$�\u001e��>\u001bc�?q���b�g���i.\"��ݎ}\n\u001b��\u001dsHx\u001b\u0017\u00015�<3[<�Փ{G�)��:;I�)�*\u000f�V`�s��Q�:.�ԴY\u0015\f.�t8@e�U�\b��93���]�<\u0007b1̎\u000f�W[@\u000fs(3NWI�;\t\u0001�\t����/yLI����a\u001bBK�K��*�#K\u0005�\n�\f��\b\u0012m(��`ΰ��P\u000bL��S���\u00163��l�x��2��*E�Zߒy4��\r�\u0018\\����\u000f�L�'���\u001b�@s��p��&ϞF�%\u0001w�\u0013��zY�O��Q�w[�|����<���)��W����\b;4ɮi\u0015k���o'c^�x�b\u0017H;Њw�\u0013�+h�HRBA~\u0005���<�6��.�\t\u0006\u0012kN�CAE%\u0016���-�tB�\u0005\u0003{���F�dD\u0002r�AH��S\u0001��~�HE\u0004�\u0014g\t��tW̍)��N\t/\u000b\fl �ˎ�̙�y���q�����\u0017\u0011�\u0003G�G\u001d�mG������\u0016�}1�-��\u000fZc�-[���ȑM-\u001e\u0010�\u000fL\u001c�ٶ��\u0007)�M�i��6�`!\r�t��}\t��O�9_4�\u0002>�q���M\u001d��#�T�%�j�I`�o�\u0007����[���wR랍��tO�B)\f\u0006���h(���ɨ7��\u0003�1\t\t�|\u0012\\]y\u0007��v�!���8��S��/��1������F3U\b��⤭Ӗ�_X��f�!�К!2\u001e?N޵!\u000f�g���Ch�\u000bpa\u0013\u0000�b�\u0016M��6\u0000�5Mp^/T\u001c�\u0014x��m'v��n!6?뱈t^ᤵ���\f�\u001e��\b�g�氮b��t�YT��\u0011S��'��!0��!=�Aq��@�\tc(�s\u001d��t!\r��\u001a��b<I�\u0019�35�g\"\u0017��6ި\u000f���\n�Xm\u0015��x=QG�\"C<�[c�N�~\u001d{���\"�K�,B`�\u0001\u001e�ϓ�5��r�����>MO\t�(��w�*g��\u001e�\u001c\u0015k`�=�;O�\bSU%B��s\u001d5���ۃк�3���P�-��\u0002\u001b�|]�\u0019)\u0007���c�ž�\u001d�p�2\u0003D�v\u001b7���v��~\u0019c�N\u000e\u001a��\"�7���\u00170[��\u001fꢿ\u0004Fk���s\u001a�\u000e���.�\t��BKE[@�Ks˪wd�*�\u0005�f@�sU�1l_\u000f�k�bS�\u001d\u0001��z������9�@\u0002��\u001f���B\f�\u00178������H�?t�\\i4�޷~���KT�l��IB�����]V\u0002��\u0001��\u0017��V��h)SCR�B���D�X�\n�׬v\u0019�:���2=�����Fx\nE��0���L\u0018t5f����i\t�=m��\u0010\u001c^��\f�0�I`^P�\u000e�ݪ��ǘ�:�)�\"�=�\"C��(i$\\�f/�-\u0014�̸a\"9\u0019cŹpQW\u0001L\u0017���\u0015\u0015�W�t��}�K������\u0005<�YC��z�`���B�\u0005�R�T�e�B\u001a�`�\u0006�\\�Y*�>�s*�\"d\u001ec���\rـ)\u0019�E�s\u0018K�~_\f`E3`���St��\riA�/h\u001f��\u0016��4��~zF\u0005\u0005�q\u0004lM�ڑ�on��\u0005n���ޞy8ټ\u001c�d񪺈\u0014��̃w*�R۩�z���Q��\r&��8V�$\u0018��\u0012z2ҷ{u���\"��+�F�8V\n\rPTȒ��:���[�N��\u001d{\u0014�#0��ZP~�^9���\u0014�ke����U:=�A\tGt[��\u00114͙V\u0012��r�\r��c��\u0010d\tV\\D/Ԉy��V0�;T�A��\u0001h�c��k7_\\�v�\u000e�s��IA����[Q\u0007�{��\u0013L��B�E�$\u001ay�1~U�I�iFY�� \t�\u0016�Ŝ\u0002{\fۺMF?'�\u0019���k\u0018�\u0005�I��\u0003$,�\u0001�s�9��\u0005�E\u0002�1�@�\f`\u0012�؄'�[\u001aZ�Ϟ���v��t�� M�a�yW��z��\u0018@X��M\f�T9�ѵ�n��UJ�F3�\u0000�唬�V�5�px�W��\u0001���B�)�&pFw\u001c����W2�'��x�=��2�u��Nz\u0006����\u001f�4Of16L�rJ6������v��\u001e��b0UQ�����k�m�#\u001a`g���B1yޓ�\u0015\u001c�����i�\u001c�0�\u0006n�V���7�R��P��� 6�kd�7*�D�_�\u0015\u0007W!u�CAT�s�'q��,8!B8˃�m�\u0005��G\u001d5X\t@�\u001di�<��\u0010\\�K�d��J�\u0011*\n\u0000��6\u0004e�� N0D|\u0016��\u0013�kw\u0018ѥDH{�\u0012<\b\u0002��\u001e\u0010����\f5�\u0013�ǜ�\b��\"�\u0018~m���7A�HXտ���i+\u0000҆�Θ��X����b\u000b�\u0018\u0006��y\u001f+���,�[�\nf�:�9�#|\u0018��1\\Rb_�3:\u00043��܃}��`G|�V�g�3N�\u001e;f\u0005��K����u��.y�\u0005�in]�,\u000e\u0005�D����1�\fNI\u00110UL�?_u͞\u0017��\bd\t�\u001d<VN;�w6n�\u001f(�Dç\u0015�\b��\u0001=\u0015\u001c\u0015�?��ѧh\u0013�K\"�Y\f�����*꘣W�ex�\u0006�>�P�\u001e�Q�!��M��G\u0016��B�[�TO�{\u0013K.�%\u0016^�Vω\u0016ڲ�+�ӟ^���WZ\u0018�fX�.e\to<I�+�Vw��S�y�V���n\u0014�C`�^��\u0004��?\u0001<�� �\u0006��r��4��tB�`ar\u0018�Hp�%u�aS�;�\u0002��L^�^�1����zk�\u001d*Y��Ycd��;�\u0012\u0004\u001b���\u0004��&�d����'�+\u0004�r6���\u0013�r3�ǉO�\f\\� \u0003\n=�\u0006aW��R�\u000f���\b�]�\\�Vi#�a��\u0000��?7���\u0014��$��Иk�q\u0004\u0002*w���4Am[�\f:q�>ڌ ШA;\u0018�8��6~d\u0007\t�W�@(>�鵲�\u001b\u0003j!U��D;w�)��iy��gM��[�d� �H\u001f:�-\u000eC- �h\u0013����c��o\u001d�x\u0019�x����f!!z=5G��;�P\u001fY*��֟��\u0010z�\u000b+�\u0007*�\r�I��U�\u00022�.����UuG]ʤQ:��©��\\��׶������\u0010����DY�n�悢J���\u000bE���\u0006�٠�����.\u000f��)\u0005Z_���\u0011G��0�\u00075p\u0001�Ǵ�\u0019�P�\\v�A+�v��=u؍!���\u0010��}K��\\�}.���Vp[\u0015\u001cej\r'�fX������\r)k�����s�QAIS/�\u0005���\u0014�Fd��4\u001d��yɜV�xL����\u001cv\u0007����d\b-\u0013��%\u0005\u0017\u0007�Ց]�\u001dna<�\u0013<��w�ɜ?w�\u000bD��r���*r�P�k\u001fn�b�Y\u0002�\f^[gt��D�n�>\u0011N\u0019�439��8���ͫ\u0010,\u0001��d@�&?Y�e��o�~5VʓS���>\u000b�k|\u0001�O�q򬥢a�`FD�!\u001dcۊw?\u001be\r�wV�K\u0013�4;zJt��kw-1$o\u001f��px�R?\b3��ŵg���}��vr\u0006����\u0012�u_��f\u001f����Z%+��\u001d8P\n\u0006���5t\u000b���I��H\u0006C�\u0018iH�43͗��\b�|\u0004�b4\u000b���ص��-�oj3��X0��,���r���q$��`��K,���/cu?w��f���NB0�?\t�\u0001A�����\t�B=�B�\u0013w���\t�Tj�?Uk�\u0000>�?^�gmd9��4��T���)M\f�l��G�܁dmq\u001eCZ\u0006}�\u0001e��\u0003?\u0004���M\u0014C\u0007��^��P�o��/3~\u0004\u0012K��Ez�\u00122����7\u0018�ݞH��t����\u001d�n�r�\nG�4i\u000e�����k��\u001fq�9l���oz\u001e�iH�\u0013xf\r�D]\u0003\u0006�q_�(U��.S1����ɿgϳs�q�rӏo�\u0003F��L�����fG�6\u0012��x\u0013*���`\r\u001a�\u0000d�%�\u0002�9=�G7&w�g�\u0007\r�D��а\u000e\u00033�D�X\u0003�,\r�\u001dog�Ħx����Y��\u001d���(����\u000f�%J����YYU��+\u0003��(Ru\u001a�n�� bt(�g��<B����\u000b\u0015;s��m:\u0016\u001f\u0015\u0000�5d��%d\u0000\u0017\n�f˜\u0016\u0018���G|3�4kڦ0�\u001c,�\u0006^ɝl�nT�\u0001�c�Ð+jS�v�����d�-џ��\u0015�>M\u001b\u000b���'p��E=;�贌\f��]��֓ƙ� �hr�hx��\u0005V�5W֟��\n��\u0001o�1��ȃB\u0003x-��\u0007��?\u000f\u0004�p!�\r\\\u0010�v\u0001��k[���=U*���\u0005E\"\u0001\u0016)a\u0017\u0004\u0010�j\u0012Ѯ>]\u001d�\u001a�z2M�O�q��B`�1�24��K\r\u0000\u001d�s\b���cbշ�Z��\u0004p���h�\u001d�\u0012\u0016��'3�!f9�7\u0000����%y\u000eu��\u0019f�<|�|w��Ҧ���\"뙄��_|��Ӊ|��H���`׾r�S�zx\u001fV�_��\u0012x�7|�\fv*Rk1*��iĦ7�����6L�Bh�g!�����\u0018��::�\u000f���3#�l�%�$�YP�M·�3��\u0011�\u0012+�-Ee�\u0013���B\u001e�č;o�3��\u000b�}k#czS���M�H�:��\u001ba⒱l�@�WµH��>��G�1町���\nt\u0012)����G\u001e\u001b��\u001c�6p;��w�0\u001d\u000b��*n(۠&�\b�Ã��w�0���\u001fr�#HWભ85{l�4P��k�m�\\F���ZF���r�!���B\u001a�J�xc�\u0004|�D.Ώ�\"�U�8YX:�?�]s\u000e?�8=\u000bަh��T�\u0019c�\u0015'\u000fг�\u001cC���:!��ȕUw<\u0013�j�u\f�L��>��\u000el����<�t�z^�wWRqM!�<d\u0003&[q})�+\n|�4ڸ�3��\u0018\u0000��R���\u001dӅ.w�vWJv�־h��$�c3{E�j,&`���>\u0002�HA�ø\u0005�XD)D2x\u000f�&�g�<\u001a���<^,�g�?�͂�v��3�\r\u0007襕��f�葻�\u0001y���\u001fb\u0015�a�\"ѭ\u0003���\u00110���\u0019`re\u001bV�\u0001�1G\u0000֚Ք��d)\u001a-�w���\u0018����M˺F\u0013�\u0001\u000f�O�f�\u0016W�{0a��\u0000j�\u0016��\u0006DRl`�`��g6�+����\u0005�ư\u0005R����:>��%��*�\f\u001di;�\u0014��r�y)���ͰTP؊��،�$��n%�z.|�2\u000e`il\u0014���K���SR#���s\u001e�E�n��-\u000b�!�J�J.?�\u0011��\u0019�!��6�{��� �3�\u0002�Z��\u000b�T��CK�Z�!��}�U;�:�μ�O��V�`�d]��!uڑ�'<*ƴ��B�S�σ\u0004�\u0005\u0000\u0016ߺ\u0006��-4>8�F�A*�Q�3��!\u0019B�m�A\t:�lCɘ\u0004>����]v�nH+�H�\u0013\u0015��MB��]\u001b!\u0019K�¹���V��\u0011�ip\u000f�\u0019C{>�\u0004���&�yl���mk76|<o ZCJ\u0004\"A�'`.����֩��J�x�L6\u001e�z�\u001c��\u0005ˍ��A�}�\u0017�2ױ\u001e-|\n\"�ȑ\u0013\"�\u0004� ]�2�A�?�MU��\u001dt�P��T[該�!v{�EoKJ#���|,�De\u0017�\u0000\u001b�^\nvK\u001f�a7\u000f(H�6��\u000e\b�\u0017?�pv?iҀ\u0001sA�*�O\u0002���3�Q-�5�2)�tH\u001d4�06�̇B(+�\u001c�w~�ýw��\u0013�F�oi��*\"B��E�\u0014%hͶ�\u0013;[�\u0015�K��Y���%\f�/�Z5�����\u0006�RK�t�v�ĿȪ�1\"�s��ˀ:\u0002�´��]vI\u0019'(��\u0006\u000b\b����Í��ڄ�چ���\u0000IQQ�s\u0005Y�jR\u0015�\u0003R>��;6֧�!9n\u000fӴ>w\b�q\u0001\tW�m\fh\u0000�\nJh%ϊv��M�\r��4^l��$w8T\u000b��/�?J{��xǨs�\u0018}ȇ�P~\u0015927$��t�\u0018����r��0\u001e�\u0001��};�\u0014S]�����w�o�9~�ݼ\f\u0001@\u0013\u0011ξ�ks�N�����\u0012󅽽b�D�Xc���;����1�!T\"\u0010��K���\tD$+D���5��\u0011}���އ|�/�6�x�\bnB�������\b�7�CsXP�ݮ\u0011A��\u0003A�y)[��\u0006��t��a�隊��\u0019�v��\u000f+\u0016��K��;�Qr_���O�K��?Y\u0002���Wށ�w�X�9ne\b\u0018��p��9��\n�\u0013}��`2��!\reX�g����\u0013�6\u001dd��\u001b\u001e�#��8假���\u0004�\u0016�*\u0004<�\nֳ:�%\u0006QB�mA�n��8����g�[:\u0006�\u000b��v�\u0006��r,��C9�Iꅠ�H���',�5t:���(!`4�!�I\u001b#\u0002����\u0017�\u0004nH���L1�/�O\u0012�\u0014g:��ӻ�K�\u0012\f4\u000fb!�ؽ�ҥ�M{���r�@\u0015�W�:�sF\u0001�ʚ�z\u0007P���\u0018�Ŧݕ{sM\u0015\u0010��'������x3��\u0002R��{�׵f\u0016&����.-��A�n\u001a�·��Z�GKn�sv�ߑ���\u000e�FI$\u001ep|�����\u001f�옷p\rѢ��\u0001�\t��T��Bt\u0015���\u001f�\u0001g�/�d�Qe\u0016�,�\u0013ׄ80�C:����\u000f�\u001f%��/���qN*Zv/K6�\n�\\\u0000|�L\u0018���ݽ���\u001e���9�ǔ��=i'�@_W��H\u0003�*��\u001fG��\t��i��X`5��\\M\\S9�h��?g��\\�d�J�\u0001]V�+\r�\u0002Vi졎��p����in�zW�����ab�`1�I�\u000e�L ��Q�\n:�B9�Z\u0015>��ynՊ�\u001b(KD�|�w�˾ws-O:�}z�\tcK\fsU5��'?�G#\\��+��*k�/�a\u0015ٕ�\n-)|t��+�n�(\u001a��Y�̙�\r\u001b����m�)�j�\u0010̴K�-p-W��\u0004�MJ�Q+p��\u000bh\u0000h����\u0000`t\u001fS,�\f�L�,�=\n��<1�ȻC�\r`�j\u0002�\u000eZ�qօ�y쀕a���h�7��L��|�\f;w�L�47�7���u\u0001�\u0014\b�!�\r(q���Ȣ;��H�X��!Ǘ�w\u0015O�K\u0011�f�k�o߇ǚ]�d#R�\n���\u000b���C��~2^f�۠�\u001b\"\n�r0s��b�U�2��2{h-��1��G��'Lm<�Y��a���Q=׳��b� Py\u00113�}��B�����l�f�Z!\u001a4ߓ�\u0013\u001d���>��<;��\"\u0000|\u0016�B�V�E\\�\u0007�X&�냯6=�n\b��I^��3/�~��-���\\Q��+,f}�\u0007\u0006�r����:�\nD�H��:��w\u000f;L�:9�Ģ�;1\td��o��б���g��)t�+/�DL�\u001aڒH\u0005c\u001c�\u0005���o*�F��ܕ��xz\u0003{iUpia rV�i\u001e\u0016�\u001b9\u0011B\u0007���d��D\u0015��\u0004\r+��\u0003w�\u001e�[\u000fJ�ϐ/\u0007f/�o\u00125��`\u0017��ĪWe_�f�\"C��\u0010�\u0000��\u001f�*�\u0017q^ɤ\u001b�&��]\u000e�_�>��n\u0016\u0007�-�A�F�\\�*B�\u0011T�-�*�w\u0015Jɨy��TD\u0001/4�k~����(ˋ.��?o]\u00047��X/������;Z\f��h@�\f\u0013����^\u0002�W�.]\u0001��\u0000&\u0016@Y���Ȕw+\u0014�g㶴��\u001a$N8rF�~J�\u0016�P\u0007\u001fߢ�=U\u001aM��2A�����\u001doq�U����p��BN��\u0019��\u001a�����\u0001{\u0018ꔣ�\t���.>���LV̥����n�[�Tf\u000fv����t��&�\u001c;\u001d�i�i!\r\u001d�F\u0012\u0005|�\u0014\u0015�Д=�2Z��d�w�\u0019��LRӵ�9�h�\u001f��/\u0002��}P���b�h�0\u0000]�yͯ��}'\u001a�\u001a��*!\u001d\b8��x\u0018KN/s1)�LK\u0012ժ-\u000eW�_0�@�g�Du'����u��T����YLMl��꘱$9,�QN���a�SN�%>�Y�#,'7UKk\u0000�\u0012M�\r�3 cP���D\n��7� fT\"�؈܁\n\u0001�4y\u001d�,aۍ��tA\u0018o�V�߉�]�8}vf[\u0003m��\fש��j�[�n�U��.\u001fբ�w���\u0004V`������ч\u001e��rz��}�D�g��D�@R[\t\u001f��+@\u0019\u0016\u0004�\b\u001c���]��,�%�\u0016� p\u0006�����_(Qmd���W��\u0007c\u0014$Ż��/\u0018�\u0004;�\u0002��t��Ǘ\u000f;L[�|n+�0�\u0018�!��N)�\u001b�_U.�R�+z��Ōu۹\u0011��T�t��\u000f\u0005����.\b�i���\u000b��dE�\u0002V�)���@\u0006�j��gO&Қŭ�,���l\\Ov�N#G��$��F��v�M|˹%�ܲ����3+(��d-X\u0018\u0014��H��h�r��\u001cD[I�R�5������6�)n���E��V����0ڄR����S9���`�\u001f��)ٽ�NM�o�+}i\u001bh��k��N�2�j���x�\u00148_Vy[�Jx\"Iz��\u0015e��>h햫�yi�\u0017�^��_.ʎ\fϡ�p{%�\u000b�+�]\"`��w~��^D�!�z����\u001e��.��\rtA{�v\u001a��x���dw7N�;��Nj��}Hx]}u$+�2���\u001f\u0004\b�\u001bbb�,���(�0\f\u0004_�S���`Q\u001aY֔�M����-\u0017\b��\"�\by�9�\r�\u0006CU�d�\u0017@`�7��P�\u001a�\f2Cb�tG���r\u001e\u0014�.��Z\u0016��f���xX����0�[�?٢�s��t�\tb�~���6�\u0014�\u0000Uz�MK�~=}�W�͑ƃhge�=m*���\u0004\u0017!d\u001d��\u0017\u0011p�x.tu\u001d�\u0017\u001elq\u0015�3D�\u0013X�}�F��[�m#S5�M��[\n�[VB\r6���r�Z$ʿ��E83nE%�fnR�hN󅘯}��U1\u0002d\u000b\u0005\u001a\u0007,�~���>\u001eݶN�\u001c\u0012r\u00036M\u0012š\"������_�D�W6�VfO���=+<��i�0����OC�r\u0001\u0019�X��\u0017�!��L\u000b�K]�\u001a�\u0003�\u001clm�Ω\u0006�E�\u001fk�o�/�x>��%\u000e��ꉨ\u001f`�{��O\u0013\u0000��L~B��n\"\u0013a\rÇ��\u0014^j�8�\u0007�\u0001݈(\u001e֞���\u0010\u0003�!n�>^tӞ��\u001eDe\b�n�w\u000e�3l�\tb�5�}qL `I��f��r|�\u001f\u0014�tb�\u0000:\u001d�^\u0005��g�ٮ\u0018b5\u0002��!��\u0003\\�z�68;hUx!���j+\u000bp�-%O�X�1\u0014E>KKmL�Θ����\b�\u001e Y\\(�Ad\u0001�ܬ�\u0002w��:}ֱw�}��\tg��\u0005��Pɽ�X���\u001f\u001b�\u0013�s�賹��߯Y��S\u0007�Ȗ��+��؟�\f�)�x\u000f6��'��\u001b��*�9�pܠ�)0;��:H\u0010��\u001b�5\u0013����\r���?\r.f[�^HN\u0005\u001c�p/�x�ڔ�.�t\t,#�.91���l�����R\u000b��&�|�ʹ��W\n\u0001�\u0017��7�Q@d�6x1D{\u000e*]��\u00179�%�\u001eq�9�`�\u0006@�@���\u0017U\bYa\u001f\u001bI��Q�B�i�\u0017:\u0003�>I�pH�?Ǌ��&�Mbx\u001b�\t�#2cM5[��\u0003�X>�[>Z����tCPc'�ʖ���\u001d�·�ª4�>�DT�)t���Ȅ(��V}�҅�M��\r�\\��\u0017\u0007q�����\u0012����+;:OS!U�.6\u001b ��0�~է�L%��\u001a&���J�P+Fp��+�\u001a#�\u000e��\u000f��p�-a\t$���\u0000�(�Ǒ�\u0004�C��\u0015�\r,�k,��7��UP\u0005��r�\r\u0016DhX#F\\U��o��q\u000b`��3���p�ψ�j���=\u0013EaTk*9�\u0002h��\n΃%X/���h\u0007\u0016K���mv\u001c2\u0007\u0000캣�,��s5\u001f��\u0018\u0015ק���A��l|9z\u001e�f��:��\u0012!��\u0002y�#�\u0016b[O\u001a[\rz\u0002�\\���_>�Ϳ#���][��\u0016��\u0002A�ۣ��1\f`j����V�o\u001b(��,�ĉe\u0004T��\t\r\u0001����~� !?\u0000�v�s�\u001b��z���s��\u0015tKϑ{�,}����ۡ��n�\u0019��>(o�'���Bn5ֈ���μiGy�Y��1A���v&�N��W/o��\nA�\u0015\u0007w\u000bB�D�D�).�PuɔlpU��� �AY��\u000f��^�ۨ\u0016��\u0002���7,|#?Ȳ\u0001�.��/o8\u001f�\u000e�_��\u0012W�俎�8OTx�S\u0016Ք\u0019���m�7w"
+    },
+    {
+      "id": "23582",
+      "url": "https://sdk-api-secure.37.com.cn/api/ai-play-assistant/v1/control/config",
+      "req_decrypted": "�����#Ei�\u001a\"�\u0002�@�\u000b���\n��K��C��.�,��\u0007���zNg\u001d�[^�1���10\u0012���:1�1���Ĥ9a\u0014���\f/Gi��\u001d>\u0012Ӂ��\u000fphM�R� �\u0014B\u000f��\u0005<(7\u000e\u000f���\u0001�v�'<ME\u001eT]2?\u000f\u001eh�\u000b��$V[7��Z�B\u001d���F���'2�\u0001�����Ls��s�Uy�2����H�@|�כ�i���\u001b-\u00046��)\u0019O�^�2ೕ����\b\u000e0\u001bI�M(�'�%6yx�X���=;��M1���� \fe\u0004EF\f�V�/F�n�\u0013*��*��\u0011h+�2\u0004܊\u0003��\u001e\u001f�\u0013&\u0015����h��OO\u0006ݝ��5\u000b�\u001e��G�\u00198 ��\u001f��\u001e��\u001d�b\u0016Y$P�gYR\b6�/��\u0000N��\u0002�}\u001d�X��\u00047\u000fy���\u0007��\u0003���fʭ��^�Y���vD�m%�NDp�S���\"��٢Ũ�\u001c��㲢�\u0005\u0007z�\t�\u0014�?�zk�\u0007\u0015��?�Y��[�t�V��(�`\u0002陃R���n�[\u0003ö��\u0014�+\u0003�Nې܆\u001bU��k��:��\u000f��K�w��\u0012*5\u0012��ȔI|�\u0006�\u0012Zd�@ã��T@^\u0013c\f&��<�U��d�)�F\f\u0003���6%��O4�O����G��\u0006\r�\u0013k\n��(���<��\u0016 �\u000f�\u0002���t��Q#w���y�`�W�Hs\u0006����@�re&\u0004�q\u0017�Zo�}\u000b�0��\u0015\u0005I�H\u0018����^�+}p����k�A\u0015\u001b޿T���k��zl>�ȓ�S\bnl�\u0006\f�A\u0010�}Nր{+,��Y�~\u000f\u001b$��a�\u0006���ٔI'^�b��K,\n��tÙ\u0002ӫ`k*�rE��J�'\f��+�;;5Q\nr�FnlH\u0001���/lm�����\u0013ٓ�/\u001a���&Ѝ�\u0006���X�*�\u0012̆&�� ��{_�xM>\\��P�SOo��]��^�\f�GnW7������Z���{R�R\r��ī\u0017�`�U��ug�\u0015�-�\\�[$w��WAu9\u0007\u0000DH�m=�\u0011d��htϢN\u0012��\u0001_/�s����mi8z\u0017q�uP*\u001eg��%/�#�\b�_2�ib���\n�4\\u�U�2l�x�PQ\u0007��A\u0014��i�k��\u0011�q\u0014\u0002��;���o�ʳ\u001bvk=����މ��|���?�*�\\u$�@0\n��\u000e^��\t��m����H�\u0014֔��A z�����\u001f�\u001by����\u0016-���`���m6TXp\fC�zt\u0001�H��xJ�↱G\u001b2J�Z@yo�\u001aUX#۶Uf�\u0014\u0013�Ƭ0�.�ϯ\\\u000e\u0013\u0003ZyEo\u0005�N�Q�\\\u0001P��\u0007>�⋙R1\u0015�3���wr����{6���\u0001���F�A��@.>��Հ���\u0006W8���`�5N�a���H�S,�X��i�X\r~�\u0017�16��8�]���\u0011\u0017���3�Cۡ]��/�\u0002𛻪��\r\u0005\u001b���R4?���\u001a�����i���BsG`x�\u0005k.7<FY�\b�ȍ\\�U�W����\u0007M�\u0013L%�\u0010/͖\r䩘���)\u000f��_~� ��%�KT\u0011�&?�K��{P\u0014�\u0019���W\u001e��\u0005��1��a\u0004�\u001a�&+����{��@����\u0016w�jZ�\u0016���DJ(1I��,�\rc@�h���n\u001fٟ�u�\u0003[&�Z�E|��Ѧj�\u0007��R\b�I��1\u0011R^&Ԉ!�'\u0001\u001f��ˁU~�!�\u0011��']`�,��u\u0011�jկ�\u0010��&���y��\u0017�E\u001f�Ԡ\f\u0015H\u0015\u0010�G[����Yo��μ���ї4���\u0015�\\�\u0019��ƹ����F\u000b���`��TGa�Z8�5��Ey!J�v%\u0004��\rO-�5�W�v 0�R���\u001b[9iز�j@�Nw\u001dPdP�jKW��<�\u001al�&�?z�?��q������\u000f33\t\u000e�m�6-O2[z��,U��h-�����\u0003p���\u0010}�&��\u0010�oFr\u0007�����v�(���\u0015�\u0013��C�\u0012�Ze�PF{z\u001a�\b�V\u001a�ׄ04�N'�\u0019�\u0001�~��\u0000ư=��0\u0005�u�Y��l�y�O_�Q��\u0007�_*�&�\t�p P���^��OZ:V�P�@\u00068\u0011�\u0006�Ԓ4�5��r%�m\u0015T'�\u0014\u000f~\u001e'6�0�>r����W\u0007\u00137\u0019\u0002z��q]�����)�5�'��\b��xSBh�&������]>\u0011b���o�����\u001aPt�kj�Y��Ǻ��vdBv�\"H%Q\rs7F��54ͯ6\u000f\u0015\u0015���\u0013t�-S{CN��\u0001���\\j=�AE~��\u0016�~0\u0006��j\u0012�\u0014ߛ\u0006ߋc�\u0001���h��t��q��#\u0003L?Ү��2�XF\u001c\u0018\u001c�\"}�q�&m��\u001b�L-�4��#�â����w��[Ns(�\u0016�Ŝg�@n\tKr���\u0004�p\u0014��=�\np",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23605",
+      "url": "https://us-api-secure.37.com.cn/userinfo/getAvatarList?PB1FfKXrz_mgqotWPqZhO32N2FbvDlKNgvl1N3ThQphFI_5KvW9m8E_3eBjbhNF0G3kuyS7fmtmoJQ5xeHF-engu1Ov2_Q-NiEqp4up8dLiJ4sEG6SinjmrrvbQhAa8Cc4wTDOLqgZjunyhsS-lbARcISJwlf7SkLzY0STrtCPGAtOhrzguG17c85mU4thmEahpIjxUhFsTspZQ_05Y9MT52UMNrlfngQRIzX48uX_87dH_GTi3KZDPIksyBaZkiB0tyvvuT_OADOz9LsoQigNTMOSUTB7exSLdG2eah8LLCUD-RtsHiRYoE1LCLH4q8peOFfxPpfJ1HweXTwSWHS4aQ62l14orYtbre9M8JUzPSYnyFhAnC9ep2FAnQVYXxtZXLoxJBxF9tKqRo1JuJSx2yfrBo3ZupSRTDtpzXT6tD8JtQyvbIXxmd-X_Nyv6Z",
+      "req_decrypted": null,
+      "resp_decrypted": "�)��j���t?�\u001f���a�\u0015v�Xrzu�`�\f=i�:?�0���5��\u001bt-���}b(�����d���+\b+\b�ڻwq�4 ��͹\u000b\u0013jDС\u0016���C��8�W�4���\u0002M~*�2q��\u0004;/|���ZZ����k��\u0018r{�%ҽ��ib��AZ\u0019�\u0017�8t�1\u0017�5\u0007�M��,yb\u000b~��M!\u0011k��6��'/5\u001c�7G�\u0001\u001fo�Ͽ��X��\u001dIa\u0002��Sl�B�u��3�V�\u001d����\u0010�6�#�6O!\u000f��92')�m�ۥ��N]��\u0006�۳�\u001e�7p�\u0006�m��) t�w��3f`*����z\u0017s\u0013Jn�!7�\u001c凥�d\b\"x�&:��ˍ�+Z3�wFx��j�V)_ҝ�\u001bkѝ(o��\u0003��-8�y\u0004sO�\u000ba!\f|7�\u0007��?\u000f�V����HS�p�k\u000e\u0001�k���\u001a�\u0002_�]����s����sZe�?���0�3��r\u0015���r\u000bAYu�}��Iי�-��g�\u000b�\u0017�r�Z4OY�\"���\u0014�c�2���\u0017�\u0018\u0000"
+    },
+    {
+      "id": "23606",
+      "url": "https://message-api-secure.37.com.cn/api/message-state-api/v1/red_dot/quantity?CRnIkZ1YduCUnnqXPFYCTXp4TP4vNCibppZC2jVJz2EH3Un__X4C2m7AmFddSC-kcJyI4GGojU7g9mXuhs2rWLI_YYHzoqVw_jqc0wE3xzTGEeTXESKd4jaIsdgQJzJfRFHfRRd9mZi7BcifLezyQVQ3Yqo45sWtXCfow2T4iA1gbYwxO1Rp52bBH2Rxw55IlByvBViJka0GpAzXsZ1-lVUFc0DJZgC5PoNyFzEqDxZbz9C62j1FlanTQJp38ZsEE-ZCb4cVZAgaRnMX1Fs-F7sLYPAFmCJzHQZmxxhLVHuSU9iN8OSKkdhZ9lMaqf_DAOhsZseOQLRfIPKuSmUyi5jYxyXlGT7Uf68NrgHQmGCpT1bb9CvByQllYSnEmHK29KfqfaOFj59XmJ_Nw4n714sfVJbeedwVlvhpk26IqsBnfmL7H9GJ0JkMP_DsVDqpSbL2KOELPyNaVRVjJYRXFFIDQACNhVskjagoMHI55asH7L8MgD75Naq2oFJs-W59nyzqMZA1v7A1anQZ-1WhZlq5JHox_qavHnVx2jrSeGWLzWpbbgbf_yJFkWhA_8GYYF2a01SsvnpSLll3ZKUpoOiO4q52u31HrQmlTqlKwi1Sp8DbOBnHvIDUbrO_rCouXs2BdXH-rlxP9C0PW8A2JDt9tKIb6dkbe5SHM2p8o3TjFDVQ5kq16p0aposrGqE52nkRvWzuaZArklPhIMZGEvHqUFKIg4f69tLxDGiPMSZvbdf0IJZpBzyyy493KrFpQ-PQexX_LCCd6Z3OALgH2SAqxb26zLp1JxmKDfZhdBQPOzh31T_6_VGt2UyJhJek",
+      "req_decrypted": "QUERY: ��\u0005\u0005�$��~*���\u0018q�Y����\u0004�=S��wl%J�j�<����u\u000b�\u001fhP񭙁��8�_R�8.��6�o����~Q2\u0012�F�\u0007L��)����y�\u0011��Le��4t\u000e �%�>��������ܜ7\u000b\u0013+�v�O[��n~�԰\u001f��kq5�2t'x���\t�>����\u0011��$\u0006�\u0010}\u001c\t.��\u001c�\u001f�������ڿ���/\u001c���;�2T�*=h�c7ɓ��\u0002TF���h3�\bGJՎ�\u0007z�B�/�EEC�<Soˀ�[�\u0010څ\u0005oXX��?T�W-u�<�w���B�y���h�fKoJ\u0012M\u0007}�۴���\u0004��\rٲ�\u0005L\u0001�u���)\u000bVA�'�\u0010�eĩ\u001d�+�\fC�l�[�]ȓfw��^�BK���z\u0010�\u001802�<GL\rU\u001e\u001a�+�G˛\u0016��͋*��I�#7�*\u0010�CQ\b�9��[\u001e�\u0005P�F��N��\u0014\u0010��^a��\u0005ɒ��yz��tU�\u0019\u0005\u001c���mN�j��f�g^�\u0011�\u001f\u0004���(�9`�t���.2Фr�\u0018�q��\\�\u0006\u0007v��5��0�bշD�\u0003\u0010\u0011�.��ӆ6�a/�\u001d��`]\u000e�?�-�Pu�]��H_���%�P2A�]_���\u0015r\u0018+���\f�H�Xx��\r�t��w����\u001b,N\u000f\u0018|&�n\u0018W�/��\u0010�XMv7�:C\u0002�+m�U�}\u0005%\u0002��\u0011_A!\u00184\u0019ԾqT\u000eyg$\np\u0012�?oz�\u001d\u001b�^G����?\u001a�DqE\n��\u001bfت",
+      "resp_decrypted": null
+    },
+    {
+      "id": "23607",
+      "url": "https://message-api-secure.37.com.cn/api/message-state-api/v1/red_dot/sdk/get_warning",
+      "req_decrypted": null,
+      "resp_decrypted": "��RcC\t�����9{v��7��}�i.��J\u0013YE��5�\u0004ˠ�y4)w\u0017s�&�.�\r)�,`��8%��*u-�\u0005���`iL\u0015/�\u0013��/��[�6r̅�x�L\u001c��#u�G�^]\u0010�\u0016�\u0012�ќ?��f\u001d4n�\u001dŧ-+����2��\u001e�J��LO�\u0019\u0006Y�\u0010�hMͩ_�QE��\u0012�\u0010's\f�\u00179�R$��}�\u000eEaÐ�\u0010��2$�!\u000b�л*�E�\u0016e"
+    }
+  ]
+}
