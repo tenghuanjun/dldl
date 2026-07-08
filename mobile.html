@@ -196,7 +196,7 @@
             cursor: pointer; padding: 4px 8px;
         }
         .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; overflow: hidden; }
-        .scan-viewport video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
+        .scan-viewport video { width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; background: #000; }
         .scan-line {
             position: absolute; left: 8%; width: 84%; height: 2px;
             background: linear-gradient(90deg, transparent, #C3702A, transparent);
@@ -404,6 +404,7 @@
                         <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
                         📷 相册上传
                     </label>
+                    <button class="btn btn-secondary" @click="toggleTorch" v-if="torchSupported">💡 闪光灯</button>
                     <button class="btn btn-secondary" @click="closeScanner">取消</button>
                 </div>
             </div>
@@ -623,6 +624,8 @@ createApp({
         const scanCurrentAccount = ref(null);
         let html5Qr = null;           // Html5Qrcode 实例
         let html5QrAvailable = false; // html5-qrcode 库是否加载
+        let torchSupported = ref(false);   // 相机是否支持闪光灯
+        let torchOn = false;                // 闪光灯当前状态
 
         function openScanner(area, account) {
             scanVisible.value = true;
@@ -648,22 +651,40 @@ createApp({
                 try { await html5Qr.stop(); } catch (e) {}
             }
             try {
-                html5Qr = new Html5Qrcode('scan-viewport', { verbose: false });
+                html5Qr = new Html5Qrcode('scan-viewport', {
+                    verbose: false,
+                    useBarCodeDetectorIfSupported: false   // 强制用 ZXing，跨平台一致
+                });
                 var config = {
-                    fps: 10,
+                    fps: 15,                                  // 提高扫描频率
                     qrbox: function (vw, vh) {
+                        // 取景框放宽到 0.85，避免二维码稍大就超出识别区导致一直解不出
                         var m = Math.min(vw, vh);
-                        var s = Math.floor(m * 0.7);
+                        var s = Math.floor(m * 0.85);
                         return { width: s, height: s };
-                    }
+                    },
+                    videoConstraints: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },               // 提高分辨率，屏幕二维码(摩尔纹)也能识别
+                        height: { ideal: 720 }
+                    },
+                    useBarCodeDetectorIfSupported: false
                 };
                 await html5Qr.start(
                     { facingMode: 'environment' },
                     config,
                     onDecodeSuccess,
-                    function () {}   // 单帧未识别的噪音回调，忽略
+                    onDecodeError     // 诊断用：仅记录真实报错
                 );
                 console.log('[scan] html5-qrcode started');
+                // 诊断：打印相机真实分辨率，确认确实在出帧
+                try {
+                    var settings = html5Qr.getRunningTrackSettings();
+                    console.log('[scan] track settings:', JSON.stringify(settings));
+                    var caps = html5Qr.getRunningTrackCapabilities();
+                    torchSupported.value = !!(caps && caps.torch);
+                    console.log('[scan] torch supported:', torchSupported);
+                } catch (e) { console.warn('[scan] get settings failed', e); }
             } catch (err) {
                 console.error('[scan] camera start failed:', err);
                 var em = (err && err.message) ? err.message : '';
@@ -676,6 +697,32 @@ createApp({
                     msg = '摄像头启动失败: ' + em;
                 }
                 scanError.value = msg;
+            }
+        }
+
+        // 诊断回调：html5-qrcode 每帧都会回调 "No QR code found"，忽略它，只在出现真实错误时记录
+        var lastDecodeErrLog = 0;
+        function onDecodeError(errMsg) {
+            if (errMsg && typeof errMsg === 'string' && errMsg.indexOf('No QR') === -1) {
+                var now = Date.now();
+                if (now - lastDecodeErrLog > 3000) {
+                    lastDecodeErrLog = now;
+                    console.warn('[scan] decode error:', errMsg);
+                }
+            }
+        }
+
+        // iOS 闪光灯开关（弱光下扫码失败最常见原因）
+        async function toggleTorch() {
+            if (!html5Qr) return;
+            try {
+                torchOn = !torchOn;
+                await html5Qr.applyVideoConstraints({ advanced: [{ torch: torchOn }] });
+                console.log('[scan] torch', torchOn ? 'on' : 'off');
+            } catch (e) {
+                console.warn('[scan] torch toggle failed', e);
+                torchOn = false;
+                torchSupported.value = false;
             }
         }
 
