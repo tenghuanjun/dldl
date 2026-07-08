@@ -6,7 +6,7 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>new VConsole().setSwitchPosition(20, window.innerHeight - 80);</script>
     <style>
@@ -151,8 +151,10 @@
         }
         .back-top:active { opacity: 1; transform: translateX(-50%) scale(0.93); }
         .url-age {
-            font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
+            font-size: 11px; font-weight: 600; color: #4a4036; flex-shrink: 0; margin-right: 2px;
         }
+        .url-age.urgent { color: #b45309; }
+        .url-age.expired { color: #c0392b; font-weight: 700; }
         .empty { text-align: center; padding: 40px 16px; color: #8a7560; font-size: 14px; }
         .tip { font-size: 12px; color: #8a7560; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #8a7560; }
@@ -194,7 +196,7 @@
             cursor: pointer; padding: 4px 8px;
         }
         .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; overflow: hidden; }
-        .scan-viewport video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .scan-viewport video { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; }
         .scan-line {
             position: absolute; left: 8%; width: 84%; height: 2px;
             background: linear-gradient(90deg, transparent, #C3702A, transparent);
@@ -330,8 +332,8 @@
         <div class="tip" v-else>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。绿色圆点表示已有URL。</div>
 
         <div v-if="loading" class="loading">加载中...</div>
-        <template v-else-if="areas.length">
-            <div v-for="g in areas" :key="g.id" class="area-group">
+        <template v-else-if="visibleAreas.length">
+            <div v-for="g in visibleAreas" :key="g.id" class="area-group">
                 <div class="area-group-header">
                     <span class="dot"></span>
                     <span>{{ g.name || '未命名区服' }}</span>
@@ -344,7 +346,7 @@
                         <div class="account-main">
                             <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
                             <div class="account-meta">
-                                <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
+                                <span v-if="hasUrl(a) && getUrlRemaining(a)" class="url-age" :class="urlRemainingState(a)">{{ getUrlRemaining(a) }}</span>
                                 <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
                             </div>
                         </div>
@@ -394,10 +396,9 @@
                 <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
                 <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
                 <div class="scan-viewport" id="scan-viewport">
-                    <video id="scan-video" autoplay playsinline muted></video>
                     <div class="scan-line" id="scan-line"></div>
-                    <canvas id="scan-canvas" style="display:none"></canvas>
                 </div>
+                <div id="scan-file-reader" style="display:none"></div>
                 <div class="scan-upload" v-if="!scanResult && !scanLoading">
                     <label class="btn btn-upload">
                         <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
@@ -453,7 +454,7 @@
 </div>
 
 <script>
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted } = Vue;
 
 createApp({
     setup() {
@@ -620,207 +621,109 @@ createApp({
 
         const scanCurrentArea = ref(null);
         const scanCurrentAccount = ref(null);
-        let scanStream = null;        // getUserMedia stream
-        let scanRafId = null;         // requestAnimationFrame id
-        let scanPaused = false;       // 扫码暂停标记
-        let jsQrAvailable = false;    // jsQR 库是否加载
-        let barcodeDetectorAvailable = false; // BarcodeDetector API 是否可用
-        let scanLastFrame = 0;        // 帧率控制
+        let html5Qr = null;           // Html5Qrcode 实例
+        let html5QrAvailable = false; // html5-qrcode 库是否加载
 
         function openScanner(area, account) {
             scanVisible.value = true;
             scanError.value = '';
             scanResult.value = '';
             scanLoading.value = false;
-            scanPaused = false;
             scanCurrentArea.value = area;
             scanCurrentAccount.value = account;
 
-            // 检测可用能力
-            barcodeDetectorAvailable = typeof BarcodeDetector !== 'undefined';
-            jsQrAvailable = typeof jsQR !== 'undefined';
-            console.log('[scan] open - BarcodeDetector:', barcodeDetectorAvailable, 'jsQR:', jsQrAvailable);
-
-            // 等 DOM 渲染后启动
+            html5QrAvailable = typeof Html5Qrcode !== 'undefined';
+            if (!html5QrAvailable) {
+                scanError.value = '扫码库未加载，请检查网络后刷新重试';
+                return;
+            }
+            // 等 DOM 渲染后启动相机
             setTimeout(function () {
-                if (!scanVisible.value) return;
-                startCamera();
+                if (scanVisible.value) startCamera();
             }, 200);
         }
 
         async function startCamera() {
-            stopCamera();
+            if (html5Qr) {
+                try { await html5Qr.stop(); } catch (e) {}
+            }
             try {
-                scanStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' },
-                    audio: false
-                });
-                var video = document.getElementById('scan-video');
-                video.srcObject = scanStream;
-                // 等待视频就绪后开始解码
-                video.onloadedmetadata = function () {
-                    video.play();
-                    startScanLoop();
+                html5Qr = new Html5Qrcode('scan-viewport', { verbose: false });
+                var config = {
+                    fps: 10,
+                    qrbox: function (vw, vh) {
+                        var m = Math.min(vw, vh);
+                        var s = Math.floor(m * 0.7);
+                        return { width: s, height: s };
+                    }
                 };
-                console.log('[scan] camera opened');
+                await html5Qr.start(
+                    { facingMode: 'environment' },
+                    config,
+                    onDecodeSuccess,
+                    function () {}   // 单帧未识别的噪音回调，忽略
+                );
+                console.log('[scan] html5-qrcode started');
             } catch (err) {
-                console.error('[scan] camera error:', err);
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    scanError.value = '请授予相机权限后重试';
-                } else if (err.name === 'NotFoundError') {
-                    scanError.value = '未找到可用摄像头';
-                } else {
-                    scanError.value = '摄像头启动失败: ' + (err.message || '未知错误');
+                console.error('[scan] camera start failed:', err);
+                var em = (err && err.message) ? err.message : '';
+                var msg = '摄像头启动失败';
+                if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+                    msg = '请授予相机权限后重试';
+                } else if (em.indexOf('NotFound') >= 0 || em.indexOf('not found') >= 0) {
+                    msg = '未找到可用摄像头';
+                } else if (em) {
+                    msg = '摄像头启动失败: ' + em;
                 }
+                scanError.value = msg;
             }
         }
 
-        function startScanLoop() {
-            var video = document.getElementById('scan-video');
-            var canvas = document.getElementById('scan-canvas');
-            var ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-            // 创建一个 BarcodeDetector 实例复用
-            var detector = null;
-            if (barcodeDetectorAvailable) {
-                try { detector = new BarcodeDetector({ formats: ['qr_code'] }); }
-                catch (e) { barcodeDetectorAvailable = false; }
-            }
-
-            function loop() {
-                if (!scanVisible.value || !scanStream || scanPaused) {
-                    scanRafId = null;
-                    return;
-                }
-                // 帧率控制 ~15fps
-                var now = Date.now();
-                if (now - scanLastFrame < 66) {
-                    scanRafId = requestAnimationFrame(loop);
-                    return;
-                }
-                scanLastFrame = now;
-                decodeFrame(video, canvas, ctx, detector);
-                scanRafId = requestAnimationFrame(loop);
-            }
-            loop();
+        // html5-qrcode 成功回调：暂停扫描并进入验证流程（防止重复触发）
+        function onDecodeSuccess(decodedText) {
+            if (scanLoading.value || scanResult.value) return;
+            if (!decodedText) return;
+            if (html5Qr) { try { html5Qr.pause(true); } catch (e) {} }
+            onScanSuccess(decodedText);
         }
 
-        async function decodeFrame(video, canvas, ctx, detector) {
-            if (scanLoading.value || scanPaused) return;
-            if (video.videoWidth === 0) return;
-
-            try {
-                if (barcodeDetectorAvailable && detector) {
-                    var codes = await detector.detect(video);
-                    if (codes && codes.length > 0) {
-                        console.log('[scan] detected:', codes[0].rawValue.slice(0, 50));
-                        scanPaused = true;
-                        onScanSuccess(codes[0].rawValue);
-                        return;
-                    }
-                }
-                // jsQR fallback（不做双重检测，只在 BarcodeDetector 不可用时启用）
-                if (!barcodeDetectorAvailable && jsQrAvailable) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    ctx.drawImage(video, 0, 0);
-                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-                    if (code) {
-                        console.log('[scan] jsQR detected:', code.data.slice(0, 50));
-                        scanPaused = true;
-                        onScanSuccess(code.data);
-                    }
-                }
-            } catch (e) {
-                // noop - 继续尝试下一帧
-            }
-        }
-
-        function stopCamera() {
-            if (scanRafId) { cancelAnimationFrame(scanRafId); scanRafId = null; }
-            if (scanStream) {
-                scanStream.getTracks().forEach(function (t) { t.stop(); });
-                scanStream = null;
-            }
+        function resumeScan() {
+            if (html5Qr) { try { html5Qr.resume(); } catch (e) {} }
         }
 
         function closeScanner() {
             scanVisible.value = false;
-            stopCamera();
+            if (html5Qr) {
+                html5Qr.stop().then(function () { html5Qr = null; })
+                    .catch(function () { html5Qr = null; });
+            }
         }
 
         async function handleFileUpload(event) {
             var file = event.target.files && event.target.files[0];
             if (!file) return;
             event.target.value = '';
+            if (!html5QrAvailable) { scanError.value = '扫码库未加载，请检查网络后刷新重试'; return; }
 
             scanLoading.value = true;
             scanError.value = '';
             scanResult.value = '';
 
+            var tmp = null;
             try {
-                var decodedText = null;
-
-                // 方案1: BarcodeDetector API（最快最准）
-                if (typeof BarcodeDetector !== 'undefined') {
-                    try {
-                        var bitmap = await createImageBitmap(file);
-                        var detector = new BarcodeDetector({ formats: ['qr_code'] });
-                        var codes = await detector.detect(bitmap);
-                        bitmap.close();
-                        if (codes && codes.length > 0) {
-                            decodedText = codes[0].rawValue;
-                            console.log('[upload] BarcodeDetector:', decodedText.slice(0, 50));
-                        }
-                    } catch (e) { console.debug('[upload] BarcodeDetector failed, fallback to jsQR:', e); }
-                }
-
-                // 方案2: jsQR fallback（图像解析）
-                if (!decodedText && typeof jsQR !== 'undefined') {
-                    var img = await loadImage(file);
-                    var canvas = document.getElementById('scan-canvas');
-                    if (!canvas) throw new Error('canvas not found');
-                    var ctx = canvas.getContext('2d');
-                    // 限制图片尺寸避免性能问题
-                    var maxDim = 1920;
-                    var w = img.width, h = img.height;
-                    if (w > maxDim || h > maxDim) {
-                        var scale = maxDim / Math.max(w, h);
-                        w = Math.round(w * scale);
-                        h = Math.round(h * scale);
-                    }
-                    canvas.width = w;
-                    canvas.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-                    var imageData = ctx.getImageData(0, 0, w, h);
-                    // 两种反色模式都尝试
-                    var code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
-                    if (code) {
-                        decodedText = code.data;
-                        console.log('[upload] jsQR:', decodedText.slice(0, 50));
-                    }
-                    URL.revokeObjectURL(img.src);
-                }
-
-                if (!decodedText) {
-                    throw new Error('no qr found');
-                }
+                // 使用独立隐藏容器解析图片（不占用相机实例）
+                tmp = new Html5Qrcode('scan-file-reader', { verbose: false });
+                var decodedText = await tmp.scanFile(file, false);
+                if (!decodedText) throw new Error('no qr found');
+                // 图片解码成功，直接进入验证流程（不走相机暂停）
                 onScanSuccess(decodedText);
             } catch (e) {
                 console.error('[upload] scan failed:', e);
                 scanError.value = '未识别到二维码，请确保图片清晰且包含完整二维码';
                 scanLoading.value = false;
+            } finally {
+                if (tmp) { try { tmp.clear(); } catch (e) {} }
             }
-        }
-
-        function loadImage(file) {
-            return new Promise(function (resolve, reject) {
-                var img = new Image();
-                img.onload = function () { resolve(img); };
-                img.onerror = function () { reject(new Error('image load failed')); };
-                img.src = URL.createObjectURL(file);
-            });
         }
 
         async function onScanSuccess(decodedText) {
@@ -834,7 +737,7 @@ createApp({
             if (!sessionId) {
                 scanError.value = '二维码内容为空';
                 scanLoading.value = false;
-                scanPaused = false;
+                resumeScan();
                 return;
             }
 
@@ -842,7 +745,7 @@ createApp({
             if (!account) {
                 scanError.value = '账号信息丢失，请重新打开';
                 scanLoading.value = false;
-                scanPaused = false;
+                resumeScan();
                 return;
             }
 
@@ -861,7 +764,7 @@ createApp({
                     scanError.value = '该账号缺少用户名或密码';
                 }
                 scanLoading.value = false;
-                scanPaused = false;
+                resumeScan();
                 return;
             }
 
@@ -892,7 +795,7 @@ createApp({
                 if (e.name === 'AbortError') msg = '请求超时，请检查网络';
                 else if (msg === 'Load failed' || msg.includes('NetworkError') || msg.includes('TypeError')) msg = '网络连接失败，请检查网络';
                 scanError.value = '验证失败：' + msg;
-                scanPaused = false; // 失败后恢复扫描
+                resumeScan(); // 失败后恢复扫描
             } finally {
                 scanLoading.value = false;
             }
@@ -1196,6 +1099,41 @@ createApp({
             return '刚刚';
         }
 
+        // 地址有效期窗口（小时），与筛选逻辑一致：valid 0~71h，expired >71h
+        var URL_VALIDITY_HOURS = 72;
+        function getUrlRemaining(account) {
+            if (!account) return '';
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return '';
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return '';
+            var ageMs = Date.now() - urlTime.getTime();
+            if (ageMs < 0) return '剩 ' + URL_VALIDITY_HOURS + '小时';
+            var remainingMs = URL_VALIDITY_HOURS * 3600000 - ageMs;
+            if (remainingMs <= 0) return '已过期';
+            var totalHours = Math.floor(remainingMs / 3600000);
+            var days = Math.floor(totalHours / 24);
+            var hours = totalHours % 24;
+            if (days > 0 && hours > 0) return '剩 ' + days + '天' + hours + '小时';
+            if (days > 0) return '剩 ' + days + '天';
+            if (hours > 0) return '剩 ' + hours + '小时';
+            var minutes = Math.floor(remainingMs / 60000);
+            if (minutes > 0) return '剩 ' + minutes + '分钟';
+            return '剩 <1分钟';
+        }
+        function urlRemainingState(account) {
+            if (!account) return '';
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return '';
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return '';
+            var ageMs = Date.now() - urlTime.getTime();
+            var remainingMs = URL_VALIDITY_HOURS * 3600000 - ageMs;
+            if (remainingMs <= 0) return 'expired';
+            if (remainingMs <= 12 * 3600000) return 'urgent';
+            return '';
+        }
+
         function urlAgeHours(account) {
             var timeStr = account.url_created_at || account.created_at || '';
             if (!timeStr) return -1;
@@ -1217,6 +1155,13 @@ createApp({
                 return true;
             });
         }
+
+        // 筛选后，剔除「没有任何匹配账号」的区服
+        const visibleAreas = computed(function() {
+            return areas.value.filter(function(g) {
+                return filteredAccounts(g).length > 0;
+            });
+        });
 
         function generateImei() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -1346,7 +1291,7 @@ createApp({
             globalLoading: globalLoading, globalLoadingText: globalLoadingText,
             loginLoading: loginLoading, loginError: loginError,
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
-            areas: areas, loading: loading, loadError: loadError,
+            areas: areas, visibleAreas: visibleAreas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, cronRefreshLoading: cronRefreshLoading,
             handleCronRefresh: handleCronRefresh, lastRefresh: lastRefresh,
             actionLoading: actionLoading, urlFilter: urlFilter,
@@ -1354,6 +1299,7 @@ createApp({
             hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
+            getUrlRemaining: getUrlRemaining, urlRemainingState: urlRemainingState,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
             // 新增账号
             addVisible, addLoading, addError, addForm, editAccountId,
