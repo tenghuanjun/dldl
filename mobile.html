@@ -330,8 +330,8 @@
         <div class="tip" v-else>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。绿色圆点表示已有URL。</div>
 
         <div v-if="loading" class="loading">加载中...</div>
-        <template v-else-if="areas.length">
-            <div v-for="g in areas" :key="g.id" class="area-group">
+        <template v-else-if="visibleAreas.length">
+            <div v-for="g in visibleAreas" :key="g.id" class="area-group">
                 <div class="area-group-header">
                     <span class="dot"></span>
                     <span>{{ g.name || '未命名区服' }}</span>
@@ -453,7 +453,7 @@
 </div>
 
 <script>
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted } = Vue;
 
 createApp({
     setup() {
@@ -1218,6 +1218,13 @@ createApp({
             });
         }
 
+        // 筛选后，剔除「没有任何匹配账号」的区服
+        const visibleAreas = computed(function() {
+            return areas.value.filter(function(g) {
+                return filteredAccounts(g).length > 0;
+            });
+        });
+
         function generateImei() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -1346,7 +1353,7 @@ createApp({
             globalLoading: globalLoading, globalLoadingText: globalLoadingText,
             loginLoading: loginLoading, loginError: loginError,
             loginShowPwd: loginShowPwd, addShowPwd: addShowPwd,
-            areas: areas, loading: loading, loadError: loadError,
+            areas: areas, visibleAreas: visibleAreas, loading: loading, loadError: loadError,
             refreshLoading: refreshLoading, cronRefreshLoading: cronRefreshLoading,
             handleCronRefresh: handleCronRefresh, lastRefresh: lastRefresh,
             actionLoading: actionLoading, urlFilter: urlFilter,
