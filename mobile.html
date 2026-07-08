@@ -151,8 +151,10 @@
         }
         .back-top:active { opacity: 1; transform: translateX(-50%) scale(0.93); }
         .url-age {
-            font-size: 11px; color: #7d8aa0; flex-shrink: 0; margin-right: 2px;
+            font-size: 11px; font-weight: 600; color: #4a4036; flex-shrink: 0; margin-right: 2px;
         }
+        .url-age.urgent { color: #b45309; }
+        .url-age.expired { color: #c0392b; font-weight: 700; }
         .empty { text-align: center; padding: 40px 16px; color: #8a7560; font-size: 14px; }
         .tip { font-size: 12px; color: #8a7560; margin-bottom: 16px; line-height: 1.5; }
         .loading { text-align: center; padding: 20px; color: #8a7560; }
@@ -344,7 +346,7 @@
                         <div class="account-main">
                             <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
                             <div class="account-meta">
-                                <span v-if="hasUrl(a) && getUrlAge(a)" class="url-age">{{ getUrlAge(a) }}</span>
+                                <span v-if="hasUrl(a) && getUrlRemaining(a)" class="url-age" :class="urlRemainingState(a)">{{ getUrlRemaining(a) }}</span>
                                 <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
                             </div>
                         </div>
@@ -1196,6 +1198,41 @@ createApp({
             return '刚刚';
         }
 
+        // 地址有效期窗口（小时），与筛选逻辑一致：valid 0~71h，expired >71h
+        var URL_VALIDITY_HOURS = 72;
+        function getUrlRemaining(account) {
+            if (!account) return '';
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return '';
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return '';
+            var ageMs = Date.now() - urlTime.getTime();
+            if (ageMs < 0) return '剩 ' + URL_VALIDITY_HOURS + '小时';
+            var remainingMs = URL_VALIDITY_HOURS * 3600000 - ageMs;
+            if (remainingMs <= 0) return '已过期';
+            var totalHours = Math.floor(remainingMs / 3600000);
+            var days = Math.floor(totalHours / 24);
+            var hours = totalHours % 24;
+            if (days > 0 && hours > 0) return '剩 ' + days + '天' + hours + '小时';
+            if (days > 0) return '剩 ' + days + '天';
+            if (hours > 0) return '剩 ' + hours + '小时';
+            var minutes = Math.floor(remainingMs / 60000);
+            if (minutes > 0) return '剩 ' + minutes + '分钟';
+            return '剩 <1分钟';
+        }
+        function urlRemainingState(account) {
+            if (!account) return '';
+            var timeStr = account.url_created_at || account.created_at || '';
+            if (!timeStr) return '';
+            var urlTime = new Date(timeStr);
+            if (isNaN(urlTime.getTime())) return '';
+            var ageMs = Date.now() - urlTime.getTime();
+            var remainingMs = URL_VALIDITY_HOURS * 3600000 - ageMs;
+            if (remainingMs <= 0) return 'expired';
+            if (remainingMs <= 12 * 3600000) return 'urgent';
+            return '';
+        }
+
         function urlAgeHours(account) {
             var timeStr = account.url_created_at || account.created_at || '';
             if (!timeStr) return -1;
@@ -1361,6 +1398,7 @@ createApp({
             hashPassword: hashPassword, handleLogin: handleLogin, handleRegister: handleRegister, handleLogout: handleLogout,
             loadAccounts: loadAccounts, handleRefresh: handleRefresh,
             hasUrl: hasUrl, getStatus: getStatus, getUrlAge: getUrlAge,
+            getUrlRemaining: getUrlRemaining, urlRemainingState: urlRemainingState,
             doAppLogin: doAppLogin, doRefreshToken: doRefreshToken,
             // 新增账号
             addVisible, addLoading, addError, addForm, editAccountId,
