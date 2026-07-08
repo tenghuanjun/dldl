@@ -249,6 +249,31 @@
         }
         .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
         .btn-danger { background: #d44235 !important; }
+
+        /* 账号卡片 - 通行证码输入（与桌面端一致） */
+        .card-pass-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 0 10px 10px;
+        }
+        .pass-code-input-wrap { position: relative; flex: 1; min-width: 0; }
+        .pass-code-input {
+            width: 100%; padding: 7px 26px 7px 10px;
+            border-radius: 6px; border: 1px solid #D4C8B5;
+            background: #fff; color: #3d3025; font-size: 12px; outline: none;
+        }
+        .pass-code-input:focus { border-color: #C3702A; }
+        .pass-code-clear {
+            position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+            width: 22px; height: 22px; border: none; background: none;
+            color: #b0a090; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pass-code-clear:active { color: #3d3025; }
+        .pass-code-status { font-size: 10px; flex-shrink: 0; white-space: nowrap; }
+        .pass-code-status.sending { color: #C3702A; }
+        .pass-code-status.ok { color: #059669; }
+        .pass-code-status.expired { color: #d0a020; }
+        .pass-code-status.fail { color: #d44235; }
     </style>
 </head>
 <body>
@@ -328,8 +353,26 @@
                         <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
                         <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
                         <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
-                        <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
+                    <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
+                </div>
+                <div class="card-pass-row">
+                    <div class="pass-code-input-wrap">
+                        <input
+                            class="pass-code-input"
+                            type="text"
+                            placeholder="通行证码"
+                            :value="getPassCodeValue(g.area, a)"
+                            @input="onPassCodeInput($event, g.area, a)"
+                            @blur="onPassCodeBlur($event, g.area, a)"
+                            @keyup.enter="$event.target.blur()"
+                        >
+                        <button v-if="getPassCodeValue(g.area, a)" class="pass-code-clear" type="button" tabindex="-1" title="清除" @mousedown.prevent="clearPassCode(g.area, a)">✕</button>
                     </div>
+                    <span v-if="isPassCodeSending(g.area, a)" class="pass-code-status sending">发送中…</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'expired'" class="pass-code-status expired">已失效</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'fail'" class="pass-code-status fail">失败</span>
+                </div>
                 </div>
                 </div>
             </div>
@@ -461,6 +504,8 @@ createApp({
         const addError = ref('');
         const addForm = reactive({ area: '', name: '', uname: '', upwd: '' });
         const editAccountId = ref(null);
+        // ===== 通行证码（与桌面端 account.html 逻辑一致） =====
+        const passCodeMap = reactive({});
 
         function openAddModal(account) {
             addError.value = '';
@@ -853,6 +898,105 @@ createApp({
             }
         }
 
+        // ===== 通行证码（与桌面端 account.html sendPassCode 流程一致） =====
+        function passCodeKey(area, account) {
+            return String(area) + '::' + (account.uname || account.id || '');
+        }
+        function setPassCodeState(area, account, updates) {
+            var key = passCodeKey(area, account);
+            passCodeMap[key] = Object.assign({}, passCodeMap[key] || {}, updates);
+        }
+        function getPassCodeValue(area, account) {
+            var key = passCodeKey(area, account);
+            return (passCodeMap[key] && passCodeMap[key].value) || '';
+        }
+        function getPassCodeStatus(area, account) {
+            var key = passCodeKey(area, account);
+            return (passCodeMap[key] && passCodeMap[key].status) || '';
+        }
+        function isPassCodeSending(area, account) {
+            return getPassCodeStatus(area, account) === 'sending';
+        }
+        function onPassCodeInput(ev, area, account) {
+            var val = ev.target.value;
+            if (val === '' || val == null) {
+                setPassCodeState(area, account, { value: '', status: '' });
+            } else {
+                setPassCodeState(area, account, { value: val });
+            }
+        }
+        function onPassCodeBlur(ev, area, account) {
+            var code = String(ev.target.value || '').trim();
+            if (!code) return;
+            var curStatus = getPassCodeStatus(area, account);
+            if (curStatus === 'ok' || curStatus === 'expired') return;
+            sendPassCode(code, area, account);
+        }
+        function clearPassCode(area, account) {
+            setPassCodeState(area, account, { value: '', status: '' });
+        }
+        async function sendPassCode(code, area, account) {
+            if (typeof CryptoJS === 'undefined' || !CryptoJS.MD5) {
+                alert('CryptoJS 未加载，无法发送通行证');
+                return;
+            }
+            setPassCodeState(area, account, { status: 'sending' });
+            try {
+                // 优先使用 APP 登录的 token/sign，没有则回退到 token/sign
+                var passToken = String(account.app_token || account.token || '');
+                var passSign = String(account.app_sign || account.sign || '');
+                var dataObj = {
+                    gid: '1003279',
+                    pid: '46',
+                    token: encodeURIComponent(passToken),
+                    time: Date.now(),
+                    sign: passSign,
+                    appVer: '',
+                    platCode: '37wan',
+                    IMEI: ''
+                };
+                var dataStr = JSON.stringify(dataObj);
+                var timestamp = Date.now();
+                // 与桌面端一致：sign = md5(code + time + 'pcjgv587!?')
+                var sign = CryptoJS.MD5(code + String(timestamp) + 'pcjgv587!?').toString();
+                var body = 'id=' + encodeURIComponent(code) +
+                    '&data=' + encodeURIComponent(dataStr) +
+                    '&time=' + timestamp +
+                    '&sign=' + sign;
+                var url = 'http://app.xxh5.z7xz.com/pc/postCodeInfo';
+                var resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                });
+                if (resp.ok) {
+                    var tokenValid = true;
+                    try {
+                        var bodyText = await resp.text();
+                        if (bodyText) {
+                            var json = JSON.parse(bodyText);
+                            // code !== 0 表示失败（37 系 API：code 0 = 成功）
+                            if (json && json.code !== undefined && json.code !== 0) tokenValid = false;
+                            // 服务端明确返回 token 为空字符串，说明 token 已失效
+                            if (json && json.hasOwnProperty('token') && json.token === '') tokenValid = false;
+                        }
+                    } catch (_) {
+                        // 响应不是 JSON 或为空，忽略
+                    }
+                    if (tokenValid) {
+                        setPassCodeState(area, account, { status: 'ok' });
+                    } else {
+                        setPassCodeState(area, account, { status: 'expired' });
+                    }
+                } else {
+                    throw new Error('HTTP ' + resp.status);
+                }
+            } catch (e) {
+                console.error('sendPassCode failed', e);
+                setPassCodeState(area, account, { status: 'fail' });
+            }
+        }
+
         function CACHE_KEY() { return 'dldl_accounts_' + (currentUser.value ? currentUser.value.id : ''); }
 
         function saveToCache(data) {
@@ -1217,6 +1361,9 @@ createApp({
             // 扫码器
             scanVisible, scanError, scanResult, scanLoading,
             openScanner, closeScanner, onScanSuccess, handleFileUpload,
+            // 通行证码（与桌面端一致）
+            getPassCodeValue, getPassCodeStatus, isPassCodeSending,
+            onPassCodeInput, onPassCodeBlur, clearPassCode,
             scrollToTop
         };
     }
