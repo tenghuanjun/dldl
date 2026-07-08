@@ -656,17 +656,14 @@ createApp({
                     useBarCodeDetectorIfSupported: false   // 强制用 ZXing，跨平台一致
                 });
                 var config = {
-                    fps: 15,                                  // 提高扫描频率
-                    qrbox: function (vw, vh) {
-                        // 取景框放宽到 0.85，避免二维码稍大就超出识别区导致一直解不出
-                        var m = Math.min(vw, vh);
-                        var s = Math.floor(m * 0.85);
-                        return { width: s, height: s };
-                    },
+                    fps: 20,                                  // 更高帧率：不同帧摩尔纹不同，更易抓到干净帧
+                    // 注意：不设置 qrbox，改为整帧扫描。
+                    // 否则 html5-qrcode 会先按 qrbox 裁剪画面再送解码，
+                    // 二维码一旦比框大就被切坏 -> "No MultiFormat Readers..." 解不出。
                     videoConstraints: {
                         facingMode: 'environment',
-                        width: { ideal: 1280 },               // 提高分辨率，屏幕二维码(摩尔纹)也能识别
-                        height: { ideal: 720 }
+                        width: { ideal: 1920 },               // 提高分辨率，屏幕二维码(摩尔纹)也能识别
+                        height: { ideal: 1080 }
                     },
                     useBarCodeDetectorIfSupported: false
                 };
@@ -683,7 +680,7 @@ createApp({
                     console.log('[scan] track settings:', JSON.stringify(settings));
                     var caps = html5Qr.getRunningTrackCapabilities();
                     torchSupported.value = !!(caps && caps.torch);
-                    console.log('[scan] torch supported:', torchSupported);
+                    console.log('[scan] torch supported:', torchSupported.value);
                 } catch (e) { console.warn('[scan] get settings failed', e); }
             } catch (err) {
                 console.error('[scan] camera start failed:', err);
