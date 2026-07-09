@@ -915,44 +915,71 @@ createApp({
             setPassCodeState(area, account, { value: '', status: '' });
         }
         async function sendPassCode(code, area, account) {
-            if (typeof getWorker !== 'function') {
-                showToast('Worker 未初始化，无法发送通行证');
+            if (typeof CryptoJS === 'undefined' || !CryptoJS.MD5) {
+                showToast('CryptoJS 未加载，无法发送通行证');
                 return;
             }
             setPassCodeState(area, account, { status: 'sending' });
             try {
-                var ctrl = new AbortController();
-                var t = setTimeout(function () { ctrl.abort(); }, 60000);
-                // 与扫码路径一致：走 Cloudflare Worker（HTTPS + 已配置 CORS），
-                // 由 Worker 以 https 转发到游戏服 postCodeInfo。
-                // 之前直连 http://app.xxh5.z7xz.com 在 HTTPS 页面下会被浏览器以
-                // "混合内容" 拦截，导致 TypeError: Failed to fetch。
+                // ===== 与桌面端 account.html sendPassCode 完全一致 =====
+                // 优先使用 APP 登录的 token/sign，没有则回退到 h5sdk 的
                 var passToken = String(account.app_token || account.token || '');
                 var passSign = String(account.app_sign || account.sign || '');
-                var resp = await fetch(getWorker() + '/api/pass-code', {
+                var dataObj = {
+                    gid: '1003279',
+                    pid: '46',
+                    token: encodeURIComponent(passToken),
+                    time: Date.now(),
+                    sign: passSign,
+                    appVer: '',
+                    platCode: '37wan',
+                    IMEI: ''
+                };
+                var dataStr = JSON.stringify(dataObj);
+                var timestamp = Date.now();
+                // 桌面端签名：sign = md5(code + time + 'pcjgv587!?')
+                var sign = CryptoJS.MD5(code + String(timestamp) + 'pcjgv587!?').toString();
+                var body = 'id=' + encodeURIComponent(code) +
+                    '&data=' + encodeURIComponent(dataStr) +
+                    '&time=' + timestamp +
+                    '&sign=' + sign;
+                // 注意：桌面端原为 http://，但本页托管在 https(GitHub Pages)，
+                // 浏览器会拦截 https 页面向 http 发起的 fetch（混合内容），
+                // 因此改为 https://，其余请求体/签名与桌面端一字不差。
+                var url = 'https://app.xxh5.z7xz.com/pc/postCodeInfo';
+                var resp = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sessionId: code,
-                        token: passToken,
-                        sign: passSign,
-                        uname: account.uname || '',
-                        upwd: account.upwd || ''
-                    }),
-                    signal: ctrl.signal
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
                 });
-                clearTimeout(t);
-                var result = await resp.json();
-                if (!result.ok || result.state !== 1) {
-                    setPassCodeState(area, account, { status: 'fail' });
-                    showToast('通行证发送失败：' + (result.message || result.msg || '未知错误'));
+                if (resp.ok) {
+                    var tokenValid = true;
+                    try {
+                        var bodyText = await resp.text();
+                        if (bodyText) {
+                            var json = JSON.parse(bodyText);
+                            // code !== 0 表示失败（37 系 API：code 0 = 成功）
+                            if (json && json.code !== undefined && json.code !== 0) tokenValid = false;
+                            // 服务端明确返回 token 为空字符串，说明 token 已失效
+                            if (json && json.hasOwnProperty('token') && json.token === '') tokenValid = false;
+                        }
+                    } catch (_) {
+                        // 响应不是 JSON 或为空，忽略
+                    }
+                    if (tokenValid) {
+                        setPassCodeState(area, account, { status: 'ok' });
+                        showToast('通行证已发送');
+                    } else {
+                        setPassCodeState(area, account, { status: 'expired' });
+                        showToast('通行证已发送，但 token 已失效，请刷新 token');
+                    }
                 } else {
-                    setPassCodeState(area, account, { status: 'ok' });
+                    throw new Error('HTTP ' + resp.status);
                 }
             } catch (e) {
                 console.error('sendPassCode failed', e);
                 setPassCodeState(area, account, { status: 'fail' });
-                showToast('通行证发送失败，请检查网络');
+                showToast('通行证发送失败：' + (e && e.message ? e.message : e));
             }
         }
 
