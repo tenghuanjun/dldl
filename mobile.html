@@ -8,7 +8,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-    <script>new VConsole().setSwitchPosition(20, window.innerHeight - 80);</script>
+    <script>
+      const vConsole = new VConsole();
+      setTimeout(() => {
+        vConsole.setSwitchPosition(20, window.innerHeight - 80);
+      }, 0);
+    </script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -141,15 +146,16 @@
         .btn-edit   { background: #f5f0e8 !important; color: #8a7560 !important; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
         .back-top {
-            position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 10000;
+            position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%) translateZ(0); z-index: 2147483647;
             width: 44px; height: 44px; border-radius: 12px;
             background: #C3702A; color: #fff; border: none;
             font-size: 18px; cursor: pointer;
             box-shadow: 0 2px 12px rgba(195, 112, 42, 0.35);
             display: flex; align-items: center; justify-content: center;
             transition: all 0.2s; opacity: 0.9;
+            will-change: transform;
         }
-        .back-top:active { opacity: 1; transform: translateX(-50%) scale(0.93); }
+        .back-top:active { opacity: 1; transform: translateX(-50%) translateZ(0) scale(0.93); }
         .url-age {
             font-size: 11px; font-weight: 600; color: #4a4036; flex-shrink: 0; margin-right: 2px;
         }
@@ -276,6 +282,18 @@
         .pass-code-status.ok { color: #059669; }
         .pass-code-status.expired { color: #d0a020; }
         .pass-code-status.fail { color: #d44235; }
+
+        /* 移动端吐司提示（2 秒自动消失） */
+        .toast {
+            position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+            max-width: 80%; padding: 11px 18px; border-radius: 10px;
+            background: rgba(20, 16, 10, 0.88); color: #fff; font-size: 14px; line-height: 1.45;
+            text-align: center; z-index: 2147483646;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 1; pointer-events: none;
+        }
+        .toast.hide { opacity: 0; transform: translateX(-50%) translateY(8px); }
     </style>
 </head>
 <body>
@@ -383,6 +401,9 @@
         <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
 
         <button v-if="areas.length" class="back-top" title="回到顶部" @click="scrollToTop">&#9650;</button>
+
+        <!-- 移动端吐司提示 -->
+        <div class="toast" :class="{ hide: !toastVisible }">{{ toastMsg }}</div>
 
         <!-- 扫码器模态框 -->
         <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
@@ -494,6 +515,17 @@ createApp({
         const addShowPwd = ref(false);
         const globalLoading = ref(false);
         const globalLoadingText = ref('处理中…');
+
+        // ===== 吐司提示（移动端，2 秒自动消失） =====
+        const toastMsg = ref('');
+        const toastVisible = ref(false);
+        let toastTimer = null;
+        function showToast(msg) {
+            toastMsg.value = msg;
+            toastVisible.value = true;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { toastVisible.value = false; }, 2000);
+        }
 
         // ===== 扫码器 =====
         const scanVisible = ref(false);
@@ -884,7 +916,7 @@ createApp({
         }
         async function sendPassCode(code, area, account) {
             if (typeof CryptoJS === 'undefined' || !CryptoJS.MD5) {
-                alert('CryptoJS 未加载，无法发送通行证');
+                showToast('CryptoJS 未加载，无法发送通行证');
                 return;
             }
             setPassCodeState(area, account, { status: 'sending' });
@@ -1037,9 +1069,31 @@ createApp({
             Object.keys(launchedMap).forEach(function(k) { delete launchedMap[k]; });
         }
 
+        // 被禁用→踢下线属于预期流程，用此哨兵消息区分真实异常
+        const DISABLED_MSG = '账号已被禁用，已退出登录';
+
+        // ===== 校验当前账号是否仍启用（被禁用则踢下线） =====
+        async function checkUserEnabled() {
+            if (!currentUser.value) return;
+            try {
+                var resp = await fetch(API + '/users?select=enabled&id=eq.' + currentUser.value.id, { headers: hdrs() });
+                if (!resp.ok) return; // 网络/权限异常时不拦截，避免误踢
+                var arr = await resp.json();
+                if (arr && arr.length && arr[0].enabled === false) {
+                    showToast('您的账号已被禁用，已自动退出登录');
+                    handleLogout();
+                    throw new Error(DISABLED_MSG);
+                }
+            } catch (e) {
+                if (e.message === DISABLED_MSG) throw e;
+                // 其他错误（网络等）忽略，不影响后续刷新
+            }
+        }
+
         // ===== 加载账号数据（从服务端） =====
         async function fetchAccounts() {
             if (!currentUser.value) return;
+            await checkUserEnabled();
             var uid = currentUser.value.id;
             var areasPromise = fetch(
                 API + '/areas?select=*&user_id=eq.' + uid + '&order=sort_order.asc',
@@ -1074,11 +1128,13 @@ createApp({
             try {
                 var resp = await fetch('https://red-moon-ff95.tenghuanjun.workers.dev/api/cron-refresh');
                 var result = await resp.json();
-                alert('定时刷新完成：扫描 ' + result.scanned + ' 个，刷新 ' + result.refreshed + ' 个，错误 ' + result.errors + ' 个');
+                showToast('定时刷新完成：扫描 ' + result.scanned + ' 个，刷新 ' + result.refreshed + ' 个，错误 ' + result.errors + ' 个');
                 // 刷新列表
                 areas.value = await fetchAccounts();
             } catch (e) {
-                alert('定时刷新失败：' + (e.message || '网络错误'));
+                if (e.message !== DISABLED_MSG) {
+                    showToast('定时刷新失败：' + (e.message || '网络错误'));
+                }
             } finally {
                 cronRefreshLoading.value = false;
             }
@@ -1090,8 +1146,10 @@ createApp({
             try {
                 areas.value = await fetchAccounts();
             } catch (e) {
-                console.error('refresh failed', e);
-                loadError.value = e.message || '刷新失败';
+                if (e.message !== DISABLED_MSG) {
+                    console.error('refresh failed', e);
+                    loadError.value = e.message || '刷新失败';
+                }
             } finally { refreshLoading.value = false; globalLoading.value = false; }
         }
 
@@ -1106,7 +1164,12 @@ createApp({
             // 首次进入没有缓存，主动拉取
             loading.value = true; loadError.value = '';
             try { areas.value = await fetchAccounts(); }
-            catch (e) { console.error('loadAccounts failed', e); loadError.value = e.message || '加载数据失败'; }
+            catch (e) {
+                if (e.message !== DISABLED_MSG) {
+                    console.error('loadAccounts failed', e);
+                    loadError.value = e.message || '加载数据失败';
+                }
+            }
             finally { loading.value = false; }
         }
 
@@ -1237,7 +1300,7 @@ createApp({
             if (actionLoading.value) return;
             var uname = String(account && account.uname || '').trim();
             var upwd = String(account && account.upwd || '').trim();
-            if (!uname || !upwd) { alert('刷新 token 需要账号与密码'); return; }
+            if (!uname || !upwd) { showToast('刷新 token 需要账号与密码'); return; }
             actionLoading.value = true; globalLoading.value = true; globalLoadingText.value = '刷新 ' + uname + ' 的token…';
             
             // 最多尝试3个 Worker
@@ -1292,7 +1355,7 @@ createApp({
                         }
                     }
                     saveToCache([...areas.value]);
-                    alert('已刷新 ' + uname + ' 的 APP token');
+                    showToast('已刷新 ' + uname + ' 的 APP token');
                     actionLoading.value = false; globalLoading.value = false;
                     return;  // 成功退出
                 } catch (e) {
@@ -1302,7 +1365,7 @@ createApp({
                         if (e.name === 'AbortError') msg = '请求超时，请检查网络或稍后重试';
                         else if (msg === 'Load failed' || msg.includes('NetworkError')) msg = '网络连接失败，请检查网络';
                         if (!msg.includes('40025')) {
-                            alert('刷新 APP token 失败：' + msg);
+                            showToast('刷新 APP token 失败：' + msg);
                             actionLoading.value = false; globalLoading.value = false;
                             return;
                         }
@@ -1354,7 +1417,8 @@ createApp({
             // 通行证码（与桌面端一致）
             getPassCodeValue, getPassCodeStatus, isPassCodeSending,
             onPassCodeInput, onPassCodeBlur, clearPassCode,
-            scrollToTop
+            scrollToTop,
+            toastVisible: toastVisible, toastMsg: toastMsg, showToast: showToast
         };
     }
 }).mount('#app');
