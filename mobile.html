@@ -340,7 +340,7 @@
                     <option value="expired">地址过期</option>
                     <option value="none">无地址</option>
                 </select>
-                <button v-if="currentUser && currentUser.username === 'tenghuanjun'" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
+                <button v-if="currentUser && currentUser.is_admin" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
@@ -1017,6 +1017,7 @@ createApp({
                 var arr = await resp.json();
                 if (!arr || !arr.length) throw new Error('用户不存在');
                 var data = arr[0];
+                if (data.enabled === false) throw new Error('账号已被禁用，请联系管理员开启');
                 var hash = hashPassword(password);
                 console.log('[mobile login] user:', data.username, 'db_hash:', data.password_hash, 'computed_hash:', hash, 'match:', hash === data.password_hash);
                 if (hash !== data.password_hash) throw new Error('密码错误');
@@ -1041,19 +1042,15 @@ createApp({
                 var resp = await fetch(API + '/users', {
                     method: 'POST',
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-                    body: JSON.stringify({ username: username, password_hash: hash, enabled: true })
+                    body: JSON.stringify({ username: username, password_hash: hash, enabled: false, is_admin: false })
                 });
                 if (!resp.ok) {
                     if (resp.status === 409) throw new Error('用户名已存在');
                     throw new Error('注册失败 (' + resp.status + ')');
                 }
-                var data = await resp.json();
-                var user = Array.isArray(data) ? data[0] : data;
-                currentUser.value = { id: user.id, username: user.username, enabled: user.enabled };
-                isLoggedIn.value = true;
-                localStorage.setItem('dldl_user', JSON.stringify(currentUser.value));
+                // 新注册账号默认禁用，需管理员开启后方可登录使用（不自动登录）
                 loginForm.username = ''; loginForm.password = '';
-                loadAccounts();
+                showToast('注册成功，请等待管理员开启后登录');
             } catch (e) { loginError.value = e.message || '注册失败'; }
             finally { loginLoading.value = false; globalLoading.value = false; }
         }
