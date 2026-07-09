@@ -11,7 +11,9 @@ git checkout tauri -- mobile.html
 if errorlevel 1 goto :fail
 
 echo === [3] 构建混淆产物 (mobile.min.html + app.min.js) ===
-call npm run build
+git checkout tauri -- tools/obfuscate.mjs
+if errorlevel 1 goto :buildfail
+node tools/obfuscate.mjs
 if errorlevel 1 goto :buildfail
 
 echo === [4] 提交并推送到线上 ===
