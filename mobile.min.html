@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>DLDL 手机版</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>
+      const vConsole = new VConsole();
+      setTimeout(() => {
+        vConsole.setSwitchPosition(20, window.innerHeight - 80);
+      }, 0);
+    </script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            background: #F5F0E8; color: #3d3025;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container { max-width: 480px; margin: 0 auto; padding: 0 16px 80px; min-height: 100%; }
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid #E0D5C5;
+            position: sticky; top: 0; z-index: 100;
+            background: #F5F0E8;
+        }
+        .header h1 { font-size: 18px; font-weight: 600; color: #4a3520; }
+        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
+            border: none; cursor: pointer; transition: all 0.15s;
+            color: #fff; background: #C3702A; white-space: nowrap;
+            -webkit-tap-highlight-color: transparent; user-select: none;
+        }
+        .btn:active { opacity: 0.8; transform: scale(0.97); }
+        .btn-secondary { background: #E8DFD0; color: #6b5a42; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* 筛选下拉 */
+        .filter-select {
+            appearance: none; -webkit-appearance: none;
+            padding: 6px 28px 6px 10px;
+            font-size: 12px; font-weight: 500; color: #6b5a42;
+            background: #E8DFD0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b5a42' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+            border: none; border-radius: 6px; cursor: pointer;
+            transition: all 0.15s; min-width: 80px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .filter-select:active, .filter-select:focus { outline: none; opacity: 0.85; }
+        .btn-block { display: flex; width: 100%; }
+
+        /* 登录表单 */
+        .login-box {
+            background: #FFF9F3; border-radius: 12px; padding: 24px;
+            max-width: 360px; margin: 60px auto 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .login-box h2 { font-size: 18px; margin-bottom: 20px; text-align: center; color: #4a3520; }
+        .form-group { margin-bottom: 14px; position: relative; }
+        .form-group label { display: block; font-size: 13px; color: #8a7560; margin-bottom: 4px; }
+        .form-group input {
+            width: 100%; padding: 12px 36px 12px 12px; border-radius: 8px;
+            border: 1px solid #D4C8B5; background: #fff; color: #3d3025;
+            font-size: 16px; outline: none;
+        }
+        .form-group input:focus { border-color: #C3702A; }
+        .input-clear {
+            position: absolute; right: 4px; bottom: 4px; width: 32px; height: 32px;
+            background: none; border: none; color: #b0a090; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .input-clear:active { color: #3d3025; }
+        .pwd-wrap { position: relative; }
+        .pwd-wrap input { padding-right: 64px !important; }
+        .pwd-toggle {
+            position: absolute; right: 36px; bottom: 4px; width: 28px; height: 32px;
+            background: none; border: none; font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #b0a090;
+        }
+        .pwd-toggle:active { transform: scale(0.9); }
+        .login-error { color: #d44235; font-size: 13px; margin-top: 10px; text-align: center; }
+
+        /* 区服分组 */
+        .area-group { margin-bottom: 16px; }
+        .area-group-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; background: #fff; border-radius: 10px 10px 0 0;
+            font-size: 14px; font-weight: 600; color: #5a4030;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+        }
+        .area-group-header .dot { width: 6px; height: 6px; border-radius: 50%; background: #C3702A; flex-shrink: 0; }
+        .area-group-header .count { margin-left: auto; font-size: 12px; color: #8a7560; }
+
+        /* 账号卡片 */
+        .account-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            padding: 8px 8px 12px;
+        }
+        .account-card {
+            display: flex; flex-direction: column;
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+        }
+        .account-info {
+            display: flex; align-items: flex-start; gap: 6px;
+            padding: 10px 10px 0;
+        }
+        .account-main { flex: 1; min-width: 0; }
+        .account-nick {
+            font-size: 13px; font-weight: 600; color: #3d3025; line-height: 1.35;
+            word-break: break-all;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .account-meta {
+            display: flex; align-items: center; gap: 5px; margin-top: 4px;
+            min-height: 18px;
+        }
+        .url-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+        }
+        .url-dot.has { background: #10b981; box-shadow: 0 0 3px rgba(16,185,129,0.4); }
+        .url-dot.no  { background: #d0c8bb; }
+        .app-status {
+            font-size: 10px; color: #059669; flex-shrink: 0;
+            padding: 1px 6px; border-radius: 8px; background: #ecfdf5; font-weight: 500;
+        }
+        .account-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+            padding: 8px 10px 10px;
+        }
+        .account-actions .btn {
+            padding: 7px 4px; font-size: 11px; border-radius: 6px;
+            font-weight: 500; transition: none;
+        }
+        .btn-refresh { background: #f5f0e8 !important; color: #8a7560 !important; }
+        .btn-login  { background: #C3702A !important; color: #fff !important; }
+        .btn-scan   { background: #ecfdf5 !important; color: #059669 !important; }
+        .btn-edit   { background: #f5f0e8 !important; color: #8a7560 !important; }
+        .btn:disabled { opacity: 0.5; pointer-events: none; }
+        .back-top {
+            position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%) translateZ(0); z-index: 2147483647;
+            width: 44px; height: 44px; border-radius: 12px;
+            background: #C3702A; color: #fff; border: none;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 2px 12px rgba(195, 112, 42, 0.35);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; opacity: 0.9;
+            will-change: transform;
+        }
+        .back-top:active { opacity: 1; transform: translateX(-50%) translateZ(0) scale(0.93); }
+        .url-age {
+            font-size: 11px; font-weight: 600; color: #4a4036; flex-shrink: 0; margin-right: 2px;
+        }
+        .url-age.urgent { color: #b45309; }
+        .url-age.expired { color: #c0392b; font-weight: 700; }
+        .empty { text-align: center; padding: 40px 16px; color: #8a7560; font-size: 14px; }
+        .tip { font-size: 12px; color: #8a7560; margin-bottom: 16px; line-height: 1.5; }
+        .loading { text-align: center; padding: 20px; color: #8a7560; }
+
+        /* 全局加载遮罩 */
+        .global-loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(245,240,232,0.7); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: all;
+        }
+        .global-loading .spinner {
+            width: 40px; height: 40px; border: 3px solid #E0D5C5;
+            border-top-color: #C3702A; border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .global-loading .text {
+            margin-top: 12px; font-size: 14px; color: #8a7560;
+        }
+
+        /* 扫码器模态框 */
+        .scan-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .scan-box {
+            width: 90vw; max-width: 360px;
+            background: #FFF9F3; border-radius: 12px; overflow: hidden;
+        }
+        .scan-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; border-bottom: 1px solid #E0D5C5;
+        }
+        .scan-header span { font-size: 15px; font-weight: 600; color: #4a3520; }
+        .scan-close {
+            background: none; border: none; color: #8a7560; font-size: 20px;
+            cursor: pointer; padding: 4px 8px;
+        }
+        .scan-viewport { width: 100%; height: 280px; background: #000; position: relative; overflow: hidden; }
+        .scan-viewport video { width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; background: #000; }
+        .scan-line {
+            position: absolute; left: 8%; width: 84%; height: 2px;
+            background: linear-gradient(90deg, transparent, #C3702A, transparent);
+            box-shadow: 0 0 8px rgba(195,112,42,0.6);
+            animation: scanLine 2s ease-in-out infinite; pointer-events: none;
+        }
+        @keyframes scanLine {
+            0% { top: 10%; }
+            50% { top: 85%; }
+            100% { top: 10%; }
+        }
+        .scan-tip {
+            padding: 14px 16px; font-size: 13px; color: #8a7560; text-align: center;
+            line-height: 1.5;
+        }
+        .scan-error {
+            padding: 12px 16px; font-size: 13px; color: #d44235; text-align: center;
+        }
+        .scan-loading { color: #C3702A; }
+        .scan-success { color: #2d8a5e; }
+        .btn-scan { background: #2d8a5e; }
+        .btn-scan:disabled { opacity: 0.5; pointer-events: none; }
+        .scan-upload {
+            padding: 10px 16px; display: flex; gap: 8px; justify-content: center; border-top: 1px solid #E0D5C5;
+        }
+        .scan-upload input[type="file"] { display: none; }
+        .scan-upload .btn { font-size: 13px; padding: 8px 14px; }
+        .btn-upload { background: #EDE4D5; color: #6b5a42; }
+
+        /* 新增账号模态框 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            width: 90vw; max-width: 360px; max-height: 85vh; overflow-y: auto;
+            background: #FFF9F3; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .modal-box h3 { font-size: 16px; color: #4a3520; margin-bottom: 16px; }
+        .modal-box .form-group { margin-bottom: 12px; }
+        .modal-box .form-group label { display: block; font-size: 13px; color: #8a7560; margin-bottom: 4px; }
+        .modal-box .form-group input, .modal-box .form-group select {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid #D4C8B5; background: #fff; color: #3d3025;
+            font-size: 15px; outline: none;
+        }
+        .modal-box .form-group input:focus, .modal-box .form-group select:focus { border-color: #C3702A; }
+        .modal-box .form-group select { appearance: none; }
+        .modal-actions {
+            display: flex; gap: 8px; justify-content: space-between; margin-top: 16px;
+        }
+        .modal-actions .btn { font-size: 13px; padding: 8px 14px; }
+        .btn-danger { background: #d44235 !important; }
+
+        /* 账号卡片 - 通行证码输入（与桌面端一致） */
+        .card-pass-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 0 10px 10px;
+        }
+        .pass-code-input-wrap { position: relative; flex: 1; min-width: 0; }
+        .pass-code-input {
+            width: 100%; padding: 7px 26px 7px 10px;
+            border-radius: 6px; border: 1px solid #D4C8B5;
+            background: #fff; color: #3d3025; font-size: 12px; outline: none;
+        }
+        .pass-code-input:focus { border-color: #C3702A; }
+        .pass-code-clear {
+            position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+            width: 22px; height: 22px; border: none; background: none;
+            color: #b0a090; font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pass-code-clear:active { color: #3d3025; }
+        .pass-code-status { font-size: 10px; flex-shrink: 0; white-space: nowrap; }
+        .pass-code-status.sending { color: #C3702A; }
+        .pass-code-status.ok { color: #059669; }
+        .pass-code-status.expired { color: #d0a020; }
+        .pass-code-status.fail { color: #d44235; }
+
+        /* 移动端吐司提示（2 秒自动消失） */
+        .toast {
+            position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+            max-width: 80%; padding: 11px 18px; border-radius: 10px;
+            background: rgba(20, 16, 10, 0.88); color: #fff; font-size: 14px; line-height: 1.45;
+            text-align: center; z-index: 2147483646;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 1; pointer-events: none;
+        }
+        .toast.hide { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- 全局加载遮罩 -->
+    <div v-if="globalLoading" class="global-loading">
+        <div class="spinner"></div>
+        <div class="text">{{ globalLoadingText }}</div>
+    </div>
+
+    <!-- 未登录 -->
+    <div v-if="!isLoggedIn" class="container">
+        <div class="login-box">
+            <h2>DLDL 账号管理</h2>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input v-model="loginForm.username" type="text" placeholder="请输入用户名" @keyup.enter="handleLogin" />
+                    <button v-if="loginForm.username" class="input-clear" @click="loginForm.username=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="pwd-wrap">
+                        <input v-model="loginForm.password" :type="loginShowPwd ? 'text' : 'password'" placeholder="请输入密码" @keyup.enter="handleLogin" />
+                        <button class="pwd-toggle" @click="loginShowPwd = !loginShowPwd">{{ loginShowPwd ? '🙈' : '👁' }}</button>
+                        <button v-if="loginForm.password" class="input-clear" style="right:4px" @click="loginForm.password=''">&times;</button>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px">
+                    <button class="btn" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleLogin">{{ loginLoading ? '登录中...' : '登录' }}</button>
+                    <button class="btn btn-secondary" style="flex:1;padding:12px;font-size:16px" :disabled="loginLoading" @click="handleRegister">{{ loginLoading ? '注册中...' : '注册' }}</button>
+                </div>
+            <div v-if="loginError" class="login-error">{{ loginError }}</div>
+        </div>
+    </div>
+
+    <!-- 已登录 -->
+    <div v-else class="container">
+        <div class="header">
+            <h1>DLDL</h1>
+            <div class="user-info">
+                <select v-model="urlFilter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="valid">地址有效</option>
+                    <option value="expired">地址过期</option>
+                    <option value="none">无地址</option>
+                </select>
+                <button v-if="currentUser && currentUser.is_admin" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
+                <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
+                <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
+            </div>
+        </div>
+        <div class="tip" v-if="lastRefresh">最近刷新：{{ lastRefresh }}<br>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。</div>
+        <div class="tip" v-else>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。绿色圆点表示已有URL。</div>
+
+        <div v-if="loading" class="loading">加载中...</div>
+        <template v-else-if="visibleAreas.length">
+            <div v-for="g in visibleAreas" :key="g.id" class="area-group">
+                <div class="area-group-header">
+                    <span class="dot"></span>
+                    <span>{{ g.name || '未命名区服' }}</span>
+                    <span class="count">{{ filteredAccounts(g)?.length || 0 }} 个</span>
+                </div>
+                <div class="account-grid">
+                <div v-for="a in filteredAccounts(g)" :key="a.id" class="account-card">
+                    <div class="account-info">
+                        <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
+                        <div class="account-main">
+                            <span class="account-nick">{{ a.name || a.uname || '未命名' }}</span>
+                            <div class="account-meta">
+                                <span v-if="hasUrl(a) && getUrlRemaining(a)" class="url-age" :class="urlRemainingState(a)">{{ getUrlRemaining(a) }}</span>
+                                <span v-if="getStatus(g.area, a) === 'launched'" class="app-status">已启动</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
+                        <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
+                        <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                    <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
+                </div>
+                <div class="card-pass-row">
+                    <div class="pass-code-input-wrap">
+                        <input
+                            class="pass-code-input"
+                            type="text"
+                            placeholder="通行证码"
+                            :value="getPassCodeValue(g.area, a)"
+                            @input="onPassCodeInput($event, g.area, a)"
+                            @blur="onPassCodeBlur($event, g.area, a)"
+                            @keyup.enter="$event.target.blur()"
+                        >
+                        <button v-if="getPassCodeValue(g.area, a)" class="pass-code-clear" type="button" tabindex="-1" title="清除" @mousedown.prevent="clearPassCode(g.area, a)">✕</button>
+                    </div>
+                    <span v-if="isPassCodeSending(g.area, a)" class="pass-code-status sending">发送中…</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'expired'" class="pass-code-status expired">已失效</span>
+                    <span v-else-if="getPassCodeStatus(g.area, a) === 'fail'" class="pass-code-status fail">失败</span>
+                </div>
+                </div>
+                </div>
+            </div>
+        </template>
+        <div v-else-if="loadError" class="empty">{{ loadError }}</div>
+        <div v-else class="empty">暂无账号数据，请在桌面端添加</div>
+
+        <button v-if="areas.length" class="back-top" title="回到顶部" @click="scrollToTop">&#9650;</button>
+
+        <!-- 移动端吐司提示 -->
+        <div class="toast" :class="{ hide: !toastVisible }">{{ toastMsg }}</div>
+
+        <!-- 扫码器模态框 -->
+        <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
+            <div class="scan-box">
+                <div class="scan-header">
+                    <span>扫描通行证二维码</span>
+                    <button class="scan-close" @click="closeScanner">&times;</button>
+                </div>
+                <div v-if="scanError" class="scan-error">{{ scanError }}</div>
+                <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
+                <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
+                <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
+                <div class="scan-viewport" id="scan-viewport">
+                    <div class="scan-line" id="scan-line"></div>
+                </div>
+                <div id="scan-file-reader" style="display:none"></div>
+                <div class="scan-upload" v-if="!scanResult && !scanLoading">
+                    <label class="btn btn-upload">
+                        <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
+                        📷 相册上传
+                    </label>
+                    <button class="btn btn-secondary" @click="toggleTorch" v-if="torchSupported">💡 闪光灯</button>
+                    <button class="btn btn-secondary" @click="closeScanner">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新增/编辑账号模态框 -->
+        <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
+            <div class="modal-box">
+                <h3>{{ editAccountId ? '编辑账号' : '新增账号' }}</h3>
+                <div v-if="addError" class="login-error" style="margin-bottom:10px">{{ addError }}</div>
+                <div class="form-group">
+                    <label>区服</label>
+                    <input v-model="addForm.area" list="area-list" placeholder="选择或输入新区服名称" autocomplete="off">
+                    <datalist id="area-list">
+                        <option v-for="g in areas" :key="g.id" :value="g.name">{{ g.name || '未命名区服' }}</option>
+                    </datalist>
+                    <button v-if="addForm.area" class="input-clear" @click="addForm.area=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input v-model="addForm.name" placeholder="显示用，选填" autocomplete="off">
+                    <button v-if="addForm.name" class="input-clear" @click="addForm.name=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>账号 *</label>
+                    <input v-model="addForm.uname" placeholder="必填" autocomplete="off">
+                    <button v-if="addForm.uname" class="input-clear" @click="addForm.uname=''">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <div class="pwd-wrap">
+                        <input v-model="addForm.upwd" :type="addShowPwd ? 'text' : 'password'" placeholder="必填" autocomplete="new-password">
+                        <button class="input-clear" v-if="addForm.upwd" @click="addForm.upwd=''">&times;</button>
+                        <button class="pwd-toggle" @click="addShowPwd = !addShowPwd">{{ addShowPwd ? '🙈' : '👁' }}</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button v-if="editAccountId" class="btn btn-danger" :disabled="addLoading" @click="deleteAccount">删除</button>
+                    <span v-else></span>
+                    <span>
+                        <button class="btn btn-secondary" @click="closeAddModal">取消</button>
+                        <button class="btn" style="margin-left:8px" :disabled="addLoading" @click="submitAddAccount">{{ addLoading ? '保存中...' : '保存' }}</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.min.js"></script>
+</body>
+</html>
