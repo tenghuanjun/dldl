@@ -816,31 +816,16 @@ async function refreshExpiredAccounts(env) {
 
     const workerResults = await Promise.all(
       batches.map((batch, idx) => {
-        const workerNum = (idx % DLAPI_COUNT) + 1;
-        const workerUrl = `https://dlapi-${workerNum}.tenghuanjun.workers.dev/api/batch-refresh`;
-        console.log('[cron] → dlapi-' + workerNum + ' (' + batch.length + '个账号)');
-        return fetch(workerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accounts: batch.map(b => ({ id: b.acc.id, uname: b.acc.uname, upwd: b.acc.upwd }))
-          })
-        }).then(async r => {
-          const text = await r.text();
-          console.log('[cron] ← dlapi-' + workerNum + ' status=' + r.status + ' body=' + text.slice(0, 200));
-          try { return JSON.parse(text); }
-          catch (e) { return { error: 'JSON parse failed: ' + text.slice(0, 100) }; }
-        }).catch(e => {
-          console.log('[cron] ✗ dlapi-' + workerNum + ' failed:', e.message);
-          return { error: e.message };
-        });
+        const preferredWorker = (idx % DLAPI_COUNT) + 1;
+        return dispatchToDlapi(batch.map(b => ({ id: b.acc.id, uname: b.acc.uname, upwd: b.acc.upwd })), preferredWorker, 3, 'cron');
       })
     );
 
-    for (const wr of workerResults) {
+    for (let wi = 0; wi < workerResults.length; wi++) {
+      const wr = workerResults[wi];
       if (wr.error) {
-        results.errors++;
-        results.detail.push(wr);
+        results.errors += batches[wi].length;
+        results.detail.push({ batch: wi + 1, error: wr.error });
       }
       if (typeof wr.refreshed === 'number') results.refreshed += wr.refreshed;
       if (typeof wr.errors === 'number') results.errors += wr.errors;
@@ -882,6 +867,149 @@ async function refreshExpiredAccounts(env) {
   }
 
   console.log('[cron] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误');
+  return results;
+}
+
+// ===== 通用：向 dlapi Worker 派发一批账号（带重试/fallback） =====
+// batch: [{id, uname, upwd}], preferredWorker: 首选 worker 编号, maxRetries: 最多尝试的 Worker 数量
+async function dispatchToDlapi(batch, preferredWorker, maxRetries, label) {
+  const DLAPI_COUNT = 99;
+  let lastError = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const workerNum = ((preferredWorker - 1 + attempt) % DLAPI_COUNT) + 1;
+    const workerUrl = `https://dlapi-${workerNum}.tenghuanjun.workers.dev/api/batch-refresh`;
+    console.log(`[${label}] → dlapi-${workerNum} (批${batch.length}个${attempt > 0 ? ', 重试' + attempt : ''})`);
+    try {
+      const r = await fetch(workerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accounts: batch.map(b => ({ id: b.id, uname: b.uname, upwd: b.upwd })) })
+      });
+      const text = await r.text();
+      try { return JSON.parse(text); }
+      catch (_) {
+        lastError = text.slice(0, 200);
+        console.log(`[${label}] dlapi-${workerNum} 返回非JSON:`, lastError);
+      }
+    } catch (e) {
+      lastError = e.message;
+      console.log(`[${label}] dlapi-${workerNum} fetch失败:`, e.message);
+    }
+    // 本 Worker 失败，换下一个重试
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  // 全部尝试失败
+  console.log(`[${label}] 全部${maxRetries}个Worker失败:`, lastError);
+  return { error: lastError || 'unknown' };
+}
+
+// ===== 通用：将一批账号分发到 dlapi Worker 并发刷新（含兜底） =====
+// accounts: [{id, uname, upwd}], 由调用方决定筛选条件
+async function dispatchAndRefresh(accounts, label) {
+  const results = { refreshed: 0, errors: 0, detail: [] };
+  if (!accounts || accounts.length === 0) return results;
+
+  const BATCH_SIZE = 7;
+  const DLAPI_COUNT = 99;
+  const batches = [];
+  for (let i = 0; i < accounts.length; i += BATCH_SIZE) {
+    batches.push(accounts.slice(i, i + BATCH_SIZE));
+  }
+
+  const workerResults = await Promise.all(
+    batches.map((batch, idx) => {
+      const preferredWorker = (idx % DLAPI_COUNT) + 1;
+      return dispatchToDlapi(batch.map(b => ({ id: b.id, uname: b.uname, upwd: b.upwd })), preferredWorker, 3, label);
+    })
+  );
+
+  for (let wi = 0; wi < workerResults.length; wi++) {
+    const wr = workerResults[wi];
+    if (wr.error) {
+      results.errors += batches[wi].length;
+      results.detail.push({ batch: wi + 1, error: wr.error });
+    }
+    if (typeof wr.refreshed === 'number') results.refreshed += wr.refreshed;
+    if (typeof wr.errors === 'number') results.errors += wr.errors;
+    if (wr.detail && Array.isArray(wr.detail)) results.detail.push(...wr.detail.slice(0, 10));
+  }
+
+  // 兜底：如果所有 dlapi Worker 都失败了，主 Worker 亲自刷
+  if (results.refreshed === 0 && results.errors > 0 && accounts.length > 0) {
+    console.log('[' + label + '] dlapi 全部分发失败，主 Worker 兜底直接刷新 ' + accounts.length + ' 个账号');
+    results.refreshed = 0;
+    results.errors = 0;
+    results.detail = [];
+    const SUPABASE_KEY_FALLBACK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+    for (const acc of accounts) {
+      try {
+        const result = await doLoginCore(acc.uname, acc.upwd);
+        if (result.ok && result.token) {
+          await fetch(SUPABASE_URL + '/rest/v1/accounts?id=eq.' + acc.id, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY_FALLBACK, 'Authorization': 'Bearer ' + SUPABASE_KEY_FALLBACK, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: 'https://dldl.50pk.com/login.php?' + new URLSearchParams({
+                gid: result.entryGid || '1003279', pid: result.entryPid || '46',
+                token: result.token, time: result.entryTime || '', sign: result.sign,
+                appVer: result.appVer || '134', platCode: result.platCode || '37wan',
+                IMEI: result.IMEI || '', isPcLauncher: 'true'
+              }).toString(),
+              app_token: result.token, app_sign: result.sign,
+              url_created_at: new Date().toISOString()
+            })
+          });
+          results.refreshed++;
+        } else {
+          results.errors++;
+          results.detail.push({ uname: acc.uname, error: '兜底: ' + (result.message || '登录返回异常') });
+        }
+      } catch (e) {
+        results.errors++;
+        results.detail.push({ uname: acc.uname, error: e.message });
+      }
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  return results;
+}
+
+// 管理员触发：初始化某用户下全部账号（走 dlapi Worker 并发，与 cron-refresh 同源机制）
+// 过期规则与移动端定时刷新一致：有 url 且 url_created_at >= 60h 才刷新；无 url 的必刷
+async function initUserAccounts(userId) {
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+  console.log('[init] 开始初始化用户账号:', userId);
+  const results = { scanned: 0, refreshed: 0, errors: 0, skipped: 0, detail: [] };
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?user_id=eq.' + encodeURIComponent(userId) + '&select=id,uname,upwd,url,url_created_at', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!resp.ok) { console.log('[init] 查询失败:', resp.status); return results; }
+    const accounts = await resp.json();
+    results.scanned = accounts.length;
+
+    // 分类：无 url → 必刷；有 url 且 >= 60h → 过期需刷新；有 url 且 < 60h → 跳过
+    const toRefresh = [];
+    for (const a of accounts) {
+      if (!a.url) {
+        toRefresh.push(a);
+      } else {
+        const t = a.url_created_at ? new Date(a.url_created_at) : null;
+        const ageH = t && !isNaN(t.getTime()) ? (Date.now() - t.getTime()) / 3600000 : 999;
+        if (ageH >= 60) toRefresh.push(a); else results.skipped++;
+      }
+    }
+    console.log('[init] 该用户账号数:', accounts.length, '需刷新:', toRefresh.length, '跳过:', results.skipped);
+    if (toRefresh.length === 0) return results;
+
+    const dr = await dispatchAndRefresh(toRefresh, 'init');
+    results.refreshed = dr.refreshed;
+    results.errors = dr.errors;
+    results.detail = dr.detail;
+  } catch (e) {
+    console.log('[init] 异常:', e.message);
+  }
+  console.log('[init] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误', results.skipped, '跳过');
   return results;
 }
 
@@ -964,6 +1092,31 @@ export default {
       if (url.pathname === '/api/cron-refresh') {
         const result = await refreshExpiredAccounts(env);
         return jsonResponse(result);
+      }
+
+      // 管理员触发：初始化某用户下全部账号（走 dlapi Worker 并发）
+      if (url.pathname === '/api/admin-init-refresh') {
+        let body;
+        try { body = await request.json(); } catch (_) { body = {}; }
+        const userId = body.userId || body.user_id;
+        if (!userId) return jsonResponse({ ok: false, message: '缺少 userId' }, 400);
+        const result = await initUserAccounts(userId);
+        return jsonResponse(result);
+      }
+
+      // 通用批量刷新代理：接收账号列表，分发到 dlapi Worker（mobile 批量刷新 + 数据初始化同源流程）
+      if (url.pathname === '/api/batch-refresh-proxy' && request.method === 'POST') {
+        let body;
+        try { body = await request.json(); } catch (_) { body = {}; }
+        const accounts = Array.isArray(body.accounts) ? body.accounts : [];
+        if (!accounts.length) return jsonResponse({ ok: false, message: '缺少 accounts 数组' }, 400);
+        const cleaned = accounts.map(a => ({
+          id: a.id, uname: String(a.uname || '').trim(), upwd: String(a.upwd || '').trim()
+        })).filter(a => a.uname && a.upwd);
+        if (!cleaned.length) return jsonResponse({ ok: false, message: '所有账号均缺少凭据' }, 400);
+        console.log('[proxy] mobile 批量刷新请求:', cleaned.length, '个账号');
+        const result = await dispatchAndRefresh(cleaned, 'proxy');
+        return jsonResponse({ scanned: cleaned.length, refreshed: result.refreshed, errors: result.errors, detail: result.detail });
       }
 
       // dlapi Worker 批量刷新

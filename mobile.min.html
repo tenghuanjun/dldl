@@ -6,7 +6,6 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>
       const vConsole = new VConsole();
@@ -30,8 +29,7 @@
             position: sticky; top: 0; z-index: 100;
             background: #F5F0E8;
         }
-        .header h1 { font-size: 18px; font-weight: 600; color: #4a3520; }
-        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; }
+        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
             padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
@@ -294,6 +292,16 @@
             opacity: 1; pointer-events: none;
         }
         .toast.hide { opacity: 0; transform: translateX(-50%) translateY(8px); }
+
+        /* 批量选择 */
+        .area-select { width: 16px; height: 16px; flex-shrink: 0; accent-color: #C3702A; }
+        .account-card { position: relative; }
+        .account-card.selected { box-shadow: 0 0 0 2px #C3702A, 0 1px 4px rgba(0,0,0,0.06); }
+        .account-select-wrap {
+            position: absolute; top: 8px; right: 8px; z-index: 2;
+            display: flex; align-items: center;
+        }
+        .account-select-wrap input { width: 18px; height: 18px; accent-color: #C3702A; }
     </style>
 </head>
 <body>
@@ -332,7 +340,6 @@
     <!-- 已登录 -->
     <div v-else class="container">
         <div class="header">
-            <h1>DLDL</h1>
             <div class="user-info">
                 <select v-model="urlFilter" class="filter-select">
                     <option value="all">全部</option>
@@ -342,6 +349,8 @@
                 </select>
                 <button v-if="currentUser && currentUser.is_admin" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
+                <button class="btn btn-primary btn-sm" :disabled="batchRefreshing" @click="handleBatchRefresh">{{ batchRefreshing ? '刷新中 ' + batchProgress.done + '/' + batchProgress.total : (selectedCount > 0 ? '批量刷新(' + selectedCount + ')' : '批量刷新') }}</button>
+                <button class="btn btn-secondary btn-sm" v-if="selectedCount > 0" :disabled="batchRefreshing" @click="clearSelection">取消选择</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
@@ -353,12 +362,16 @@
         <template v-else-if="visibleAreas.length">
             <div v-for="g in visibleAreas" :key="g.id" class="area-group">
                 <div class="area-group-header">
+                    <input type="checkbox" class="area-select" :checked="isAreaAllSelected(g)" @change="toggleSelectArea(g)" title="全选本区服">
                     <span class="dot"></span>
                     <span>{{ g.name || '未命名区服' }}</span>
                     <span class="count">{{ filteredAccounts(g)?.length || 0 }} 个</span>
                 </div>
                 <div class="account-grid">
-                <div v-for="a in filteredAccounts(g)" :key="a.id" class="account-card">
+                <div v-for="a in filteredAccounts(g)" :key="a.id" class="account-card" :class="{ selected: isSelected(g, a) }">
+                    <label class="account-select-wrap">
+                        <input type="checkbox" :checked="isSelected(g, a)" @change="toggleSelect(g, a)" title="选择此账号">
+                    </label>
                     <div class="account-info">
                         <span class="url-dot" :class="hasUrl(a) ? 'has' : 'no'" :title="hasUrl(a) ? '有URL' : '无URL'"></span>
                         <div class="account-main">
@@ -372,7 +385,7 @@
                     <div class="account-actions">
                         <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
                         <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
-                        <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                        <button class="btn btn-scan" :disabled="actionLoading" @click="copyAccountUrl(g.area, a)" title="复制登录地址">复制</button>
                     <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
                 </div>
                 <div class="card-pass-row">
@@ -405,31 +418,8 @@
         <!-- 移动端吐司提示 -->
         <div class="toast" :class="{ hide: !toastVisible }">{{ toastMsg }}</div>
 
-        <!-- 扫码器模态框 -->
-        <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
-            <div class="scan-box">
-                <div class="scan-header">
-                    <span>扫描通行证二维码</span>
-                    <button class="scan-close" @click="closeScanner">&times;</button>
-                </div>
-                <div v-if="scanError" class="scan-error">{{ scanError }}</div>
-                <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
-                <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
-                <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
-                <div class="scan-viewport" id="scan-viewport">
-                    <div class="scan-line" id="scan-line"></div>
-                </div>
-                <div id="scan-file-reader" style="display:none"></div>
-                <div class="scan-upload" v-if="!scanResult && !scanLoading">
-                    <label class="btn btn-upload">
-                        <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
-                        📷 相册上传
-                    </label>
-                    <button class="btn btn-secondary" @click="toggleTorch" v-if="torchSupported">💡 闪光灯</button>
-                    <button class="btn btn-secondary" @click="closeScanner">取消</button>
-                </div>
-            </div>
-        </div>
+        <!-- 扫码器模态框（已移除，改为点击「复制」直接复制登录地址） -->
+
 
         <!-- 新增/编辑账号模态框 -->
         <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">

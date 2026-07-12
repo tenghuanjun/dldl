@@ -6,7 +6,6 @@
     <title>DLDL 手机版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>
       const vConsole = new VConsole();
@@ -30,8 +29,7 @@
             position: sticky; top: 0; z-index: 100;
             background: #F5F0E8;
         }
-        .header h1 { font-size: 18px; font-weight: 600; color: #4a3520; }
-        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; }
+        .header .user-info { font-size: 13px; color: #8a7560; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
             padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500;
@@ -342,7 +340,6 @@
     <!-- 已登录 -->
     <div v-else class="container">
         <div class="header">
-            <h1>DLDL</h1>
             <div class="user-info">
                 <select v-model="urlFilter" class="filter-select">
                     <option value="all">全部</option>
@@ -352,7 +349,7 @@
                 </select>
                 <button v-if="currentUser && currentUser.is_admin" class="btn btn-secondary btn-sm" :disabled="cronRefreshLoading" @click="handleCronRefresh">{{ cronRefreshLoading ? '刷新中...' : '定时刷新' }}</button>
                 <button class="btn btn-secondary btn-sm" :disabled="refreshLoading" @click="handleRefresh">{{ refreshLoading ? '刷新中...' : '刷新' }}</button>
-                <button class="btn btn-primary btn-sm" v-if="selectedCount > 0" :disabled="batchRefreshing" @click="handleBatchRefresh">{{ batchRefreshing ? '刷新中 ' + batchProgress.done + '/' + batchProgress.total : '批量刷新(' + selectedCount + ')' }}</button>
+                <button class="btn btn-primary btn-sm" :disabled="batchRefreshing" @click="handleBatchRefresh">{{ batchRefreshing ? '刷新中 ' + batchProgress.done + '/' + batchProgress.total : (selectedCount > 0 ? '批量刷新(' + selectedCount + ')' : '批量刷新') }}</button>
                 <button class="btn btn-secondary btn-sm" v-if="selectedCount > 0" :disabled="batchRefreshing" @click="clearSelection">取消选择</button>
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
@@ -388,7 +385,7 @@
                     <div class="account-actions">
                         <button class="btn btn-refresh" :disabled="actionLoading" @click="doRefreshToken(g.area, a)">刷新</button>
                         <button class="btn btn-login" @click="doAppLogin(g.area, a)">登录</button>
-                        <button class="btn btn-scan" :disabled="actionLoading" @click="openScanner(g.area, a)" title="扫描通行证二维码">扫码</button>
+                        <button class="btn btn-scan" :disabled="actionLoading" @click="copyAccountUrl(g.area, a)" title="复制登录地址">复制</button>
                     <button class="btn btn-edit" @click="openAddModal(a)">编辑</button>
                 </div>
                 <div class="card-pass-row">
@@ -421,31 +418,8 @@
         <!-- 移动端吐司提示 -->
         <div class="toast" :class="{ hide: !toastVisible }">{{ toastMsg }}</div>
 
-        <!-- 扫码器模态框 -->
-        <div v-if="scanVisible" class="scan-overlay" @click.self="closeScanner">
-            <div class="scan-box">
-                <div class="scan-header">
-                    <span>扫描通行证二维码</span>
-                    <button class="scan-close" @click="closeScanner">&times;</button>
-                </div>
-                <div v-if="scanError" class="scan-error">{{ scanError }}</div>
-                <div v-else-if="scanResult" class="scan-tip scan-success">✅ {{ scanResult }}</div>
-                <div v-else-if="scanLoading" class="scan-tip scan-loading">处理中…</div>
-                <div v-else class="scan-tip">将二维码对准框内，自动识别<br><small style="color:#666">或点击下方相册按钮上传截图</small></div>
-                <div class="scan-viewport" id="scan-viewport">
-                    <div class="scan-line" id="scan-line"></div>
-                </div>
-                <div id="scan-file-reader" style="display:none"></div>
-                <div class="scan-upload" v-if="!scanResult && !scanLoading">
-                    <label class="btn btn-upload">
-                        <input type="file" accept="image/*" @change="handleFileUpload" ref="fileInput">
-                        📷 相册上传
-                    </label>
-                    <button class="btn btn-secondary" @click="toggleTorch" v-if="torchSupported">💡 闪光灯</button>
-                    <button class="btn btn-secondary" @click="closeScanner">取消</button>
-                </div>
-            </div>
-        </div>
+        <!-- 扫码器模态框（已移除，改为点击「复制」直接复制登录地址） -->
+
 
         <!-- 新增/编辑账号模态框 -->
         <div v-if="addVisible" class="modal-overlay" @click.self="closeAddModal">
@@ -552,11 +526,6 @@ createApp({
             toastTimer = setTimeout(function () { toastVisible.value = false; }, 2000);
         }
 
-        // ===== 扫码器 =====
-        const scanVisible = ref(false);
-        const scanError = ref('');
-        const scanResult = ref('');
-        const scanLoading = ref(false);
         // ===== 新增/编辑账号 =====
         const addVisible = ref(false);
         const addLoading = ref(false);
@@ -684,23 +653,45 @@ createApp({
         let torchSupported = ref(false);   // 相机是否支持闪光灯
         let torchOn = false;                // 闪光灯当前状态
 
-        function openScanner(area, account) {
-            scanVisible.value = true;
-            scanError.value = '';
-            scanResult.value = '';
-            scanLoading.value = false;
-            scanCurrentArea.value = area;
-            scanCurrentAccount.value = account;
-
-            html5QrAvailable = typeof Html5Qrcode !== 'undefined';
-            if (!html5QrAvailable) {
-                scanError.value = '扫码库未加载，请检查网络后刷新重试';
+        // 复制账号登录地址到剪贴板（替代原扫码功能）
+        function copyAccountUrl(area, account) {
+            var url = account && account.url ? String(account.url) : '';
+            if (!url) {
+                showToast('该账号暂无登录地址，请先点「刷新」');
                 return;
             }
-            // 等 DOM 渲染后启动相机
-            setTimeout(function () {
-                if (scanVisible.value) startCamera();
-            }, 200);
+            copyText(url, '已复制登录地址');
+        }
+
+        function copyText(text, okMsg) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(
+                        function () { showToast(okMsg || '已复制'); },
+                        function () { fallbackCopy(text, okMsg); }
+                    );
+                    return;
+                }
+            } catch (e) {}
+            fallbackCopy(text, okMsg);
+        }
+
+        function fallbackCopy(text, okMsg) {
+            try {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.top = '-9999px';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                var ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast(ok ? (okMsg || '已复制') : '复制失败，请手动复制');
+            } catch (e) {
+                showToast('复制失败，请手动复制');
+            }
         }
 
         async function startCamera() {
@@ -1447,26 +1438,52 @@ createApp({
             return out;
         }
 
+        // ===== 批量刷新：通过 Worker 分发到 dlapi Worker 并发执行（与桌面端数据初始化同源机制） =====
         async function handleBatchRefresh() {
             if (batchRefreshing.value) return;
             var sel = collectSelectedAccounts();
             if (!sel.length) { showToast('请先勾选要刷新的账号'); return; }
+            var accounts = sel.map(function(s) {
+                return {
+                    id: s.account.id,
+                    uname: String(s.account.uname || '').trim(),
+                    upwd: String(s.account.upwd || '').trim()
+                };
+            }).filter(function(a) { return a.uname && a.upwd; });
+            if (!accounts.length) { showToast('选中账号均缺少账号或密码，无法刷新'); return; }
+
             batchRefreshing.value = true;
-            batchProgress.value = { done: 0, total: sel.length };
-            var ok = 0, fail = 0, failedNames = [];
-            for (var i = 0; i < sel.length; i++) {
-                batchProgress.value = { done: i, total: sel.length };
-                var r = await refreshOneToken(sel[i].account);
-                if (r.ok) ok++;
-                else { fail++; failedNames.push(sel[i].account.uname || sel[i].account.name || '?'); }
-                batchProgress.value = { done: i + 1, total: sel.length };
+            batchProgress.value = { done: 0, total: accounts.length };
+            try {
+                var resp = await fetch('https://red-moon-ff95.tenghuanjun.workers.dev/api/batch-refresh-proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accounts: accounts })
+                });
+                var result = await resp.json();
+                var refreshed = result.refreshed || 0;
+                var errors = result.errors || 0;
+                var detail = Array.isArray(result.detail) ? result.detail : [];
+                batchProgress.value = { done: accounts.length, total: accounts.length };
+                batchRefreshing.value = false;
+
+                if (errors === 0) {
+                    showToast('批量刷新完成：成功 ' + refreshed + ' 个');
+                } else {
+                    var failedNames = [];
+                    var workerFails = detail.filter(function(d) { return d.batch; }).length;
+                    detail.filter(function(d) { return d.uname; }).forEach(function(d) { failedNames.push(d.uname); });
+                    var msg = '批量刷新完成：成功 ' + refreshed + '，失败 ' + errors;
+                    if (failedNames.length) msg += '（' + failedNames.join('、') + '）';
+                    if (workerFails) msg += '，' + workerFails + ' 个 Worker 故障';
+                    showToast(msg);
+                }
+                clearSelection();
+                handleRefresh();
+            } catch (e) {
+                batchRefreshing.value = false;
+                showToast('批量刷新异常：' + (e.message || '网络错误'));
             }
-            batchRefreshing.value = false;
-            if (fail === 0) showToast('批量刷新完成：成功 ' + ok + ' 个');
-            else showToast('批量刷新完成：成功 ' + ok + '，失败 ' + fail + '（' + failedNames.join('、') + '）');
-            clearSelection();
-            // 从服务端重新拉取，确保列表与数据库一致
-            handleRefresh();
         }
 
         // ===== 初始化 =====
@@ -1506,9 +1523,8 @@ createApp({
             // 新增账号
             addVisible, addLoading, addError, addForm, editAccountId,
             openAddModal, closeAddModal, submitAddAccount, deleteAccount,
-            // 扫码器
-            scanVisible, scanError, scanResult, scanLoading,
-            openScanner, closeScanner, onScanSuccess, handleFileUpload,
+            // 复制登录地址（替代原扫码器）
+            copyAccountUrl,
             // 通行证码（与桌面端一致）
             getPassCodeValue, getPassCodeStatus, isPassCodeSending,
             onPassCodeInput, onPassCodeBlur, clearPassCode,

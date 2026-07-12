@@ -5,3 +5,7 @@ dist-electron/
 src-tauri/target/
 src-tauri/_embed/
 *.apk
+
+# 海神服专用浏览器与提取目录（大体积二进制，不纳入版本控制）
+海神服专用浏览器/
+海神服_提取/

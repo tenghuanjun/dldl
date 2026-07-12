@@ -45,7 +45,7 @@
                     <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
                 </div>
                 <div class="sticky-tools">
-                    <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '强制刷新' }}</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '刷新列表' }}</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
                     <button
@@ -305,8 +305,8 @@
         </div>
 
         <div v-if="userManageModalVisible" class="modal-mask" @click.self="closeUserManageModal">
-            <div class="modal" style="max-width: 600px;">
-                <div class="modal-title">用户管理</div>
+            <div class="modal user-manage-modal" style="max-width: 600px;">
+                <div class="modal-title">用户管理（共 {{ allUsers.length }} 个）</div>
                 <div class="user-manage-tip">tenghuanjun 为管理员，不可禁用和删除</div>
                 <div class="user-manage-list">
                     <div class="user-manage-item" v-for="user in allUsers" :key="user.id">
@@ -314,8 +314,11 @@
                         <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
                         <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
                         <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
+                        <!-- 敏感操作已隐藏
                         <button class="btn btn-secondary btn-mini" type="button" @click="openChangePwdModal(user)">改密码</button>
                         <button class="btn btn-secondary btn-mini" type="button" @click="showUserPassword(user)" :disabled="showPwdLoading">看密码</button>
+                        -->
+                        <button class="btn btn-primary btn-mini" type="button" @click="initUserData(user)" :disabled="userInitLoading[user.id]">{{ userInitLoading[user.id] ? '初始化中...' : '数据初始化' }}</button>
                         <button class="btn btn-danger btn-mini" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
                     </div>
                 </div>
@@ -398,7 +401,7 @@
                         list.splice(newIndex, 0, moved);
                         const vm = binding.instance;
                         if (vm && typeof vm.onAccountCardsSorted === 'function') {
-                            void vm.onAccountCardsSorted();
+                            void vm.onAccountCardsSorted(g.area);
                         }
                     }
                 });
@@ -471,6 +474,7 @@
                     areaSortModalVisible: false,
                     areaSortList: [],
                     userManageModalVisible: false,
+                    userInitLoading: {},
                     allUsers: [],
                     changePwdModalVisible: false,
                     changePwdUser: null,
@@ -683,6 +687,42 @@
                         this.loadingText = '';
                     }
                 },
+                async initUserData(user) {
+                    if (this.userInitLoading[user.id]) return;
+                    this.userInitLoading = Object.assign({}, this.userInitLoading, { [user.id]: true });
+                    try {
+                        // 走 Worker 端执行（red-moon 协调 Worker 再分发到 dlapi-1~99 并发刷新），
+                        // 客户端只需把 userId 发给 Worker，无需翻墙直连游戏服。
+                        const base = this.proxyWorkerUrl || 'https://red-moon-ff95.tenghuanjun.workers.dev';
+                        const resp = await fetch(base + '/api/admin-init-refresh', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: user.id })
+                        });
+                        const result = await resp.json();
+                        const scanned = result.scanned || 0;
+                        const refreshed = result.refreshed || 0;
+                        const errors = result.errors || 0;
+                        const skipped = result.skipped || 0;
+                        const detail = Array.isArray(result.detail) ? result.detail : [];
+                        const skipNote = skipped > 0 ? `，跳过 ${skipped} 个（未过期）` : '';
+                        if (errors === 0) {
+                            this.showSuccess(`数据初始化完成（${user.username}）：扫描 ${scanned} 个，刷新 ${refreshed} 个${skipNote}`);
+                        } else {
+                            // 区分 Worker 故障（detail 含 batch/error）与账号刷新失败（detail 含 uname/error）
+                            const workerFails = detail.filter(d => d.batch);
+                            let msg = `数据初始化完成（${user.username}）：成功 ${refreshed}，失败 ${errors}${skipNote}`;
+                            const accFails = detail.filter(d => d.uname).map(d => d.uname + (d.error ? '(' + d.error + ')' : ''));
+                            if (accFails.length) msg += '\n账号失败：' + accFails.join('、');
+                            if (workerFails.length) msg += '\nWorker故障：' + workerFails.map(d => '批' + d.batch + ' ' + d.error).join('；');
+                            this.showError(msg);
+                        }
+                    } catch (e) {
+                        this.showError(`数据初始化失败（${user.username}）：${e.message}`);
+                    } finally {
+                        this.userInitLoading = Object.assign({}, this.userInitLoading, { [user.id]: false });
+                    }
+                },
                 openChangePwdModal(user) {
                     this.changePwdUser = user;
                     this.newPassword = '';
@@ -786,6 +826,20 @@
                     return false;
                 },
                 async refreshAccounts() {
+                    // 点击刷新列表时先校验当前用户状态：被禁用则直接退出账号并提示
+                    if (this.currentUser && this.currentUser.id) {
+                        try {
+                            const { data: u, error: uErr } = await db
+                                .from('users').select('enabled').eq('id', this.currentUser.id).single();
+                            if (!uErr && u && u.enabled === false) {
+                                this.handleLogout();
+                                this.showError('当前账号已被禁用，已自动退出登录');
+                                return;
+                            }
+                        } catch (_) {
+                            // 查询用户状态失败时仍继续刷新列表，不阻塞主流程
+                        }
+                    }
                     this.accountsRefreshing = true;
                     try {
                         await this.loadAccounts();
@@ -800,7 +854,7 @@
                             .from('areas').select('*').eq('user_id', this.currentUser.id).order('sort_order');
                         if (areasError) throw areasError;
                         const { data: accountsData, error: accountsError } = await db
-                            .from('accounts').select('*').eq('user_id', this.currentUser.id).order('id');
+                            .from('accounts').select('*').eq('user_id', this.currentUser.id).order('sort_order');
                         if (accountsError) throw accountsError;
                         const accountsByArea = {};
                         for (const account of (accountsData || [])) {
@@ -893,7 +947,8 @@
                         const accountsToDelete = (existingAccounts || []).filter(a => !currentAccountKeys.has(`${a.area_name}|${a.uname}`)).map(a => a.id);
                         if (accountsToDelete.length > 0) await db.from('accounts').delete().eq('user_id', userId).in('id', accountsToDelete);
                         for (const group of this.areas) {
-                            for (const acc of group.accounts) {
+                            for (let ai = 0; ai < group.accounts.length; ai++) {
+                                const acc = group.accounts[ai];
                                 const existing = (existingAccounts || []).find(a => a.area_name === group.area && a.uname === acc.uname);
                                 const accountData = {
                                     area_name: group.area,
@@ -906,7 +961,8 @@
                                     uinfo: acc.uinfo || '',
                                     history: acc.history || '',
                                     app_token: acc.app_token || '',
-                                    app_sign: acc.app_sign || ''
+                                    app_sign: acc.app_sign || '',
+                                    sort_order: ai
                                 };
                                 if (existing) await db.from('accounts').update(accountData).eq('id', existing.id).eq('user_id', userId);
                                 else await db.from('accounts').insert({ ...accountData, user_id: userId });
@@ -919,13 +975,14 @@
                         return false;
                     }
                 },
-            async onAccountCardsSorted() {
-                const saved = await this.saveAccounts();
-                if (!saved) {
-                    await this.loadAccounts();
-                    return;
-                }
-                this.showSuccess('排序已保存');
+            async onAccountCardsSorted(area) {
+                // 账号顺序持久化到数据库的 sort_order 列（由 saveAccounts 写入每个账号在区服内的下标）。
+                // 保存后立刻从 DB 重新读回，保证界面顺序 == 数据库真实顺序：
+                // 若写库被丢弃（例如 Supabase schema 缓存未刷新导致新列被静默忽略），这里会立即回退暴露问题。
+                const savedDb = await this.saveAccounts();
+                await this.loadAccounts();
+                if (!savedDb) this.showError('排序保存失败');
+                else this.showSuccess('排序已保存');
             },
             findAccountLocation(account) {
                 for (const group of this.areas) {
@@ -1576,21 +1633,12 @@
                         this.showError('APP 登录需要账号与密码');
                         return;
                     }
-                    const windowName = `dldl_app_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-                    const left = Math.round((screen.width - 360) / 2);
-                    const top = Math.round((screen.height - 660) / 2);
-                    const winOpts = `width=360,height=660,left=${left},top=${top}`;
-                    // 已有缓存 url：直接打开
+                    // 已有缓存 url：直接打开独立窗口
                     const cachedUrl = String(account.url || '').trim();
                     if (cachedUrl) {
-                        const w = window.open(cachedUrl, windowName, winOpts);
-                        if (!w) {
-                            this.showError("弹窗被拦截，请允许本应用打开新窗口");
-                        }
+                        this._openAppLoginWindow(cachedUrl, uname);
                         return;
                     }
-                    // 无缓存 url：先开 about:blank，走 APP SDK 获取后再跳转
-                    const win = window.open("about:blank", windowName, winOpts);
                     try {
                         const resp = await fetch('/api/app-login', {
                             method: 'POST',
@@ -1621,16 +1669,29 @@
                                 console.warn('写入 url/app_token/app_sign 异常:', e);
                             }
                         }
-                        // 导航已打开的 about:blank 到目标 url
-                        if (win && !win.closed) {
-                            win.location.href = url;
-                        } else {
-                            window.open(url, windowName, winOpts);
-                        }
+                        // 由主进程创建独立渲染进程窗口打开（多开隔离 + 平铺排版）
+                        this._openAppLoginWindow(url, uname);
                     } catch (e) {
                         console.error('appLogin failed', e);
                         this.showError(`APP 登录失败：${e?.message || e}`);
                     }
+                },
+                /**
+                 * 打开 APP 登录窗口：优先走 Electron 主进程多开管理（独立进程 + 平铺 + 回收），
+                 * 非 Electron 环境（纯网页）回退到 window.open。
+                 */
+                _openAppLoginWindow(url, title) {
+                    const electron = window.__ELECTRON__;
+                    if (electron && typeof electron.openAppLogin === 'function') {
+                        electron.openAppLogin({ url: String(url), title: title || 'APP 登录' }).catch(e => {
+                            this.showError(`打开 APP 登录窗口失败：${e?.message || e}`);
+                        });
+                        return;
+                    }
+                    // 回退：纯网页环境直接新开窗口
+                    const winOpts = 'width=360,height=660';
+                    const w = window.open(url, '_blank', winOpts);
+                    if (!w) this.showError('弹窗被拦截，请允许本应用打开新窗口');
                 },
                 buildAppLoginUrl(loginResult, account) {
                     // APP 登录流程：完整模拟 APP 扫码授权
@@ -2151,6 +2212,24 @@
         .area-sort-chosen { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,0.35); }
         .user-manage-tip { font-size: 12px; color: #94a0b8; margin-bottom: 10px; }
         .user-manage-list { max-height: 60vh; overflow-y: auto; }
+        /* 用户管理弹窗：标题与底部按钮固定，仅列表区内部滚动，避免内容多时撑爆或标题滚走 */
+        /* 用 .modal.user-manage-modal 提高优先级，覆盖 .modal 的 overflow-y:auto / max-height，避免弹窗与列表双重滚动 */
+        .modal.user-manage-modal {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-height: min(88vh, 820px);
+        }
+        .user-manage-modal .modal-title,
+        .user-manage-modal .user-manage-tip { flex-shrink: 0; }
+        .user-manage-modal .user-manage-list {
+            flex: 1 1 auto;
+            max-height: none;
+            overflow-y: auto;
+            margin: 0;
+            padding-right: 6px;
+        }
+        .user-manage-modal .modal-actions { flex-shrink: 0; margin-top: 14px; }
         .user-manage-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; margin-bottom: 4px; }
         .user-manage-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
         .user-manage-role { font-size: 11px; color: #2f81f7; background: rgba(47,129,247,0.1); padding: 2px 6px; border-radius: 4px; }

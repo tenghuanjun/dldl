@@ -6,7 +6,7 @@
  * - 管理子窗口（扫码页），共享 session 以支持多窗口 cookie 隔离
  */
 const path = require('path');
-const { app, BrowserWindow, ipcMain, session, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, session, dialog, screen } = require('electron');
 
 // 终端 UTF-8 编码（解决 Windows 下中文乱码）
 if (process.platform === 'win32') {
@@ -16,6 +16,16 @@ if (process.platform === 'win32') {
   } catch (_) {}
 }
 
+
+// ========== APP 登录「独立进程」子窗口模式（对齐《海神服多开逻辑分析》的 CreateProcess 多开模型） ==========
+// 每个 APP 登录窗口 = 一个独立 Electron 实例（独立渲染进程 + 独立 GPU 进程 + 独立 userData），
+// 这是根治「多窗口共享 GPU 进程 → 卡顿」的唯一办法。
+// 必须在 app.commandLine.appendSwitch / requestSingleInstanceLock 之前分流，否则子进程抢不到单实例锁会自杀。
+const IS_APP_LOGIN_CHILD = process.argv.includes('--app-login-child');
+if (IS_APP_LOGIN_CHILD) {
+  runAppLoginChildMode();
+  return; // CommonJS 顶层 return 合法，终止后续执行
+}
 
 // ========== GPU 加速 & 渲染优化 ==========
 // 禁用 GPU 沙箱（在某些 Windows 系统上可提升渲染性能）
@@ -28,8 +38,7 @@ app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 // 使用 ANGLE 的 D3D11 后端（Windows 下性能更好）
 app.commandLine.appendSwitch('use-angle', 'd3d11');
-// 禁用 Chromium 的帧率限制
-app.commandLine.appendSwitch('disable-frame-rate-limit');
+// 注意：不要加 disable-frame-rate-limit。多开时若去掉 60fps 上限，聚焦窗口会无节制占满 GPU。
 // 忽略 GPU 黑名单（强制启用硬件加速，即使驱动在 Chromium 黑名单中）
 app.commandLine.appendSwitch('ignore-gpu-blacklist');
 // 启用 QUIC 协议优化网络
@@ -264,6 +273,99 @@ if (!gotTheLock) {
   });
 
 
+  // ========== APP 登录多开管理（参考《海神服多开逻辑分析》的 CreateProcess 多开模型） ==========
+  // 核心思想：每个 APP 登录窗口 = 一个独立的 Electron 进程（独立渲染进程 + 独立 GPU 进程 + 独立 userData），
+  // 由主进程（主控）统一 spawn 拉起、平铺排版、登记、关闭回收。对应海神服「主控用 CreateProcess 拉起 N 个独立浏览器 exe」，
+  // 故障域 + 资源域双重隔离：单个登录窗口崩溃/卡满 GPU 不影响主窗口与其他窗口。
+  const { spawn } = require('child_process');
+  const appLoginWindows = new Map(); // id -> ChildProcess（独立 Electron 子进程）
+
+  const APP_WIN_W = 360;
+  const APP_WIN_H = 660;
+  const APP_WIN_GAP = 24;
+
+  /**
+   * 打开一个独立的 APP 登录窗口（独立 Electron 进程 = 独立 GPU 进程）
+   * @param {string} url - 已构建好的登录地址（含 token/sign）
+   * @param {string} title - 窗口标题（一般传账号名）
+   * @returns {{ok: boolean, id?: string, message?: string}}
+   */
+  function openAppLoginWindow(url, title) {
+    if (!url || !/^https?:\/\//i.test(url)) {
+      return { ok: false, message: 'URL 必须以 http 或 https 开头' };
+    }
+    const id = `app_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    // 平铺排版：按已开窗口数量计算网格坐标（对应文档 MoveWindow/SetWindowPos 平铺，避免全部叠在屏幕中央）
+    let x = 0, y = 0;
+    try {
+      const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+      const cols = Math.max(1, Math.floor((sw + APP_WIN_GAP) / (APP_WIN_W + APP_WIN_GAP)));
+      const idx = appLoginWindows.size;
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      x = col * (APP_WIN_W + APP_WIN_GAP);
+      y = Math.min(row * (APP_WIN_H + APP_WIN_GAP), Math.max(0, sh - APP_WIN_H));
+    } catch (_) {
+      // 取不到屏幕信息则放在默认位置
+    }
+
+    // 关键：每个 APP 登录窗口 = 一个独立的 Electron 子进程（独立 GPU 进程），
+    // 对应海神服 CreateProcess 拉起独立浏览器 exe。子进程复用主入口文件，靠 --app-login-child 分流；
+    // 其余参数走环境变量（避免命令行转义/特殊字符问题）。
+    const childEntry = app.getAppPath(); // 开发=项目目录，打包=app.asar；Electron 壳据此加载正确入口
+    const env = {
+      ...process.env,
+      APP_LOGIN_ID: id,
+      APP_LOGIN_URL: url,
+      APP_LOGIN_TITLE: title || 'APP 登录',
+      APP_LOGIN_X: String(x),
+      APP_LOGIN_Y: String(y),
+      APP_LOGIN_W: String(APP_WIN_W),
+      APP_LOGIN_H: String(APP_WIN_H),
+    };
+    let child;
+    try {
+      child = spawn(process.execPath, [childEntry, '--app-login-child'], {
+        env,
+        stdio: ['ignore', 'inherit', 'inherit'],
+      });
+    } catch (e) {
+      return { ok: false, message: `启动独立进程失败：${e?.message || e}` };
+    }
+    child.on('error', (e) => { console.error('[app-login] 子进程错误:', e); appLoginWindows.delete(id); });
+    child.on('exit', () => { appLoginWindows.delete(id); });
+
+    // 登记到注册表（对应文档 FindWindowEx 持有 HWND）
+    appLoginWindows.set(id, child);
+
+    return { ok: true, id };
+  }
+
+  /** 关闭所有 APP 登录窗口（对应文档批量 TerminateProcess 回收） */
+  function closeAllAppLoginWindows() {
+    for (const child of appLoginWindows.values()) {
+      try { child.kill('SIGTERM'); } catch (_) {}
+    }
+    appLoginWindows.clear();
+  }
+
+  ipcMain.handle('open-app-login', (_event, payload) => {
+    const { url, title } = payload || {};
+    return openAppLoginWindow(url, title);
+  });
+
+  ipcMain.on('dldl-open-app-login', (_event, payload) => {
+    const { url, title } = payload || {};
+    openAppLoginWindow(url, title);
+  });
+
+  ipcMain.handle('close-all-app-logins', () => {
+    closeAllAppLoginWindows();
+    return { ok: true };
+  });
+
+
   // ========== 主窗口创建 ==========
 
   async function createMainWindow() {
@@ -408,6 +510,8 @@ if (!gotTheLock) {
   });
 
   app.on('before-quit', (event) => {
+    // 退出前回收所有独立的 APP 登录子进程，避免遗留僵尸进程占满 GPU/内存
+    closeAllAppLoginWindows();
     if (!httpServer) return;
     event.preventDefault();
     closeHttpServer().then(() => {
@@ -420,4 +524,63 @@ if (!gotTheLock) {
   app.on('window-all-closed', () => {
     app.quit();
   });
+}
+
+// ========== APP 登录子进程模式（独立 Electron 实例，每个窗口一个） ==========
+// 由主进程 spawn 独立 Electron 实例并以 --app-login-child 启动。本函数在该实例中执行，
+// 只负责加载一个游戏窗口，自带独立 GPU 进程 / 渲染进程 / userData / session，
+// 对应海神服「每窗口一个独立浏览器 exe」。窗口关闭即退出本实例（等价 TerminateProcess 回收自身）。
+function runAppLoginChildMode() {
+  const os = require('os');
+  const id = process.env.APP_LOGIN_ID || `child_${Date.now()}`;
+  // 每个子进程使用独立的 userData 目录，避免多个 Chromium 实例占用同一 userData 的单例锁冲突
+  try {
+    app.setPath('userData', path.join(os.tmpdir(), 'dldl_app_login', id));
+  } catch (_) {}
+
+  const url = process.env.APP_LOGIN_URL;
+  const title = process.env.APP_LOGIN_TITLE || 'APP 登录';
+  const w = Number(process.env.APP_LOGIN_W) || 360;
+  const h = Number(process.env.APP_LOGIN_H) || 660;
+  const x = process.env.APP_LOGIN_X !== undefined ? Number(process.env.APP_LOGIN_X) : undefined;
+  const y = process.env.APP_LOGIN_Y !== undefined ? Number(process.env.APP_LOGIN_Y) : undefined;
+
+  app.whenReady().then(() => {
+    const win = new BrowserWindow({
+      width: w,
+      height: h,
+      x, y,
+      minWidth: 320,
+      minHeight: 480,
+      show: false,
+      autoHideMenuBar: true,
+      backgroundColor: '#000000',
+      title,
+      backgroundThrottling: true,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        spellcheck: false,
+        backgroundThrottling: true
+      }
+    });
+
+    // 焦点感知帧率：聚焦窗口满帧，失焦降到 5fps（独立 GPU 后仍是进一步省资源）
+    try { win.webContents.setFrameRate(60); } catch (_) {}
+    win.on('focus', () => { try { win.webContents.setFrameRate(60); } catch (_) {} });
+    win.on('blur', () => { try { win.webContents.setFrameRate(5); } catch (_) {} });
+
+    win.once('ready-to-show', () => { if (!win.isDestroyed()) win.show(); });
+    if (url) {
+      win.loadURL(url).catch(err => {
+        console.error('[app-login-child] 加载失败:', err);
+        if (!win.isDestroyed()) win.close();
+      });
+    }
+    // 子窗口关闭 → 退出本子进程（对应海神服 TerminateProcess 回收自身）
+    win.on('closed', () => { app.quit(); });
+  });
+
+  app.on('window-all-closed', () => { app.quit(); });
 }

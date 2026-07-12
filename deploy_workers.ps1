@@ -2,7 +2,7 @@
 for ($i = 1; $i -le 10; $i++) {
     $name = "dlapi-$i"
     Write-Host "=== 部署 Worker: $name ===" -ForegroundColor Yellow
-    npx wrangler deploy --name $name
+    npx wrangler deploy --name $name --config wrangler.dlapi.toml
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Worker $name 部署失败" -ForegroundColor Red
     }
