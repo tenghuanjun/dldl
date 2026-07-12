@@ -1,0 +1,24 @@
+FINDSTR: Cannot open echo
+FINDSTR: Cannot open === 工作树是否存在 ===;
+FINDSTR: Cannot open dir
+FINDSTR: Cannot open ;
+FINDSTR: Cannot open echo
+FINDSTR: Cannot open === gh-pages 有 mobile.min.html? ===;
+FINDSTR: Cannot open git
+FINDSTR: Cannot open cat-file
+FINDSTR: Cannot open -e
+FINDSTR: Cannot open origin/gh-pages:mobile.min.html
+FINDSTR: Cannot open ;
+FINDSTR: Cannot open if
+FINDSTR: Cannot open ($LASTEXITCODE
+FINDSTR: Cannot open -eq
+FINDSTR: Cannot open 0)
+FINDSTR: Cannot open {
+FINDSTR: Cannot open echo
+FINDSTR: Cannot open YES gh-pages有
+FINDSTR: Cannot open }
+FINDSTR: Cannot open else
+FINDSTR: Cannot open {
+FINDSTR: Cannot open echo
+FINDSTR: Cannot open NO gh-pages无
+FINDSTR: Cannot open }

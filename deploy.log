@@ -1,0 +1,10 @@
+
+ ⛅️ wrangler 4.110.0
+────────────────────
+Total Upload: 35.16 KiB / gzip: 9.02 KiB
+Worker Startup Time: 17 ms
+Uploaded red-moon-ff95 (2.97 sec)
+Deployed red-moon-ff95 triggers (1.53 sec)
+  https://red-moon-ff95.tenghuanjun.workers.dev
+  schedule: */30 * * * *
+Current Version ID: 7b931ff3-34b5-430c-8e93-eb3dde23b787
