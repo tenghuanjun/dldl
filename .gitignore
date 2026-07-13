@@ -9,3 +9,16 @@ src-tauri/_embed/
 # 海神服专用浏览器与提取目录（大体积二进制，不纳入版本控制）
 海神服专用浏览器/
 海神服_提取/
+
+# 混淆/打包构建产物（由 tools/obfuscate-desktop.mjs 生成，勿手改勿提交）
+account.min.html
+account.min.js
+preload.min.js
+quick-login-preload.min.js
+mobile.min.html
+app.min.js
+build.log
+deploy.err
+deploy.log
+wrangler.dlapi.toml
+$null

@@ -6,7 +6,14 @@
  * - 管理子窗口（扫码页），共享 session 以支持多窗口 cookie 隔离
  */
 const path = require('path');
+const fs = require('fs');
 const { app, BrowserWindow, ipcMain, session, dialog, screen } = require('electron');
+
+// 构建产物优先：打包后存在 .min.js 则加载混淆版 preload，否则回退源码（开发态）
+function pickPreload(name) {
+  const min = path.join(__dirname, name.replace(/\.js$/, '.min.js'));
+  return fs.existsSync(min) ? min : path.join(__dirname, name);
+}
 
 // 终端 UTF-8 编码（解决 Windows 下中文乱码）
 if (process.platform === 'win32') {
@@ -174,7 +181,7 @@ if (!gotTheLock) {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: false,
-        preload: path.join(__dirname, 'quick-login-preload.js'),
+        preload: pickPreload('quick-login-preload.js'),
         session: quickSession,
         // 渲染加速
         backgroundThrottling: false,
@@ -281,8 +288,8 @@ if (!gotTheLock) {
   const appLoginWindows = new Map(); // id -> ChildProcess（独立 Electron 子进程）
 
   const APP_WIN_W = 360;
-  const APP_WIN_H = 660;
-  const APP_WIN_GAP = 24;
+  const APP_WIN_H = 600;
+  const APP_WIN_GAP = 8;
 
   /**
    * 打开一个独立的 APP 登录窗口（独立 Electron 进程 = 独立 GPU 进程）
@@ -383,7 +390,7 @@ if (!gotTheLock) {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js'),
+        preload: pickPreload('preload.js'),
         // 渲染加速
         backgroundThrottling: false,
         enablePreferredSizeMode: true

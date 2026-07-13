@@ -1228,6 +1228,12 @@ app.use('/api/h5sdk/login', async (req, res) => {
 });
 
 // 静态文件服务（只读资源；用户可写目录 userDataDir 供日志等）
+// 构建产物优先：account.min.html（混淆版）存在时，/account.html 请求改发它
+app.get('/account.html', (req, res, next) => {
+  const minHtml = path.join(staticRoot, 'account.min.html');
+  if (fs.existsSync(minHtml)) return res.sendFile(minHtml);
+  next();
+});
 app.use(express.static(staticRoot));
 
 // app.xxh5.z7xz.com 上的接口代理：enter.js 原版会直连外部，

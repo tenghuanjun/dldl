@@ -1,12 +1,11 @@
-<html class="dark">
-
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>账号列表页</title>
-    <script src="vue.global.js"></script>
-    <link rel="stylesheet" href="lib/element-plus.css" />
-    <link rel="stylesheet" href="lib/element-plus-dark.css" />
+<html>
+    
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>账号列表页</title>
+        <script src="vue.global.js"></script>
+        <link rel="stylesheet" href="lib/element-plus.css" />
     <script src="lib/element-plus.min.js"></script>
     <script src="lib/Sortable.min.js"></script>
     <script src="lib/supabase.min.js"></script>
@@ -45,6 +44,12 @@
                     <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
                 </div>
                 <div class="sticky-tools">
+                    <select v-model="urlFilter" class="url-filter-select">
+                        <option value="all">全部</option>
+                        <option value="valid">地址有效</option>
+                        <option value="expired">地址过期</option>
+                        <option value="none">无地址</option>
+                    </select>
                     <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '刷新列表' }}</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
@@ -54,12 +59,10 @@
                         :disabled="selectedAccountCount === 0"
                         @click="batchLaunchSelected"
                     >批量启动（{{ selectedAccountCount }}）</button>
-                    <button
-                        class="btn btn-compact"
-                        :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'"
-                        type="button"
-                        @click="toggleProxyAndRefreshIP"
-                    >{{ proxyIP === '切换中...' ? '代理IP: 切换中...' : (useProxy ? proxyIP : '代理IP: 未启用（点击启用并切换IP）') }}</button>
+                    <!-- 代理IP 按钮已禁用：免费代理池源站失效 + GH-Relay 未持续运行 + Worker Relay 可能闲置被回收，
+                         三层代理链均不可用，useProxy=true 反而会导致 h5sdk/login 请求转发到死 Worker 而失败。
+                         如将来修复代理链，取消注释 <button> 即可恢复。 -->
+                    <!-- <button class="btn btn-compact" :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'" type="button" @click="toggleProxyAndRefreshIP">代理IP 已停用</button> -->
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAreaSortModal">区服排序</button>
                 </div>
             </div>
@@ -104,11 +107,11 @@
             </div>
         </header>
 
-        <section class="area" v-for="group in areas" :key="group.area">
+        <section class="area" v-for="group in visibleAreas" :key="group.area">
             <div class="area-head">
                 <div class="area-title">{{ group.area }}</div>
                 <div class="area-sub">
-                    {{ group.accounts.length }} 个账号
+                    {{ filteredAccounts(group).length }} 个账号
                     <button type="button" class="btn-link" @click="selectAllInArea(group, true)">全选</button>
                     <button type="button" class="btn-link" @click="selectAllInArea(group, false)">取消全选</button>
                     <button class="btn btn-danger btn-mini" type="button" @click="deleteArea(group)">删除区服</button>
@@ -116,7 +119,7 @@
             </div>
 
             <div class="cards" v-account-cards-sortable="group">
-                <div class="card sortable-account-card" v-for="account in group.accounts" :key="`${group.area}-${account.uname}`">
+                <div class="card sortable-account-card" :class="{ 'card-launched': getAppLoginStatus(group.area, account) === 'launched' }" v-for="account in filteredAccounts(group)" :key="`${group.area}-${account.uname}`">
                     <label class="card-check-wrap" @mousedown.stop @click.stop>
                         <input
                             type="checkbox"
@@ -169,7 +172,7 @@
                             </div>
                         </div>
                     </div>
-                    <span v-if="account.url && getUrlAge(account)" class="card-url-age">{{ getUrlAge(account) }}</span>
+                    <span v-if="account.url && getUrlRemaining(account)" class="card-url-age" :class="urlRemainingState(account)">{{ getUrlRemaining(account) }}</span>
                     <span
                         class="card-url-dot"
                         :class="(account.url && String(account.url).trim()) ? 'has-url' : 'no-url'"
@@ -305,21 +308,40 @@
         </div>
 
         <div v-if="userManageModalVisible" class="modal-mask" @click.self="closeUserManageModal">
-            <div class="modal user-manage-modal" style="max-width: 600px;">
+            <div class="modal user-manage-modal">
                 <div class="modal-title">用户管理（共 {{ allUsers.length }} 个）</div>
                 <div class="user-manage-tip">tenghuanjun 为管理员，不可禁用和删除</div>
+                <!-- 表头 -->
+                <div class="user-manage-header">
+                    <span class="um-col-name">用户</span>
+                    <span class="um-col-status">状态</span>
+                    <span class="um-col-plan">套餐</span>
+                    <span class="um-col-actions">操作</span>
+                </div>
                 <div class="user-manage-list">
                     <div class="user-manage-item" v-for="user in allUsers" :key="user.id">
-                        <span class="user-manage-name">{{ user.username }}</span>
-                        <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
-                        <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
-                        <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
-                        <!-- 敏感操作已隐藏
-                        <button class="btn btn-secondary btn-mini" type="button" @click="openChangePwdModal(user)">改密码</button>
-                        <button class="btn btn-secondary btn-mini" type="button" @click="showUserPassword(user)" :disabled="showPwdLoading">看密码</button>
-                        -->
-                        <button class="btn btn-primary btn-mini" type="button" @click="initUserData(user)" :disabled="userInitLoading[user.id]">{{ userInitLoading[user.id] ? '初始化中...' : '数据初始化' }}</button>
-                        <button class="btn btn-danger btn-mini" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
+                        <div class="um-col-name">
+                            <span class="user-manage-name">{{ user.username }}</span>
+                            <span class="user-manage-role" v-if="user.username === 'tenghuanjun'">管理员</span>
+                        </div>
+                        <span class="um-col-status">
+                            <span class="user-manage-status" :class="user.enabled ? 'status-enabled' : 'status-disabled'">{{ user.enabled ? '已启用' : '已禁用' }}</span>
+                        </span>
+                        <span class="um-col-plan">
+                            <span class="user-manage-plan" :class="planClass(user)">{{ planLabel(user) }}</span>
+                            <select class="plan-select" :value="user.plan_type || ''" @change="setPlan(user, $event)" :disabled="user.username === 'tenghuanjun'">
+                                <option value="" disabled>设置套餐</option>
+                                <option value="permanent">永久卡</option>
+                                <option value="year">年卡</option>
+                                <option value="month">月卡</option>
+                                <option value="trial">体验卡(3天)</option>
+                            </select>
+                        </span>
+                        <span class="um-col-actions">
+                            <button class="btn btn-mini" :class="user.enabled ? 'btn-danger' : 'btn-success'" type="button" @click="toggleUserEnabled(user)" :disabled="user.username === 'tenghuanjun'">{{ user.enabled ? '禁用' : '启用' }}</button>
+                            <button class="btn btn-mini um-btn-init" type="button" @click="initUserData(user)" :disabled="userInitLoading[user.id]">{{ userInitLoading[user.id] ? '初始化中...' : '初始化' }}</button>
+                            <button class="btn btn-danger btn-mini um-btn-delete" type="button" @click="deleteUser(user)" :disabled="user.username === 'tenghuanjun'">删除</button>
+                        </span>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -346,7 +368,7 @@
             <div class="modal" style="max-width: 360px;">
                 <div class="modal-title">查看密码 - {{ showPwdUser?.username }}</div>
                 <div style="padding: 16px 0; text-align: center;">
-                    <div style="font-size: 13px; color: #a0a0c0; margin-bottom: 8px;">用户密码为：</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">用户密码为：</div>
                     <div style="font-size: 22px; font-weight: 700; color: #ef4444; font-family: monospace; letter-spacing: 2px; word-break: break-all;">{{ showPwdText }}</div>
                 </div>
                 <div class="modal-actions">
@@ -461,8 +483,10 @@
                     batchLaunchMode: 'quick',
                     /** 同区服按批次：区服、每批个数、第几批（从 1 开始） */
                     batchPanelArea: '',
-                    batchPanelSize: 5,
+                    batchPanelSize: 10,
                     batchPanelBatchNo: 1,
+                    /** URL有效期（小时） */
+                    urlValidityHours: 72,
                     /** 通行证登录 */
                     passCodeMap: {},
                     /** APP登录状态：已启动等 */
@@ -487,12 +511,18 @@
                     loadingText: '',
                     accountsRefreshing: false,
                     submitting: false,
+                    /** URL筛选 */
+                    urlFilter: 'all',
                 };
             },
             computed: {
                 selectedAccountCount() {
                     const m = this.accountSelectMap;
                     return Object.keys(m).filter((k) => m[k]).length;
+                },
+                /** 筛选后，剔除没有任何匹配账号的区服 */
+                visibleAreas() {
+                    return this.areas.filter(g => this.filteredAccounts(g).length > 0);
                 },
                 isAdmin() {
                     return this.currentUser?.username === 'tenghuanjun';
@@ -647,7 +677,7 @@
                 },
                 async loadAllUsers() {
                     try {
-                        const { data, error } = await db.from('users').select('id, username, enabled').order('id');
+                        const { data, error } = await db.from('users').select('id, username, enabled, plan_type, plan_start_at, plan_expire_at').order('id');
                         if (error) throw error;
                         this.allUsers = data || [];
                     } catch (e) {
@@ -664,6 +694,64 @@
                         this.showSuccess(`已${newStatus ? '启用' : '禁用'}用户 ${user.username}`);
                     } catch (e) {
                         this.showError(`操作失败：${e.message}`);
+                    }
+                },
+                // 套餐类型中文名
+                planTypeName(type) {
+                    return { permanent: '永久卡', year: '年卡', month: '月卡', trial: '体验卡' }[type] || '未设置';
+                },
+                // 列表显示：套餐名 + 到期/剩余状态
+                planLabel(user) {
+                    if (!user.plan_type) return '未设置';
+                    const name = this.planTypeName(user.plan_type);
+                    if (user.plan_type === 'permanent') return name;
+                    if (!user.plan_expire_at) return name;
+                    const exp = new Date(user.plan_expire_at);
+                    const now = new Date();
+                    if (exp <= now) return name + '·已过期';
+                    const days = Math.ceil((exp - now) / 86400000);
+                    return name + '·剩' + days + '天';
+                },
+                // 套餐标签着色：有效 / 过期 / 未设置
+                planClass(user) {
+                    if (!user.plan_type) return 'plan-none';
+                    if (user.plan_type === 'permanent') return 'plan-active';
+                    if (user.plan_expire_at && new Date(user.plan_expire_at) > new Date()) return 'plan-active';
+                    return 'plan-expired';
+                },
+                // 设置套餐：从当前时间起算，永久卡无到期，年/月/体验卡按期限计算到期时间
+                async setPlan(user, evt) {
+                    if (user.username === 'tenghuanjun') return;
+                    const planType = evt && evt.target ? evt.target.value : evt;
+                    if (!planType || planType === user.plan_type) return;
+                    const label = this.planTypeName(planType);
+                    const confirmed = await this.confirmAction(`确认将用户 ${user.username} 的使用权限设置为「${label}」吗？将从现在开始计算期限。`, '设置套餐');
+                    if (!confirmed) {
+                        // 取消时把下拉还原回原值
+                        if (evt && evt.target) evt.target.value = user.plan_type || '';
+                        return;
+                    }
+                    const now = new Date();
+                    let expire = null;
+                    if (planType === 'year') { expire = new Date(now); expire.setFullYear(expire.getFullYear() + 1); }
+                    else if (planType === 'month') { expire = new Date(now); expire.setMonth(expire.getMonth() + 1); }
+                    else if (planType === 'trial') { expire = new Date(now); expire.setDate(expire.getDate() + 3); }
+                    // permanent: expire 保持 null
+                    try {
+                        const payload = {
+                            plan_type: planType,
+                            plan_start_at: now.toISOString(),
+                            plan_expire_at: expire ? expire.toISOString() : null
+                        };
+                        const { error } = await db.from('users').update(payload).eq('id', user.id);
+                        if (error) throw error;
+                        user.plan_type = payload.plan_type;
+                        user.plan_start_at = payload.plan_start_at;
+                        user.plan_expire_at = payload.plan_expire_at;
+                        this.showSuccess(`已将 ${user.username} 设置为「${label}」`);
+                    } catch (e) {
+                        if (evt && evt.target) evt.target.value = user.plan_type || '';
+                        this.showError(`设置套餐失败：${e.message}`);
                     }
                 },
                 async deleteUser(user) {
@@ -1624,7 +1712,44 @@
                         this.showError(`复制失败：${e?.message || e}`);
                     }
                 },
+                // ===== 套餐使用权限拦截 =====
+                // 确保当前登录用户已携带最新的套餐字段和管理员标识（兼容旧 localStorage 缓存缺失的情况）
+                async ensureCurrentUserPlan() {
+                    const u = this.currentUser;
+                    if (!u || (u.plan_type !== undefined && u.is_admin !== undefined)) return;
+                    try {
+                        const { data, error } = await db.from('users')
+                            .select('plan_type, plan_start_at, plan_expire_at, is_admin')
+                            .eq('id', u.id).single();
+                        if (!error && data) this.currentUser = Object.assign({}, u, data);
+                    } catch (_) { /* 忽略，按现有字段判断 */ }
+                },
+                // 当前登录用户套餐是否有效：管理员不受限；普通用户需有有效套餐
+                isCurrentUserPlanActive() {
+                    const u = this.currentUser;
+                    if (!u) return true;            // 未登录不会进入主界面，兜底放行
+                    if (u.is_admin) return true;    // 管理员不受套餐限制
+                    if (!u.plan_type || !u.plan_start_at) return false; // 未分配套餐
+                    if (u.plan_type === 'permanent') return true;       // 永久卡
+                    return !!(u.plan_expire_at && new Date(u.plan_expire_at) > new Date());
+                },
+                planBlockMessage() {
+                    const u = this.currentUser || {};
+                    if (!u.plan_type || !u.plan_start_at) {
+                        return '使用权限不足，禁止启动：当前账号尚未分配套餐，请在「用户管理」中设置永久卡 / 年卡 / 月卡 / 体验卡。';
+                    }
+                    const name = { permanent: '永久卡', year: '年卡', month: '月卡', trial: '体验卡' }[u.plan_type] || u.plan_type;
+                    return `使用权限不足，禁止启动：当前账号套餐「${name}」已过期，请联系管理员续期。`;
+                },
+                checkPlanBeforeLaunch() {
+                    if (this.isCurrentUserPlanActive()) return true;
+                    this.showError(this.planBlockMessage());
+                    return false;
+                },
                 async appLogin(area, account) {
+                    // 启动拦截：校验当前登录用户的套餐权限是否有效
+                    await this.ensureCurrentUserPlan();
+                    if (!this.checkPlanBeforeLaunch()) return;
                     const uname = String(account && account.uname || '').trim();
                     const upwd = String(account && account.upwd || '').trim();
                     // 标记已启动状态
@@ -1778,7 +1903,7 @@
                 async batchLaunchAccounts(accounts, opts = {}) {
                     const list = Array.isArray(accounts) ? accounts : [];
                     if (!list.length) return;
-                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : 1500;
+                    const gapMs = typeof opts.gapMs === 'number' && opts.gapMs >= 0 ? opts.gapMs : 800;
                     
                     this.showSuccess(`开始打开 ${list.length} 个 APP 登录窗口（间隔 ${gapMs/1000} 秒）`);
                     
@@ -1803,28 +1928,71 @@
                     }
                     return '';
                 },
-                /** 计算 URL 生成时间距今的时长，格式：x天x小时；无 URL 或时间返回空 */
-                getUrlAge(account) {
+                /** 计算 URL 剩余有效时长，格式：剩 x天x小时；已过期返回"已过期" */
+                getUrlRemaining(account) {
                     if (!account) return '';
                     const timeStr = account.url_created_at || account.created_at || '';
                     if (!timeStr) return '';
                     const urlTime = new Date(timeStr);
                     if (isNaN(urlTime.getTime())) return '';
-                    const now = new Date();
-                    const diffMs = now - urlTime;
-                    if (diffMs < 0) return '';
-                    const totalHours = Math.floor(diffMs / 3600000);
+                    const ageMs = Date.now() - urlTime.getTime();
+                    if (ageMs < 0) return `剩 ${this.urlValidityHours}小时`;
+                    const remainingMs = this.urlValidityHours * 3600000 - ageMs;
+                    if (remainingMs <= 0) return '已过期';
+                    const totalHours = Math.floor(remainingMs / 3600000);
                     const days = Math.floor(totalHours / 24);
                     const hours = totalHours % 24;
-                    if (days > 0 && hours > 0) return `${days}天${hours}小时`;
-                    if (days > 0) return `${days}天`;
-                    if (hours > 0) return `${hours}小时`;
-                    const minutes = Math.floor(diffMs / 60000);
-                    if (minutes > 0) return `${minutes}分钟`;
-                    return '刚刚';
+                    if (days > 0 && hours > 0) return `剩 ${days}天${hours}小时`;
+                    if (days > 0) return `剩 ${days}天`;
+                    if (hours > 0) return `剩 ${hours}小时`;
+                    const minutes = Math.floor(remainingMs / 60000);
+                    if (minutes > 0) return `剩 ${minutes}分钟`;
+                    return '剩 <1分钟';
+                },
+                /** 剩余时间状态类名：expired=已过期, urgent=12小时内 */
+                urlRemainingState(account) {
+                    if (!account) return '';
+                    const timeStr = account.url_created_at || account.created_at || '';
+                    if (!timeStr) return '';
+                    const urlTime = new Date(timeStr);
+                    if (isNaN(urlTime.getTime())) return '';
+                    const ageMs = Date.now() - urlTime.getTime();
+                    const remainingMs = this.urlValidityHours * 3600000 - ageMs;
+                    if (remainingMs <= 0) return 'expired';
+                    if (remainingMs <= 12 * 3600000) return 'urgent';
+                    return '';
+                },
+                /** 保留旧方法名兼容 */
+                getUrlAge(account) {
+                    return this.getUrlRemaining(account);
+                },
+                /** URL 已生成的小时数 */
+                urlAgeHours(account) {
+                    if (!account) return -1;
+                    const timeStr = account.url_created_at || account.created_at || '';
+                    if (!timeStr) return -1;
+                    const urlTime = new Date(timeStr);
+                    if (isNaN(urlTime.getTime())) return -1;
+                    const diffMs = Date.now() - urlTime.getTime();
+                    if (diffMs < 0) return 0;
+                    return Math.floor(diffMs / 3600000);
+                },
+                /** 根据筛选条件过滤区服下的账号 */
+                filteredAccounts(group) {
+                    if (this.urlFilter === 'all') return group.accounts;
+                    return group.accounts.filter(a => {
+                        const has = !!(a.url && String(a.url).trim());
+                        const age = this.urlAgeHours(a);
+                        if (this.urlFilter === 'none') return !has;
+                        if (this.urlFilter === 'valid') return has && age >= 0 && age <= this.urlValidityHours - 1;
+                        if (this.urlFilter === 'expired') return has && age >= this.urlValidityHours;
+                        return true;
+                    });
                 },
                 async batchLaunchSelected() {
                     if (this.loadingVisible) return;
+                    // 整批拦截：当前用户套餐无效时直接拦掉，避免每个账号刷一条错误
+                    if (!this.checkPlanBeforeLaunch()) return;
                     const list = this.getSelectedAccountsOrdered();
                     if (!list.length) {
                         this.showError('请先勾选要启动的账号');
@@ -1841,6 +2009,8 @@
                 },
                 async batchLaunchByAreaSlice() {
                     if (this.loadingVisible) return;
+                    // 整批拦截：当前用户套餐无效时直接拦掉，避免每个账号刷一条错误
+                    if (!this.checkPlanBeforeLaunch()) return;
                     const area = String(this.batchPanelArea || '').trim();
                     if (!area) {
                         this.showError('请选择区服');
@@ -1851,7 +2021,7 @@
                         this.showError('该区服下没有账号');
                         return;
                     }
-                    const size = Math.max(1, Math.floor(Number(this.batchPanelSize)) || 5);
+                    const size = Math.max(1, Math.floor(Number(this.batchPanelSize)) || 10);
                     const batchNo = Math.max(1, Math.floor(Number(this.batchPanelBatchNo)) || 1);
                     const start = (batchNo - 1) * size;
                     const slice = group.accounts.slice(start, start + size);
@@ -2046,7 +2216,8 @@
                 /** 代理IP相关方法 */
                 loadProxyConfig() {
                     try {
-                        this.useProxy = localStorage.getItem('dldl_useProxy') === 'true';
+                        // 代理功能已停用（三层代理链均不可用），强制 false，防止旧 localStorage 残留导致请求走死 Worker
+                        this.useProxy = false;
                         const savedUrl = localStorage.getItem('dldl_proxyWorkerUrl');
                         // 如果没有保存过 URL，或保存的是空值，使用默认值
                         if (!savedUrl || savedUrl.trim() === '') {
@@ -2180,104 +2351,109 @@
         app.mount("#app");
     </script>
     <style>
+        :root {
+            --bg: #f8f9fb;
+            --surface: #ffffff;
+            --border: #e2e5ea;
+            --border-hover: #c8cdd5;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --accent: #C3702A;
+            --accent-hover: #a85f1d;
+            --accent-soft: rgba(195,112,42,0.08);
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-soft: rgba(239,68,68,0.08);
+            --success: #10b981;
+            --success-hover: #059669;
+            --success-soft: rgba(16,185,129,0.08);
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow:  0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 10px -6px rgba(0,0,0,0.04);
+        }
+
         body {
             margin: 0;
-            background: #0f1115;
-            color: #e6e8eb;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .login-container { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
-        .login-box { width: 100%; max-width: 400px; background: linear-gradient(180deg, #171a21 0%, #141821 100%); border: 1px solid #242936; border-radius: 16px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
-        .login-title { margin: 0 0 24px; font-size: 24px; font-weight: 700; text-align: center; color: #e6e8eb; }
+
+        /* ===== Login ===== */
+        .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+        .login-box {
+            width: 100%; max-width: 400px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            box-shadow: var(--shadow-lg);
+        }
+        .login-title { margin: 0 0 28px; font-size: 22px; font-weight: 700; text-align: center; color: var(--text); letter-spacing: -0.3px; }
         .login-form { display: flex; flex-direction: column; gap: 16px; }
         .login-field { display: flex; flex-direction: column; gap: 6px; }
-        .login-label { font-size: 14px; color: #94a0b8; }
-        .login-input { width: 100%; box-sizing: border-box; background: #0f1115; border: 1px solid #242936; border-radius: 8px; color: #e6e8eb; padding: 12px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-        .login-input:focus { border-color: #2f81f7; }
-        .login-input::placeholder { color: #4a5568; }
-        .login-actions { display: flex; gap: 12px; margin-top: 8px; }
-        .login-btn { flex: 1; padding: 12px; font-size: 15px; }
-        .login-error { color: #d14343; font-size: 13px; text-align: center; margin-top: 4px; }
-        .btn-loading { opacity: 0.7; cursor: not-allowed; }
-        .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-        .username { font-size: 14px; color: #94a0b8; }
-        .area-sort-tip { font-size: 12px; color: #94a0b8; margin-bottom: 8px; }
-        .area-sort-list { max-height: 70vh; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
-        .area-sort-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; cursor: default; font-size: 12px; }
-        .area-sort-handle { flex-shrink: 0; color: #7a869f; font-size: 11px; cursor: grab; user-select: none; letter-spacing: -1px; }
-        .area-sort-handle:active { cursor: grabbing; }
-        .area-sort-name { font-size: 12px; font-weight: 600; color: #e6e8eb; white-space: nowrap; }
-        .area-sort-count { font-size: 11px; color: #94a0b8; white-space: nowrap; }
-        .area-sort-ghost { opacity: 0.4; }
-        .area-sort-chosen { border-color: #2f81f7; box-shadow: 0 0 0 1px rgba(47,129,247,0.35); }
-        .user-manage-tip { font-size: 12px; color: #94a0b8; margin-bottom: 10px; }
-        .user-manage-list { max-height: 60vh; overflow-y: auto; }
-        /* 用户管理弹窗：标题与底部按钮固定，仅列表区内部滚动，避免内容多时撑爆或标题滚走 */
-        /* 用 .modal.user-manage-modal 提高优先级，覆盖 .modal 的 overflow-y:auto / max-height，避免弹窗与列表双重滚动 */
-        .modal.user-manage-modal {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            max-height: min(88vh, 820px);
+        .login-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+        .login-input {
+            width: 100%; box-sizing: border-box;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 10px 14px; font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        .user-manage-modal .modal-title,
-        .user-manage-modal .user-manage-tip { flex-shrink: 0; }
-        .user-manage-modal .user-manage-list {
-            flex: 1 1 auto;
-            max-height: none;
-            overflow-y: auto;
-            margin: 0;
-            padding-right: 6px;
-        }
-        .user-manage-modal .modal-actions { flex-shrink: 0; margin-top: 14px; }
-        .user-manage-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #1a1f2e; border: 1px solid #242936; border-radius: 6px; margin-bottom: 4px; }
-        .user-manage-name { flex: 1; font-size: 14px; font-weight: 600; color: #e6e8eb; }
-        .user-manage-role { font-size: 11px; color: #2f81f7; background: rgba(47,129,247,0.1); padding: 2px 6px; border-radius: 4px; }
-        .user-manage-status { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
-        .status-enabled { color: #10b981; background: rgba(16,185,129,0.1); }
-        .status-disabled { color: #d14343; background: rgba(209,67,67,0.1); }
-        .btn-success { background: #10b981; color: #fff; }
-        .btn-success:hover { background: #059669; }
-        .btn-mini { padding: 3px 8px; font-size: 11px; }
-        .loading-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 12px; }
-        .loading-spinner { width: 36px; height: 36px; border: 3px solid #242936; border-top-color: #2f81f7; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { font-size: 14px; color: #e6e8eb; }
+        .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .login-input::placeholder { color: var(--text-muted); }
+        .login-actions { display: flex; gap: 10px; margin-top: 4px; }
+        .login-btn { flex: 1; padding: 10px 16px; font-size: 14px; font-weight: 500; }
+        .login-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 4px; }
+        .btn-loading { opacity: 0.65; cursor: not-allowed; pointer-events: none; }
 
+        /* ===== Layout ===== */
         .container {
-            max-width: min(1320px, 100%);
-            margin: 12px auto 24px;
-            padding: 0 16px;
+            max-width: min(1340px, 100%);
+            margin: 0 auto 40px;
+            padding: 0 20px;
         }
 
+        /* ===== Sticky Header ===== */
         .account-controls-sticky {
             position: sticky;
             top: 0;
             z-index: 200;
-            margin: 0 -16px 12px;
-            padding: 6px 16px 8px;
-            background: rgba(15, 17, 21, 0.94);
-            backdrop-filter: saturate(150%) blur(10px);
-            -webkit-backdrop-filter: saturate(150%) blur(10px);
-            border-bottom: 1px solid #2a3140;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+            margin: 0 -20px 20px;
+            padding: 12px 20px 14px;
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: saturate(180%) blur(16px);
+            -webkit-backdrop-filter: saturate(180%) blur(16px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-xs);
         }
 
         .sticky-row {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px 8px;
+            gap: 8px 10px;
         }
 
         .sticky-row-batch {
-            --batch-ctrl-h: 40px;
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid #242936;
+            --batch-ctrl-h: 38px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
             flex-wrap: nowrap;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             min-height: 42px;
             overflow-x: auto;
             overflow-y: hidden;
@@ -2285,695 +2461,608 @@
             scrollbar-width: thin;
         }
 
-        .sticky-row-batch::-webkit-scrollbar {
-            height: 5px;
-        }
+        .sticky-row-batch::-webkit-scrollbar { height: 4px; }
+        .sticky-row-batch::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        .sticky-row-batch::-webkit-scrollbar-thumb {
-            background: #3d4a63;
-            border-radius: 3px;
-        }
-
-        .sticky-row-batch > * {
-            flex-shrink: 0;
-        }
+        .sticky-row-batch > * { flex-shrink: 0; }
 
         .sticky-row-batch .batch-select-ep {
             flex: 1 1 140px;
             min-width: 100px;
-            max-width: 260px;
-            width: 160px;
+            max-width: 240px;
         }
 
-        /* 批量启动方式下拉 - 固定 150px 宽度 */
         .sticky-tools .batch-launch-mode-select {
-            width: 150px;
-            flex-shrink: 0;
-            height: var(--batch-ctrl-h, 36px);
-            padding: 0 8px;
-            font-size: 14px;
-            border: 1px solid #555;
-            border-radius: 4px;
-            background: #1a1a2e;
-            color: #e0e0e0;
-            cursor: pointer;
-            outline: none;
+            width: 150px; flex-shrink: 0;
+            height: var(--batch-ctrl-h);
+            padding: 0 8px; font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .sticky-tools .batch-launch-mode-select:focus {
-            border-color: #7c6ff7;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
         }
 
-        /* 区服下拉与数字框同高，与 Element Plus 尺寸变量对齐 */
+        .url-filter-select {
+            height: var(--batch-ctrl-h);
+            padding: 0 8px; font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            flex-shrink: 0;
+        }
+        .url-filter-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
         .sticky-row-batch .batch-select-ep.el-select .el-select__wrapper {
             min-height: var(--batch-ctrl-h);
             height: var(--batch-ctrl-h);
             box-sizing: border-box;
-            padding-top: 0;
-            padding-bottom: 0;
+            padding-top: 0; padding-bottom: 0;
         }
-
         .sticky-row-batch .batch-select-ep.el-select .el-select__selection {
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
         }
-
         .sticky-row-batch .batch-select-ep.el-select .el-select__placeholder,
         .sticky-row-batch .batch-select-ep.el-select .el-select__selected-item {
-            font-size: 16px;
-            line-height: 1.2;
+            font-size: 14px; line-height: 1.2;
         }
 
         .sticky-row-batch .btn-compact {
             min-height: var(--batch-ctrl-h);
             box-sizing: border-box;
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            padding: 0 12px;
+            align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 500;
+            padding: 0 14px;
         }
 
         .sticky-page-title {
-            margin: 0;
-            padding: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: #e6e8eb;
-            line-height: 1.3;
-            flex-shrink: 0;
-            max-width: 42%;
+            margin: 0; padding: 0;
+            font-size: 16px; font-weight: 700;
+            color: var(--text);
+            line-height: 1.3; flex-shrink: 0;
+            letter-spacing: -0.2px;
         }
 
         .sticky-tools {
             flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 6px;
-            min-width: 0;
+            display: flex; flex-wrap: wrap;
+            justify-content: flex-end; align-items: center;
+            gap: 6px; min-width: 0;
         }
+
+        .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .username { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
         .batch-row-head {
-            font-size: 16px;
-            font-weight: 500;
-            color: #e6e8eb;
+            font-size: 14px; font-weight: 500;
+            color: var(--text);
             margin-right: 2px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-            line-height: 1.2;
+            display: inline-flex; align-items: center;
+            gap: 4px; flex-shrink: 0; line-height: 1.2;
         }
-
-        .batch-info-icon {
-            cursor: help;
-            opacity: 0.55;
-            font-size: 16px;
-            font-weight: 400;
-            user-select: none;
-        }
-
-        .batch-info-icon:hover {
-            opacity: 0.95;
-        }
+        .batch-info-icon { cursor: help; opacity: 0.45; font-size: 15px; user-select: none; }
+        .batch-info-icon:hover { opacity: 0.8; }
 
         @media (max-width: 640px) {
-            .sticky-page-title {
-                max-width: 100%;
-                width: 100%;
-            }
-
-            .sticky-tools {
-                justify-content: flex-start;
-            }
-        }
-
-        .btn-compact {
-            padding: 5px 9px;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-
-        .btn.btn-mini.btn-compact {
-            padding: 3px 7px;
-            font-size: 11px;
-        }
-
-        .btn {
-            background: #2f81f7;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            line-height: 1;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            background: #1f6fe0;
-        }
-
-        .btn.btn-secondary {
-            background: #2a3345;
-            color: #d6dbe6;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn.btn-secondary:hover {
-            background: #35415a;
-        }
-
-        .btn.btn-danger {
-            background: #d14343;
-            color: #fff;
-        }
-
-        .btn.btn-danger:hover {
-            background: #b73838;
-        }
-
-        .btn.btn-mini {
-            padding: 4px 8px;
-            font-size: 12px;
+            .sticky-page-title { max-width: 100%; width: 100%; }
+            .sticky-tools { justify-content: flex-start; }
         }
 
         .sticky-row-batch .batch-inline-label {
-            font-size: 16px;
-            font-weight: 400;
-            color: #e6e8eb;
-            white-space: nowrap;
-            line-height: 1.2;
+            font-size: 14px; font-weight: 400;
+            color: var(--text-secondary);
+            white-space: nowrap; line-height: 1.2;
         }
 
         .sticky-row-batch .batch-num-input {
-            width: 88px;
-            max-width: 88px;
-            flex: 0 0 88px;
+            width: 80px; max-width: 80px; flex: 0 0 80px;
             box-sizing: border-box;
             height: var(--batch-ctrl-h);
             min-height: var(--batch-ctrl-h);
-            padding: 0 10px;
-            font-size: 16px;
-            line-height: 1.2;
+            padding: 0 10px; font-size: 14px; line-height: 1.2;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text); outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        .sticky-row-batch .batch-num-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--accent);
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            padding: 7px 14px;
+            cursor: pointer;
+            font-size: 13px; font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:active { transform: scale(0.98); }
+        .btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+        .btn.btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn.btn-secondary:hover {
+            background: var(--bg);
+            border-color: var(--border-hover);
+        }
+
+        .btn.btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn.btn-danger:hover { background: var(--danger-hover); }
+
+        .btn.btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn.btn-success:hover { background: var(--success-hover); }
+
+        .btn.btn-mini { padding: 3px 10px; font-size: 12px; border-radius: 4px; }
+        .btn-compact { padding: 5px 10px; font-size: 12px; border-radius: 4px; }
+        .btn.btn-mini.btn-compact { padding: 3px 8px; font-size: 11px; }
 
         .btn-link {
-            background: none;
-            border: none;
-            padding: 0 4px;
-            font-size: 12px;
-            color: #2f81f7;
+            background: none; border: none; padding: 0 4px;
+            font-size: 12px; font-weight: 500;
+            color: var(--accent);
             cursor: pointer;
-            text-decoration: underline;
-            text-underline-offset: 2px;
+            text-decoration: none;
+            transition: color 0.15s;
         }
+        .btn-link:hover { color: var(--accent-hover); }
 
-        .btn-link:hover {
-            color: #5a9dff;
-        }
+        .btn-proxy-active { background: var(--success); color: #fff; }
+        .btn-proxy-active:hover { background: var(--success-hover); }
 
-        .area {
-            margin-bottom: 14px;
-        }
+        /* ===== Area ===== */
+        .area { margin-bottom: 24px; }
 
         .area-head {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             flex-wrap: wrap;
-            gap: 6px 10px;
-            margin: 10px 0 8px;
+            gap: 8px 12px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
         }
-
         .area-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #e6e8eb;
+            font-size: 15px; font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.2px;
         }
-
         .area-sub {
             font-size: 12px;
-            color: #94a0b8;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--text-muted);
+            display: inline-flex; align-items: center;
+            gap: 8px; margin-left: auto;
         }
 
+        /* ===== Cards Grid ===== */
         .cards {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
+            gap: 10px;
             align-items: start;
         }
-
-        @media (max-width: 1020px) {
-            .cards {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 720px) {
-            .cards {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 420px) {
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 1080px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 760px)  { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 480px)  { .cards { grid-template-columns: 1fr; } }
 
         .card {
-            background: linear-gradient(180deg, #171a21 0%, #141821 100%);
-            border: 1px solid #242936;
-            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
             padding: 0;
+            box-shadow: var(--shadow-xs);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+        .card.card-launched {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+        .card.card-launched:hover {
+            border-color: #6ee7b7;
+        }
+        .card:hover {
+            box-shadow: var(--shadow);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
         }
 
         .sortable-account-card {
-            display: flex;
-            flex-direction: row;
+            display: flex; flex-direction: row;
             align-items: flex-start;
-            gap: 8px;
-            padding: 10px 10px;
-            min-height: 0;
-            position: relative;
+            gap: 10px;
+            padding: 12px;
+            min-height: 0; position: relative;
         }
 
-        /* 右上角 URL 状态指示点 */
         .card-url-dot {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
+            position: absolute; top: 8px; right: 8px;
+            width: 8px; height: 8px;
+            border-radius: 50%; flex-shrink: 0;
         }
-        .card-url-dot.has-url {
-            background: #10b981;
-            box-shadow: 0 0 4px rgba(16,185,129,0.5);
-        }
-        .card-url-dot.no-url {
-            background: #555;
-        }
-        /* URL 生成时间标签，小绿点左边 */
+        .card-url-dot.has-url { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+        .card-url-dot.no-url  { background: var(--border); }
         .card-url-age {
-            position: absolute;
-            top: 4px;
-            right: 20px;
-            font-size: 11px;
-            color: #7d8aa0;
-            white-space: nowrap;
-            pointer-events: none;
+            position: absolute; top: 5px; right: 22px;
+            font-size: 11px; color: var(--text-muted);
+            white-space: nowrap; pointer-events: none;
         }
+        .card-url-age.urgent { color: #b45309; font-weight: 600; }
+        .card-url-age.expired { color: #c0392b; font-weight: 700; }
 
         .card-check-wrap {
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            width: 20px; cursor: pointer;
         }
-
         .card-check-wrap input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            margin: 0;
-            cursor: pointer;
-            accent-color: #2f81f7;
+            width: 15px; height: 15px; margin: 0;
+            cursor: pointer; accent-color: var(--accent);
         }
 
-        .sortable-account-card .card-main {
-            flex: 1;
-            min-width: 0;
-        }
+        .sortable-account-card .card-main { flex: 1; min-width: 0; }
 
         .card-drag-handle {
             flex-shrink: 0;
-            width: 26px;
-            min-height: 44px;
+            width: 24px; min-height: 44px;
             align-self: stretch;
-            margin: 0;
-            padding: 0;
-            border: 1px solid #2f3545;
-            border-radius: 8px;
-            background: #1a1f2e;
-            color: #7a869f;
-            font-size: 12px;
-            line-height: 1;
+            margin: 0; padding: 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 12px; line-height: 1;
             letter-spacing: -1px;
             cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            -webkit-user-select: none;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none; -webkit-user-select: none;
+            transition: background 0.15s, border-color 0.15s;
         }
-
         .card-drag-handle:hover {
-            color: #c5ccd8;
-            border-color: #3d4a63;
+            background: var(--bg);
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
         }
+        .card-drag-handle:active { cursor: grabbing; }
 
-        .card-drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .card-sortable-ghost {
-            opacity: 0.45;
-        }
-
-        .card-sortable-chosen {
-            border-color: #2f81f7;
-            box-shadow: 0 0 0 1px rgba(47, 129, 247, 0.35);
-        }
-
-        .card-sortable-drag {
-            opacity: 0.95;
-        }
+        .card-sortable-ghost  { opacity: 0.4; }
+        .card-sortable-chosen { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+        .card-sortable-drag   { opacity: 0.95; }
 
         .card-top {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 8px;
-            margin: 0;
+            display: flex; flex-direction: column;
+            align-items: stretch; gap: 8px; margin: 0;
         }
 
         .card-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            justify-content: flex-start;
+            display: flex; gap: 5px;
+            flex-wrap: wrap; justify-content: flex-start;
         }
+        .card-actions .btn { padding: 5px 10px; font-size: 12px; border-radius: 4px; }
 
-        .card-actions .btn {
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-
-        .card-name {
-            min-width: 0;
-        }
-
+        .card-name { min-width: 0; }
         .card-name .nick {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e6e8eb;
-            margin-bottom: 3px;
+            font-size: 14px; font-weight: 600;
+            color: var(--text); margin-bottom: 3px;
         }
-
         .card-name .uname {
-            font-size: 12px;
-            color: #94a0b8;
-            word-break: break-all;
+            font-size: 11px; color: var(--text-muted);
+            word-break: break-all; line-height: 1.4;
         }
 
         .card-pass-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 8px;
+            display: flex; align-items: center;
+            gap: 6px; margin-top: 8px;
         }
 
-        .pass-code-input-wrap {
-            flex: 1;
-            min-width: 0;
-            position: relative;
-        }
-
+        .pass-code-input-wrap { flex: 1; min-width: 0; position: relative; }
         .pass-code-input {
-            width: 100%;
-            box-sizing: border-box;
-            background: #0f1115;
-            border: 1px solid #242936;
-            border-radius: 6px;
-            color: #e6e8eb;
+            width: 100%; box-sizing: border-box;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
             padding: 6px 24px 6px 8px;
-            font-size: 12px;
-            outline: none;
-            transition: border-color 0.2s;
+            font-size: 12px; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-
         .pass-code-input:focus {
-            border-color: #2f81f7;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
         }
-
-        .pass-code-input::placeholder {
-            color: #4a5568;
-            font-size: 11px;
-        }
+        .pass-code-input::placeholder { color: var(--text-muted); font-size: 11px; }
 
         .pass-code-clear {
-            position: absolute;
-            right: 4px;
-            top: 50%;
+            position: absolute; right: 4px; top: 50%;
             transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            border: none;
-            border-radius: 50%;
-            background: #242936;
-            color: #94a0b8;
-            font-size: 10px;
-            line-height: 1;
+            width: 18px; height: 18px;
+            border: none; border-radius: 50%;
+            background: var(--border);
+            color: var(--text-muted);
+            font-size: 10px; line-height: 1;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             padding: 0;
             transition: background 0.15s, color 0.15s;
         }
+        .pass-code-clear:hover { background: var(--border-hover); color: var(--text-secondary); }
 
-        .pass-code-clear:hover {
-            background: #3d4a63;
-            color: #e6e8eb;
-        }
+        .pass-code-status { flex-shrink: 0; font-size: 11px; white-space: nowrap; }
+        .pass-code-status.sending  { color: var(--accent); }
+        .pass-code-status.ok       { color: var(--success); }
+        .pass-code-status.expired  { color: var(--danger); }
+        .pass-code-status.fail     { color: var(--danger); }
 
-        .pass-code-status {
-            flex-shrink: 0;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        .pass-code-status.sending {
-            color: #2f81f7;
-        }
-
-        .pass-code-status.ok {
-            color: #10b981;
-        }
-
-        .pass-code-status.expired {
-            color: #d14343;
-        }
-
-        .pass-code-status.fail {
-            color: #d14343;
-        }
-
-        .card-row {
-            display: grid;
-            grid-template-columns: 42px 1fr;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .label {
-            font-size: 12px;
-            color: #94a0b8;
-        }
+        .card-row { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; }
+        .label    { font-size: 12px; color: var(--text-muted); }
 
         .pwd {
             width: 100%;
-            background: #0f1115;
-            border: 1px solid #242936;
-            border-radius: 8px;
-            color: #e6e8eb;
-            padding: 8px 10px;
-            font-size: 13px;
-            outline: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 8px 10px; font-size: 13px; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        .pwd:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
+        /* ===== Modal ===== */
         .modal-mask {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            z-index: 1000;
+            position: fixed; inset: 0;
+            background: rgba(15,23,42,0.45);
+            backdrop-filter: blur(2px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; z-index: 1000;
         }
-
         .modal {
             width: min(560px, 100%);
-            max-height: min(92vh, 900px);
+            max-height: min(90vh, 800px);
             overflow-y: auto;
-            background: #171a21;
-            border: 1px solid #242936;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-            padding: 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+        }
+        .modal-title {
+            font-size: 17px; font-weight: 700;
+            color: var(--text);
+            margin-bottom: 18px;
+            letter-spacing: -0.2px;
         }
 
         .form-section-label {
-            margin: 4px 0 0;
-            font-size: 12px;
-            font-weight: 600;
-            color: #7d8aa0;
-            letter-spacing: 0.02em;
+            margin: 6px 0 2px;
+            font-size: 11px; font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .modal-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 14px;
-        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-field { display: flex; flex-direction: column; gap: 5px; }
+        .form-field.full { grid-column: 1 / -1; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .form-field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .form-field.full {
-            grid-column: 1 / -1;
-        }
-
-        .form-label {
-            font-size: 12px;
-            color: #94a0b8;
-        }
+        .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
 
         .form-input,
         .form-select {
-            width: 100%;
-            box-sizing: border-box;
-            background: #0f1115;
-            border: 1px solid #242936;
-            border-radius: 8px;
-            color: #e6e8eb;
-            padding: 10px 12px;
-            font-size: 13px;
-            outline: none;
+            width: 100%; box-sizing: border-box;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 9px 12px; font-size: 13px; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+        .form-input:focus,
+        .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
         textarea.form-input.form-textarea {
-            min-height: 72px;
-            resize: vertical;
-            line-height: 1.45;
+            min-height: 72px; resize: vertical; line-height: 1.45;
         }
 
-        .url-extract-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
+        .url-extract-row { display: flex; gap: 10px; align-items: flex-start; }
+        .url-paste-input  { flex: 1; min-width: 0; min-height: 52px; }
+        .url-extract-btn  { flex-shrink: 0; align-self: flex-start; padding: 9px 14px; font-weight: 500; }
 
-        .url-paste-input {
-            flex: 1;
-            min-width: 0;
-            min-height: 52px;
-        }
-
-        .url-extract-btn {
-            flex-shrink: 0;
-            align-self: flex-start;
-            padding: 10px 14px;
-        }
-
-        .form-mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 12px;
-        }
-
-        .area-select {
-            width: 100%;
-        }
-
-        .area-select.el-select {
-            --el-select-input-focus-border-color: var(--el-color-primary);
-        }
-
-        .form-help {
-            font-size: 12px;
-            color: #94a0b8;
-            line-height: 1.5;
-        }
+        .form-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+        .area-select { width: 100%; }
+        .form-help { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 12px; }
 
         .modal-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-top: 16px;
+            display: flex; justify-content: space-between;
+            align-items: center; gap: 10px; margin-top: 20px;
         }
-
         .modal-actions-top {
-            margin-top: 0;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #2b2b4a;
+            margin-top: 0; margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .tip {
-            margin-top: 12px;
-            color: #94a0b8;
-            font-size: 13px;
+        /* ===== Area Sort Modal ===== */
+        .area-sort-tip { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+        .area-sort-list { max-height: 70vh; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+        .area-sort-item {
+            display: inline-flex; align-items: center;
+            gap: 6px; padding: 6px 10px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); cursor: default;
+            font-size: 12px; transition: box-shadow 0.15s ease;
+        }
+        .area-sort-handle { flex-shrink: 0; color: var(--text-muted); font-size: 11px; cursor: grab; user-select: none; letter-spacing: -1px; }
+        .area-sort-handle:active { cursor: grabbing; }
+        .area-sort-name  { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+        .area-sort-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+        .area-sort-ghost  { opacity: 0.4; }
+        .area-sort-chosen { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+
+        /* ===== User Manage ===== */
+        .modal.user-manage-modal {
+            width: min(820px, 96vw);
+            display: flex; flex-direction: column;
+            overflow: hidden; max-height: min(88vh, 800px);
+        }
+        .user-manage-tip  { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+        .user-manage-list { flex: 1 1 auto; overflow-y: auto; margin: 0; padding-right: 4px; }
+
+        /* 表头 */
+        .user-manage-header {
+            display: flex; align-items: center;
+            padding: 0 14px 8px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+            font-size: 11px; font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .tip-secondary {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #7d8aa0;
-        }
+        /* 列宽定义 */
+        .um-col-name    { flex: 1 1 140px; min-width: 100px; display: flex; align-items: center; gap: 8px; }
+        .um-col-status  { flex: 0 0 68px; display: flex; align-items: center; justify-content: flex-start; }
+        .um-col-plan    { flex: 0 0 220px; display: flex; align-items: center; gap: 8px; }
+        .um-col-actions { flex: 0 0 210px; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 
+        .user-manage-header .um-col-status,
+        .user-manage-header .um-col-plan,
+        .user-manage-header .um-col-actions { justify-content: flex-start; }
+        .user-manage-header .um-col-actions { justify-content: flex-end; }
+
+        .user-manage-item {
+            display: flex; align-items: center;
+            padding: 10px 14px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 4px;
+            transition: background 0.15s;
+        }
+        .user-manage-item:hover { background: var(--bg); }
+
+        .user-manage-name  { font-size: 13px; font-weight: 600; color: var(--text); }
+        .user-manage-role  { font-size: 10px; color: var(--accent); background: var(--accent-soft); padding: 1px 7px; border-radius: 4px; font-weight: 600; flex-shrink: 0; }
+        .user-manage-status { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+        .status-enabled  { color: var(--success); background: var(--success-soft); }
+        .status-disabled { color: var(--danger);  background: var(--danger-soft); }
+        .user-manage-plan  { font-size: 11px; padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+        .plan-active  { color: #f59e0b; background: rgba(245,158,11,0.1); }
+        .plan-expired { color: var(--danger); background: var(--danger-soft); }
+        .plan-none    { color: var(--text-muted); background: rgba(148,163,184,0.1); }
+
+        .um-col-plan .plan-select {
+            flex-shrink: 0;
+            font-size: 11px; padding: 4px 6px;
+            background: var(--surface); color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px; cursor: pointer;
+            max-width: 110px;
+            transition: border-color 0.2s ease;
+        }
+        .um-col-plan .plan-select:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* 操作按钮统一宽度 */
+        .um-col-actions .btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+            min-width: 46px;
+            text-align: center;
+        }
+        .um-btn-init   { min-width: 58px !important; }
+        .um-btn-delete { min-width: 42px !important; }
+
+        .user-manage-modal .modal-title,
+        .user-manage-modal .user-manage-tip { flex-shrink: 0; }
+        .user-manage-modal .user-manage-header { flex-shrink: 0; }
+        .user-manage-modal .modal-actions { flex-shrink: 0; margin-top: 14px; }
+
+        /* ===== Loading ===== */
+        .loading-mask {
+            position: fixed; inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(3px);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 9999; gap: 14px;
+        }
+        .loading-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; font-weight: 500; color: #fff; }
+
+        /* ===== Tips ===== */
+        .tip { margin-top: 12px; color: var(--text-muted); font-size: 13px; }
+        .tip-secondary { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
         .tip code {
-            font-size: 12px;
-            padding: 1px 6px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.06);
+            font-size: 12px; padding: 1px 6px; border-radius: 4px;
+            background: var(--bg); color: var(--accent);
         }
 
         .visually-hidden {
             position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
+            width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0);
+            white-space: nowrap; border: 0;
         }
-        .white-space-nowrap{
-            white-space: nowrap;
-        }
+        .white-space-nowrap { white-space: nowrap; }
 
-        .btn-proxy-active {
-            background: #10b981;
-            color: #fff;
+        /* ===== Element Plus Overrides ===== */
+        .el-select { --el-color-primary: var(--accent); }
+        .el-select .el-select__wrapper {
+            border-radius: var(--radius-sm) !important;
+            box-shadow: none !important;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-
-        .btn-proxy-active:hover {
-            background: #059669;
+        .el-select .el-select__wrapper:hover { border-color: var(--border-hover); }
+        .el-select .el-select__wrapper.is-focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--accent-soft) !important;
         }
+        .el-select-dropdown { border-radius: var(--radius) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow-lg) !important; }
+        .el-select-dropdown__item { font-size: 13px !important; }
+        .el-select-dropdown__item.is-selected { color: var(--accent) !important; font-weight: 600; }
+        .el-select-dropdown__item:hover { background: var(--bg) !important; }
+        .el-popper.is-light { background: var(--surface) !important; border: 1px solid var(--border) !important; }
+        .el-select-dropdown__item.is-hovering { background: var(--bg) !important; }
     </style>
 </body>
 

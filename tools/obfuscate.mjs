@@ -36,6 +36,37 @@ if (!mainBlock) {
   process.exit(1);
 }
 
+// setup() return 对象中暴露给 Vue 模板的全部 property 名白名单，
+// 强制保留原名，确保 @click="foo" / :checked="bar(g)" 等模板绑定不因混淆断裂。
+// 新增方法/属性时，在此列表追加即可。
+const reservedNames = [
+  'isLoggedIn', 'currentUser', 'loginForm',
+  'globalLoading', 'globalLoadingText',
+  'loginLoading', 'loginError',
+  'loginShowPwd', 'addShowPwd',
+  'areas', 'visibleAreas', 'loading', 'loadError',
+  'refreshLoading', 'cronRefreshLoading',
+  'handleCronRefresh', 'lastRefresh',
+  'actionLoading', 'urlFilter',
+  'filteredAccounts',
+  'hashPassword', 'handleLogin', 'handleRegister', 'handleLogout',
+  'loadAccounts', 'handleRefresh',
+  'hasUrl', 'getStatus', 'getUrlAge',
+  'getUrlRemaining', 'urlRemainingState',
+  'doAppLogin', 'doRefreshToken',
+  'batchSelected', 'selectedCount', 'batchRefreshing', 'batchProgress',
+  'isSelected', 'toggleSelect', 'isAreaAllSelected', 'toggleSelectArea',
+  'clearSelection', 'handleBatchRefresh',
+  'addVisible', 'addLoading', 'addError', 'addForm', 'editAccountId',
+  'openAddModal', 'closeAddModal', 'submitAddAccount', 'deleteAccount',
+  'copyAccountUrl',
+  'getPassCodeValue', 'getPassCodeStatus', 'isPassCodeSending',
+  'onPassCodeInput', 'onPassCodeBlur', 'clearPassCode',
+  'scrollToTop',
+  'toastVisible', 'toastMsg', 'showToast',
+];
+console.log('reservedNames:', reservedNames.length, '个');
+
 const result = obfuscate(mainCode, {
   compact: true,
   controlFlowFlattening: false,
@@ -46,6 +77,7 @@ const result = obfuscate(mainCode, {
   renameGlobals: false,      // 不重命名全局（Vue / CryptoJS / VConsole 等）
   renameProperties: false,   // 不重命名属性名（否则 Vue 模板绑定 / DB 字段会断）
   identifierNamesGenerator: 'hexadecimal',
+  reservedNames,             // Vue 模板引用的方法/属性名白名单，强制保留
   selfDefending: false,      // 设为 false 以免静态文件被二次压缩/格式化后失效
   debugProtection: false,
   disableConsoleOutput: false
