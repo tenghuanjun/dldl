@@ -6,6 +6,15 @@ src-tauri/target/
 src-tauri/_embed/
 *.apk
 
+# APK 反编译/提取/源码目录（大体积，不纳入版本控制）
+dldl_apk_extract/
+dldl_apk_src/
+dldl28_apk_extract/
+dldl28_apk_src/
+dldl28_src/
+dldl28_src_c3/
+
+
 # 海神服专用浏览器与提取目录（大体积二进制，不纳入版本控制）
 海神服专用浏览器/
 海神服_提取/

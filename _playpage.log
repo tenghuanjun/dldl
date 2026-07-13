@@ -1,0 +1,19 @@
+REQ https://jehe.5144wan.com/upload/admin/20240127/cbce3344f35ea7da284ddd872a880434.jpg
+RESP 200 https://jehe.5144wan.com/upload/admin/20240127/cbce3344f35ea7da284ddd872a880434.jpg
+REQ https://www.28zhe.com/index.php?ac=play&id=10274&aid=4689470&t=1008
+RESP 200 https://www.28zhe.com/index.php?ac=play&id=10274&aid=4689470&t=1008
+clicked a:has-text("进入游戏")
+REQ https://jehe.5144wan.com/upload/admin/20240127/cbce3344f35ea7da284ddd872a880434.jpg
+REQ https://admin.m.5144wan.com/static/channel/libWancmsnewSDK.js
+RESP 200 https://admin.m.5144wan.com/static/channel/libWancmsnewSDK.js
+REQ https://admin.m.5144wan.com/h5/gamenew/initApi?gid=917&ctype=newshangjing&sdkVersionCode=1.4.3&wcgameid=3490&wchannelCod
+REQ https://admin.m.5144wan.com/h5/gamenew/loginApi?gid=917&ctype=newshangjing&sdkVersionCode=1.4.3&wcgameid=3490&wchannelCo
+RESP 200 https://admin.m.5144wan.com/h5/gamenew/initApi?gid=917&ctype=newshangjing&sdkVersionCode=1.4.3&wcgameid=3490&wchannelCod
+REQ https://admin.m.5144wan.com/static/channel/a28zhe.js
+RESP 200 https://admin.m.5144wan.com/h5/gamenew/loginApi?gid=917&ctype=newshangjing&sdkVersionCode=1.4.3&wcgameid=3490&wchannelCo
+RESP 200 https://admin.m.5144wan.com/static/channel/a28zhe.js
+URL now: https://www.28zhe.com/index.php?ac=play&id=10274&aid=4689470&t=1008
+iframes: ["https://applyapi.600uu.com/h5game/newshangjing/entrance?gid=917&ctype=newshangjing&sdkVersionCode=1.4.3&wcgameid=3490&wchannelCode=189&age=22&authentication=yes&avatar=https%3A%2F%2Foss.28zhe.com%2Fimages%2Favatar_no.gif&gameId=10274&signType=md5&time=1783958343&uid=4689470&userName=665094722&userSex=no&sign=67a06d4df5842e5de27e40c118fab8d7","https://www.28zhe.com/h5/#/wode-index?gameId=10274&aid=4689470&t=1099"]
+found in html: 5144wan.com/upload/admin/20240127/cbce3344f35ea7da284ddd872a880434.jpg
+  5144wan.com/upload/admin/20240127/cbce3344f35ea7da284ddd872a880434.jpg&quot;)
+DONE

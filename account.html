@@ -104,22 +104,31 @@
                 >
                 <label class="batch-inline-label">批</label>
                 <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
+                <span class="batch-search-sep"></span>
+                <input
+                    v-model="searchKeyword"
+                    type="text"
+                    class="form-input search-input"
+                    placeholder="昵称搜索"
+                >
+                <button v-if="searchMode" class="btn btn-compact btn-clear-search" type="button" @click="clearSearch">退出搜索</button>
             </div>
         </header>
 
-        <section class="area" v-for="group in visibleAreas" :key="group.area">
+        <template v-if="!searchMode"><section class="area" v-for="group in visibleAreas" :key="group.area">
             <div class="area-head">
                 <div class="area-title">{{ group.area }}</div>
                 <div class="area-sub">
                     {{ filteredAccounts(group).length }} 个账号
                     <button type="button" class="btn-link" @click="selectAllInArea(group, true)">全选</button>
                     <button type="button" class="btn-link" @click="selectAllInArea(group, false)">取消全选</button>
+                    <button class="btn btn-mini btn-sort-highlight" type="button" @click="openAccountSortModal(group)">账号排序</button>
                     <button class="btn btn-danger btn-mini" type="button" @click="deleteArea(group)">删除区服</button>
                 </div>
             </div>
 
             <div class="cards" v-account-cards-sortable="group">
-                <div class="card sortable-account-card" :class="{ 'card-launched': getAppLoginStatus(group.area, account) === 'launched' }" v-for="account in filteredAccounts(group)" :key="`${group.area}-${account.uname}`">
+                <div class="card sortable-account-card" :class="{ 'card-launched': getAppLoginStatus(group.area, account) === 'launched', 'card-selected': isAccountSelected(group.area, account) }" v-for="(account, idx) in filteredAccounts(group)" :key="`${group.area}-${account.uname}`" @click="toggleAccountSelection(group.area, account)">
                     <label class="card-check-wrap" @mousedown.stop @click.stop>
                         <input
                             type="checkbox"
@@ -127,19 +136,19 @@
                             @change="onAccountCheckboxChange($event, group.area, account)"
                         >
                     </label>
-                    <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序">⋮⋮</button>
+                    <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序" @click.stop @mousedown.stop>⋮⋮</button>
                     <div class="card-main">
                         <div class="card-top">
                             <div class="card-name">
-                                <div class="nick white-space-nowrap">{{ account.name || '-' }}</div>
+                                <div class="nick white-space-nowrap"><span class="card-index">{{ idx + 1 }}</span>{{ account.name || '-' }}</div>
                                 <div class="uname white-space-nowrap" v-if="showPwd">{{ account.uname }}</div>
                                 <div class="uname white-space-nowrap" v-if="showPwd">{{ account.upwd }}</div>
                             </div>
                             <div class="card-actions">
-                                <button class="btn btn-secondary" type="button" @click="editAccount(account)">编辑</button>
-                                <button class="btn btn-secondary" type="button" @click="refreshToken(account)">刷新APPtoken</button>
-                                <button class="btn btn-secondary" type="button" @click="copyLoginUrl(account)">复制网址</button>
-                                <button class="btn" type="button" @click="appLogin(group.area, account)">APP登录</button>
+                                <button class="btn btn-secondary" type="button" @click.stop="editAccount(account)">编辑</button>
+                                <button class="btn btn-secondary" type="button" @click.stop="refreshToken(account)">刷新APPtoken</button>
+                                <button class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(account)">复制网址</button>
+                                <button class="btn" type="button" @click.stop="appLogin(group.area, account)">APP登录</button>
                                 <span v-if="getAppLoginStatus(group.area, account) === 'launched'" class="pass-code-status ok">已启动</span>
                                 <!-- <button class="btn" type="button" @click="openLogin(account)">网页登录</button> -->
                                 <!-- <button class="btn btn-secondary" type="button" @click="openQuickLogin(group.area, account)">快捷登录</button> -->
@@ -152,6 +161,7 @@
                                         type="text"
                                         placeholder="通行证码"
                                         :value="getPassCodeValue(group.area, account)"
+                                        @click.stop @mousedown.stop
                                         @input="onPassCodeInput($event, group.area, account)"
                                         @blur="onPassCodeBlur($event, group.area, account)"
                                         @keyup.enter="($event) => { $event.target.blur(); }"
@@ -162,7 +172,7 @@
                                         type="button"
                                         tabindex="-1"
                                         title="清除"
-                                        @mousedown.prevent="clearPassCode(group.area, account)"
+                                        @click.stop @mousedown.prevent="clearPassCode(group.area, account)"
                                     >✕</button>
                                 </div>
                                 <span v-if="isPassCodeSending(group.area, account)" class="pass-code-status sending">发送中…</span>
@@ -181,6 +191,78 @@
                 </div>
             </div>
         </section>
+        </template>
+
+        <section v-else class="search-section">
+            <div class="area-head">
+                <div class="area-title">搜索结果：{{ searchKeyword }}（{{ searchResults.length }} 个账号）</div>
+                <div class="area-sub">
+                    <button type="button" class="btn-link" @click="selectAllSearch(true)">全选</button>
+                    <button type="button" class="btn-link" @click="selectAllSearch(false)">取消全选</button>
+                    <button class="btn btn-secondary btn-mini" type="button" @click="clearSearch">退出搜索</button>
+                </div>
+            </div>
+
+            <div class="cards">
+                <div class="card sortable-account-card" :class="{ 'card-launched': getAppLoginStatus(item.area, item.account) === 'launched', 'card-selected': isAccountSelected(item.area, item.account) }" v-for="(item, idx) in searchResults" :key="item.area + '-' + item.account.uname" @click="toggleAccountSelection(item.area, item.account)">
+                    <label class="card-check-wrap" @mousedown.stop @click.stop>
+                        <input
+                            type="checkbox"
+                            :checked="isAccountSelected(item.area, item.account)"
+                            @change="onAccountCheckboxChange($event, item.area, item.account)"
+                        >
+                    </label>
+                    <div class="card-main">
+                        <div class="card-top">
+                            <div class="card-name">
+                                <div class="nick white-space-nowrap"><span class="card-index">{{ idx + 1 }}</span>{{ item.account.name || '-' }}</div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary" type="button" @click.stop="editAccount(item.account)">编辑</button>
+                                <button class="btn btn-secondary" type="button" @click.stop="refreshToken(item.account)">刷新APPtoken</button>
+                                <button class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(item.account)">复制网址</button>
+                                <button class="btn" type="button" @click.stop="appLogin(item.area, item.account)">APP登录</button>
+                                <span v-if="getAppLoginStatus(item.area, item.account) === 'launched'" class="pass-code-status ok">已启动</span>
+                            </div>
+                            <div class="card-pass-row">
+                                <div class="pass-code-input-wrap">
+                                    <input
+                                        ref="passCodeInputs"
+                                        class="pass-code-input"
+                                        type="text"
+                                        placeholder="通行证码"
+                                        :value="getPassCodeValue(item.area, item.account)"
+                                        @click.stop @mousedown.stop
+                                        @input="onPassCodeInput($event, item.area, item.account)"
+                                        @blur="onPassCodeBlur($event, item.area, item.account)"
+                                        @keyup.enter="($event) => { $event.target.blur(); }"
+                                    >
+                                    <button
+                                        v-if="getPassCodeValue(item.area, item.account)"
+                                        class="pass-code-clear"
+                                        type="button"
+                                        tabindex="-1"
+                                        title="清除"
+                                        @click.stop @mousedown.prevent="clearPassCode(item.area, item.account)"
+                                    >✕</button>
+                                </div>
+                                <span v-if="isPassCodeSending(item.area, item.account)" class="pass-code-status sending">发送中…</span>
+                                <span v-else-if="getPassCodeStatus(item.area, item.account) === 'ok'" class="pass-code-status ok">已发送 ✓</span>
+                                <span v-else-if="getPassCodeStatus(item.area, item.account) === 'expired'" class="pass-code-status expired">已失效</span>
+                                <span v-else-if="getPassCodeStatus(item.area, item.account) === 'fail'" class="pass-code-status fail">失败</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span v-if="item.account.url && getUrlRemaining(item.account)" class="card-url-age" :class="urlRemainingState(item.account)">{{ getUrlRemaining(item.account) }}</span>
+                    <span
+                        class="card-url-dot"
+                        :class="(item.account.url && String(item.account.url).trim()) ? 'has-url' : 'no-url'"
+                        :title="(item.account.url && String(item.account.url).trim()) ? '有URL' : '无URL'"
+                    ></span>
+                </div>
+            </div>
+        </section>
+
         <!-- <div class="tip">同一区服下可按住左侧「⋮⋮」拖拽卡片调整账号顺序，松手后自动保存到数据库。勾选卡片左侧复选框后点「批量启动」会按 APP 登录方式依次打开窗口（可跨多个区服，只启动已勾选的账号）。「同区服按批次启动」用于同一区内按每批人数、第几批切片启动，与勾选无关。单个账号点击「APP登录」按钮。</div>
         <div class="tip tip-secondary">点击「打开扫码页」会经本地代理打开 login.php：若当前账号已缓存 token，则直接使用；仅在没有 token 时会请求 h5sdk/login 并写入 Supabase。账号页或扫码页内「刷新 token」成功后，会将新 token/time/sign 更新到 Supabase 对应账号行（按 id 匹配）。</div>
         <div class="tip tip-secondary">「快捷登录」携带该账号的 uname、upwd、uinfo 打开新窗口，在 <code>37.com.cn/h5game/public/?pid=46&amp;gid=1005176</code> 注入 UINFO/HISTORY cookie 完成登录。无 uinfo 时按 uname/upwd 自动生成。需使用 DLDL-Proxy 桌面客户端。</div>
@@ -308,8 +390,25 @@
                         <span class="area-sort-count">{{ group.accounts.length }} 个账号</span>
                     </div>
                 </div>
-                <div class="modal-actions">
+                    <div class="modal-actions">
                     <button class="btn btn-secondary" type="button" @click="closeAreaSortModal">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="accountSortModalVisible" class="modal-mask" @click.self="closeAccountSortModal">
+            <div class="modal">
+                <div class="modal-title">账号排序 - {{ accountSortArea }}</div>
+                <div class="account-sort-tip">拖拽下方账号调整顺序，完成后点击「保存」统一写入（仅显示昵称）</div>
+                <div class="account-sort-list" ref="accountSortList">
+                    <div class="account-sort-item" v-for="account in accountSortList" :key="account.id" :data-id="account.id">
+                        <span class="account-sort-handle">⋮⋮</span>
+                        <span class="account-sort-name">{{ account.name || account.uname || '-' }}</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" type="button" @click="closeAccountSortModal">取消</button>
+                    <button class="btn btn-primary" type="button" @click="saveAccountSort">保存</button>
                 </div>
             </div>
         </div>
@@ -411,14 +510,19 @@
                     return;
                 }
                 el._accountCardsSortable = SortableCtor.create(el, {
-                    animation: 180,
+                    animation: 150,
                     handle: '.card-drag-handle',
                     draggable: '.sortable-account-card',
                     ghostClass: 'card-sortable-ghost',
                     chosenClass: 'card-sortable-chosen',
                     dragClass: 'card-sortable-drag',
                     forceFallback: true,
-                    fallbackTolerance: 5,
+                    fallbackTolerance: 3,
+                    fallbackOnBody: true,
+                    // .cards 是 4 列 CSS Grid，会被 Sortable 误判为“纯横向”，导致跨行/跨列交换很难触发。
+                    // 降低交换阈值 + 启用反向交换区，使二维网格里的拖拽排序灵敏可用。
+                    swapThreshold: 0.65,
+                    invertSwap: true,
                     onEnd(evt) {
                         const g = el._sortableGroupRef;
                         if (!g || !Array.isArray(g.accounts)) return;
@@ -494,6 +598,8 @@
                     batchPanelBatchNo: 1,
                     /** URL有效期（小时） */
                     urlValidityHours: 72,
+                    /** 昵称搜索关键字（纯前端） */
+                    searchKeyword: '',
                     /** 通行证登录 */
                     passCodeMap: {},
                     /** APP登录状态：已启动等 */
@@ -504,6 +610,9 @@
                     proxyIP: '直连',
                     areaSortModalVisible: false,
                     areaSortList: [],
+                    accountSortModalVisible: false,
+                    accountSortList: [],
+                    accountSortArea: '',
                     userManageModalVisible: false,
                     userInitLoading: {},
                     allUsers: [],
@@ -530,6 +639,23 @@
                 /** 筛选后，剔除没有任何匹配账号的区服 */
                 visibleAreas() {
                     return this.areas.filter(g => this.filteredAccounts(g).length > 0);
+                },
+                /** 是否处于搜索模式（输入了非空关键字） */
+                searchMode() {
+                    return !!(this.searchKeyword && this.searchKeyword.trim());
+                },
+                /** 搜索结果：扁平账号列表，不按区服分组 */
+                searchResults() {
+                    const kw = (this.searchKeyword || '').trim().toLowerCase();
+                    if (!kw) return [];
+                    const out = [];
+                    for (const g of this.areas) {
+                        for (const a of g.accounts) {
+                            const hay = `${a.name || ''} ${a.uname || ''}`.toLowerCase();
+                            if (hay.includes(kw)) out.push({ area: g.area, account: a });
+                        }
+                    }
+                    return out;
                 },
                 isAdmin() {
                     return this.currentUser?.username === 'tenghuanjun';
@@ -694,11 +820,60 @@
                         this.showError(`保存排序失败：${e.message}`);
                         await this.loadAccounts();
                     } finally {
-                        this.loadingVisible = false;
-                        this.loadingText = '';
+                    this.loadingVisible = false;
+                    this.loadingText = '';
+                }
+            },
+            openAccountSortModal(group) {
+                if (!group || !Array.isArray(group.accounts)) return;
+                this.accountSortArea = group.area;
+                this.accountSortList = group.accounts.map(a => ({ id: a.id, uname: a.uname, name: a.name }));
+                this.accountSortModalVisible = true;
+                this.$nextTick(() => this.initAccountSort());
+            },
+            closeAccountSortModal() {
+                this.accountSortModalVisible = false;
+            },
+            initAccountSort() {
+                const el = this.$refs.accountSortList;
+                if (!el || el._accountSortable) return;
+                el._accountSortable = new Sortable(el, {
+                    animation: 180,
+                    draggable: '.account-sort-item',
+                    ghostClass: 'account-sort-ghost',
+                    chosenClass: 'account-sort-chosen',
+                    onEnd: (evt) => {
+                        const list = this.accountSortList;
+                        const moved = list.splice(evt.oldIndex, 1)[0];
+                        list.splice(evt.newIndex, 0, moved);
                     }
-                },
-                async openUserManageModal() {
+                });
+            },
+            async saveAccountSort() {
+                if (!this.currentUser) return;
+                if (this.loadingVisible) return;
+                this.loadingText = '正在保存账号排序...';
+                this.loadingVisible = true;
+                try {
+                    const areaName = this.accountSortArea;
+                    for (let i = 0; i < this.accountSortList.length; i++) {
+                        const { error } = await db.from('accounts').update({ sort_order: i })
+                            .eq('user_id', this.currentUser.id)
+                            .eq('area_name', areaName)
+                            .eq('id', this.accountSortList[i].id);
+                        if (error) throw error;
+                    }
+                    await this.loadAccounts();
+                    this.showSuccess('账号排序已保存');
+                } catch (e) {
+                    this.showError(`保存账号排序失败：${e.message}`);
+                    await this.loadAccounts();
+                } finally {
+                    this.loadingVisible = false;
+                    this.loadingText = '';
+                }
+            },
+            async openUserManageModal() {
                     this.userManageModalVisible = true;
                     await this.loadAllUsers();
                 },
@@ -1366,6 +1541,11 @@
                     this.loadingText = '正在保存账号...';
                     this.loadingVisible = true;
                     try {
+                        // 确保区服记录存在（外键 accounts.area_name → areas.name），必须在更新账号之前创建
+                        const { data: areaExists } = await db.from('areas').select('name').eq('name', area).eq('user_id', this.currentUser.id).maybeSingle();
+                        if (!areaExists) {
+                            await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 999 });
+                        }
                         const updateData = { area_name: area, uname, upwd, platform: this.accountForm.platform || '37', name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
                         const { error } = await db.from('accounts').update(updateData)
                             .eq('id', target.id).eq('user_id', this.currentUser.id);
@@ -1374,9 +1554,6 @@
                             throw error;
                         }
                         if (location.group.area !== area) {
-                            if (!this.areas.find(g => g.area === area)) {
-                                await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 999 });
-                            }
                             location.group.accounts.splice(location.index, 1);
                             targetGroup.accounts.push(target);
                         }
@@ -1990,6 +2167,26 @@
                     if (ev.target.checked) next[k] = true;
                     else delete next[k];
                     this.accountSelectMap = next;
+                },
+                toggleAccountSelection(area, account) {
+                    const k = this.accountSelectKey(area, account);
+                    const next = { ...this.accountSelectMap };
+                    if (next[k]) delete next[k];
+                    else next[k] = true;
+                    this.accountSelectMap = next;
+                },
+                selectAllSearch(on) {
+                    if (!Array.isArray(this.searchResults)) return;
+                    const next = { ...this.accountSelectMap };
+                    for (const item of this.searchResults) {
+                        const k = this.accountSelectKey(item.area, item.account);
+                        if (on) next[k] = true;
+                        else delete next[k];
+                    }
+                    this.accountSelectMap = next;
+                },
+                clearSearch() {
+                    this.searchKeyword = '';
                 },
                 selectAllInArea(group, on) {
                     if (!group || !Array.isArray(group.accounts)) return;
@@ -2749,6 +2946,9 @@
         }
         .btn.btn-danger:hover { background: var(--danger-hover); }
 
+        .btn.btn-sort-highlight { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn.btn-sort-highlight:hover { background: var(--accent-hover); }
+
         .btn.btn-success {
             background: var(--success);
             color: #fff;
@@ -2807,6 +3007,10 @@
         @media (max-width: 760px)  { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 480px)  { .cards { grid-template-columns: 1fr; } }
 
+        .sticky-row-batch .search-input { width: 260px; max-width: 260px; flex: 0 0 260px; box-sizing: border-box; }
+        .btn-clear-search { margin-left: 2px; }
+        .batch-search-sep { display: inline-block; width: 12px; }
+
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -2818,6 +3022,10 @@
         .card.card-launched {
             background: #ecfdf5;
             border-color: #a7f3d0;
+        }
+        .card.card-selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-soft);
         }
         .card.card-launched:hover {
             border-color: #6ee7b7;
@@ -2845,7 +3053,7 @@
         .card-url-dot.no-url  { background: var(--border); }
         .card-url-age {
             position: absolute; top: 5px; right: 22px;
-            font-size: 11px; color: var(--text-muted);
+            font-size: 11px; color: #16a34a; font-weight: 600;
             white-space: nowrap; pointer-events: none;
         }
         .card-url-age.urgent { color: #b45309; font-weight: 600; }
@@ -2905,6 +3113,13 @@
         .card-name .nick {
             font-size: 14px; font-weight: 600;
             color: var(--text); margin-bottom: 3px;
+        }
+        .card-name .nick .card-index {
+            display: inline-block;
+            min-width: 18px; padding: 0 4px; margin-right: 5px;
+            font-size: 11px; font-weight: 700; line-height: 16px;
+            text-align: center; color: #fff; background: var(--accent);
+            border-radius: 8px; vertical-align: middle;
         }
         .card-name .uname {
             font-size: 11px; color: var(--text-muted);
@@ -3058,6 +3273,23 @@
         .area-sort-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
         .area-sort-ghost  { opacity: 0.4; }
         .area-sort-chosen { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+
+        /* ===== Account Sort Modal ===== */
+        .account-sort-tip { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+        .account-sort-list { max-height: 70vh; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+        .account-sort-item {
+            display: inline-flex; align-items: center;
+            gap: 8px; padding: 8px 12px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); cursor: grab;
+            width: fit-content; max-width: 100%;
+            transition: box-shadow 0.15s ease;
+        }
+        .account-sort-handle { flex-shrink: 0; color: var(--text-muted); font-size: 13px; cursor: grab; user-select: none; letter-spacing: -1px; }
+        .account-sort-handle:active { cursor: grabbing; }
+        .account-sort-name  { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .account-sort-ghost  { opacity: 0.4; }
+        .account-sort-chosen { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
         /* ===== User Manage ===== */
         .modal.user-manage-modal {

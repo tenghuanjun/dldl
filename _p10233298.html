@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+<title>跳转中</title>
+<style type="text/css">
+* { margin:0; padding:0;}
+.fixed_pos {position: fixed;top: 30%;width: 100%;}
+.fixed_content { color:#00b3ff; font-size:14px; width: 90%;margin: 0 auto;max-width: 640px;position: relative;}
+#show_message {padding:20px;}
+#show_message::after {content:'';position: absolute;height: 100%;width:100%;background-color: #000;opacity: .8;top:0;left:0;z-index: -1;border-radius: 10px}
+.fixed_content img { border:none; float:left;height:auto;width:80px;margin-right: 20px }
+a { text-decoration:none;}
+a.status_tip { color:#00b3ff;}
+a.green_btn {color:#fff;background-color:#00b3ff;padding:5px 20px;border-radius: 5px;margin:10px; display: inline-block;}
+h1 { font-size:14px; margin-bottom:10px;}
+.notice { margin-bottom:10px;}
+.notice a {color: #00b3ff}
+.phone .notice {height:50px;}
+</style>
+</head>
+
+<body>
+<div class="fixed_pos">
+<div id="main" class="fixed_content">
+<div id="show_message" class="showmess_">
+    <div class="img_con"><img src="/static/images/show_icon.png" /></div>
+    <div class="msg_con">
+    	<div class="title titles_"><h1>信息提示</h1></div>
+<div class="wrap" id="wrapid_">
+<div class="notice" id="notice_">游戏id错误<br></div>
+<div class="goto" id="goto_"><a href="javascript:history.go(-1);" class="green_btn">返回上一页</a><a href="/" target="_parent"  class="green_btn">返回首页</a>
+</div>
+</div>
+    </div>
+
+</div>
+</div>
+</div>	
+<script>
+if(document.body.clientWidth <640) {
+document.getElementById("main").className +=" phone";
+}
+</script>
+</body>
+</html>
