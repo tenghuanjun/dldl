@@ -1,0 +1,186 @@
+package io.reactivex.rxjava3.internal.jdk8;
+
+import com.volcengine.j.l$$ExternalSyntheticApiModelOutline0;
+import io.reactivex.rxjava3.exceptions.Exceptions;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber;
+import io.reactivex.rxjava3.internal.subscriptions.SubscriptionHelper;
+import io.reactivex.rxjava3.parallel.ParallelFlowable;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
+import java.util.Objects;
+import java.util.Optional;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+/* JADX INFO: loaded from: d:\dldl\dldl28_apk_extract\classes3.dex */
+public final class ParallelMapOptional<T, R> extends ParallelFlowable<R> {
+    final Function<? super T, Optional<? extends R>> mapper;
+    final ParallelFlowable<T> source;
+
+    public ParallelMapOptional(ParallelFlowable<T> source, Function<? super T, Optional<? extends R>> mapper) {
+        this.source = source;
+        this.mapper = mapper;
+    }
+
+    @Override // io.reactivex.rxjava3.parallel.ParallelFlowable
+    public void subscribe(Subscriber<? super R>[] subscribers) {
+        if (validate(subscribers)) {
+            int length = subscribers.length;
+            Subscriber<? super T>[] subscriberArr = new Subscriber[length];
+            for (int i = 0; i < length; i++) {
+                Subscriber<? super R> subscriber = subscribers[i];
+                if (subscriber instanceof ConditionalSubscriber) {
+                    subscriberArr[i] = new ParallelMapConditionalSubscriber((ConditionalSubscriber) subscriber, this.mapper);
+                } else {
+                    subscriberArr[i] = new ParallelMapSubscriber(subscriber, this.mapper);
+                }
+            }
+            this.source.subscribe(subscriberArr);
+        }
+    }
+
+    @Override // io.reactivex.rxjava3.parallel.ParallelFlowable
+    public int parallelism() {
+        return this.source.parallelism();
+    }
+
+    static final class ParallelMapSubscriber<T, R> implements ConditionalSubscriber<T>, Subscription {
+        boolean done;
+        final Subscriber<? super R> downstream;
+        final Function<? super T, Optional<? extends R>> mapper;
+        Subscription upstream;
+
+        ParallelMapSubscriber(Subscriber<? super R> actual, Function<? super T, Optional<? extends R>> mapper) {
+            this.downstream = actual;
+            this.mapper = mapper;
+        }
+
+        public void request(long n) {
+            this.upstream.request(n);
+        }
+
+        public void cancel() {
+            this.upstream.cancel();
+        }
+
+        @Override // io.reactivex.rxjava3.core.FlowableSubscriber
+        public void onSubscribe(Subscription s) {
+            if (SubscriptionHelper.validate(this.upstream, s)) {
+                this.upstream = s;
+                this.downstream.onSubscribe(this);
+            }
+        }
+
+        public void onNext(T t) {
+            if (tryOnNext(t)) {
+                return;
+            }
+            this.upstream.request(1L);
+        }
+
+        @Override // io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber
+        public boolean tryOnNext(T t) {
+            if (this.done) {
+                return true;
+            }
+            try {
+                Optional optionalM112m = l$$ExternalSyntheticApiModelOutline0.m112m(Objects.requireNonNull(this.mapper.apply(t), "The mapper returned a null Optional"));
+                if (!optionalM112m.isPresent()) {
+                    return false;
+                }
+                this.downstream.onNext(optionalM112m.get());
+                return true;
+            } catch (Throwable th) {
+                Exceptions.throwIfFatal(th);
+                cancel();
+                onError(th);
+                return true;
+            }
+        }
+
+        public void onError(Throwable t) {
+            if (this.done) {
+                RxJavaPlugins.onError(t);
+            } else {
+                this.done = true;
+                this.downstream.onError(t);
+            }
+        }
+
+        public void onComplete() {
+            if (this.done) {
+                return;
+            }
+            this.done = true;
+            this.downstream.onComplete();
+        }
+    }
+
+    static final class ParallelMapConditionalSubscriber<T, R> implements ConditionalSubscriber<T>, Subscription {
+        boolean done;
+        final ConditionalSubscriber<? super R> downstream;
+        final Function<? super T, Optional<? extends R>> mapper;
+        Subscription upstream;
+
+        ParallelMapConditionalSubscriber(ConditionalSubscriber<? super R> actual, Function<? super T, Optional<? extends R>> mapper) {
+            this.downstream = actual;
+            this.mapper = mapper;
+        }
+
+        public void request(long n) {
+            this.upstream.request(n);
+        }
+
+        public void cancel() {
+            this.upstream.cancel();
+        }
+
+        @Override // io.reactivex.rxjava3.core.FlowableSubscriber
+        public void onSubscribe(Subscription s) {
+            if (SubscriptionHelper.validate(this.upstream, s)) {
+                this.upstream = s;
+                this.downstream.onSubscribe(this);
+            }
+        }
+
+        public void onNext(T t) {
+            if (tryOnNext(t)) {
+                return;
+            }
+            this.upstream.request(1L);
+        }
+
+        @Override // io.reactivex.rxjava3.internal.fuseable.ConditionalSubscriber
+        public boolean tryOnNext(T t) {
+            if (this.done) {
+                return false;
+            }
+            try {
+                Optional optionalM112m = l$$ExternalSyntheticApiModelOutline0.m112m(Objects.requireNonNull(this.mapper.apply(t), "The mapper returned a null value"));
+                return optionalM112m.isPresent() && this.downstream.tryOnNext((Object) optionalM112m.get());
+            } catch (Throwable th) {
+                Exceptions.throwIfFatal(th);
+                cancel();
+                onError(th);
+                return false;
+            }
+        }
+
+        public void onError(Throwable t) {
+            if (this.done) {
+                RxJavaPlugins.onError(t);
+            } else {
+                this.done = true;
+                this.downstream.onError(t);
+            }
+        }
+
+        public void onComplete() {
+            if (this.done) {
+                return;
+            }
+            this.done = true;
+            this.downstream.onComplete();
+        }
+    }
+}

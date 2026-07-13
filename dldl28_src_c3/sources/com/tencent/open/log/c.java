@@ -1,0 +1,25 @@
+package com.tencent.open.log;
+
+import com.tencent.connect.common.Constants;
+import com.tencent.mm.opensdk.modelmsg.WXMediaMessage;
+import java.io.File;
+
+/* JADX INFO: compiled from: ProGuard */
+/* JADX INFO: loaded from: d:\dldl\dldl28_apk_extract\classes3.dex */
+public class c {
+    public static int a = 60;
+    public static int b = 60;
+    public static String c = "OpenSDK.Client.File.Tracer";
+    public static String d = "Tencent" + File.separator + "msflogs" + File.separator + "com" + File.separator + "tencent" + File.separator + "mobileqq" + File.separator;
+    public static String e = ".log";
+    public static long f = 8388608;
+    public static int g = 262144;
+    public static int h = WXMediaMessage.DESCRIPTION_LENGTH_LIMIT;
+    public static int i = 10000;
+    public static String j = "debug.file.blockcount";
+    public static String k = "debug.file.keepperiod";
+    public static String l = "debug.file.tracelevel";
+    public static int m = 24;
+    public static long n = 604800000;
+    public static String o = Constants.APP_SPECIFIC_ROOT + File.separator + "logs";
+}

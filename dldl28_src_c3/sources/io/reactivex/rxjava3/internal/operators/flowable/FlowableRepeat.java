@@ -1,0 +1,87 @@
+package io.reactivex.rxjava3.internal.operators.flowable;
+
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableSubscriber;
+import io.reactivex.rxjava3.internal.subscriptions.SubscriptionArbiter;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+/* JADX INFO: loaded from: d:\dldl\dldl28_apk_extract\classes3.dex */
+public final class FlowableRepeat<T> extends AbstractFlowableWithUpstream<T, T> {
+    final long count;
+
+    public FlowableRepeat(Flowable<T> source, long count) {
+        super(source);
+        this.count = count;
+    }
+
+    @Override // io.reactivex.rxjava3.core.Flowable
+    public void subscribeActual(Subscriber<? super T> s) {
+        SubscriptionArbiter subscriptionArbiter = new SubscriptionArbiter(false);
+        s.onSubscribe(subscriptionArbiter);
+        long j = this.count;
+        new RepeatSubscriber(s, j != Long.MAX_VALUE ? j - 1 : Long.MAX_VALUE, subscriptionArbiter, this.source).subscribeNext();
+    }
+
+    static final class RepeatSubscriber<T> extends AtomicInteger implements FlowableSubscriber<T> {
+        private static final long serialVersionUID = -7098360935104053232L;
+        final Subscriber<? super T> downstream;
+        long produced;
+        long remaining;
+        final SubscriptionArbiter sa;
+        final Publisher<? extends T> source;
+
+        RepeatSubscriber(Subscriber<? super T> actual, long count, SubscriptionArbiter sa, Publisher<? extends T> source) {
+            this.downstream = actual;
+            this.sa = sa;
+            this.source = source;
+            this.remaining = count;
+        }
+
+        @Override // io.reactivex.rxjava3.core.FlowableSubscriber
+        public void onSubscribe(Subscription s) {
+            this.sa.setSubscription(s);
+        }
+
+        public void onNext(T t) {
+            this.produced++;
+            this.downstream.onNext(t);
+        }
+
+        public void onError(Throwable t) {
+            this.downstream.onError(t);
+        }
+
+        public void onComplete() {
+            long j = this.remaining;
+            if (j != Long.MAX_VALUE) {
+                this.remaining = j - 1;
+            }
+            if (j != 0) {
+                subscribeNext();
+            } else {
+                this.downstream.onComplete();
+            }
+        }
+
+        void subscribeNext() {
+            if (getAndIncrement() == 0) {
+                int iAddAndGet = 1;
+                while (!this.sa.isCancelled()) {
+                    long j = this.produced;
+                    if (j != 0) {
+                        this.produced = 0L;
+                        this.sa.produced(j);
+                    }
+                    this.source.subscribe(this);
+                    iAddAndGet = addAndGet(-iAddAndGet);
+                    if (iAddAndGet == 0) {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}

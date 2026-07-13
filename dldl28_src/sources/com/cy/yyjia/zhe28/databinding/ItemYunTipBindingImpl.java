@@ -1,0 +1,135 @@
+package com.cy.yyjia.zhe28.databinding;
+
+import android.util.SparseIntArray;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import androidx.databinding.DataBindingComponent;
+import androidx.databinding.ViewDataBinding;
+import androidx.databinding.adapters.TextViewBindingAdapter;
+import com.cy.yyjia.zhe28.domain.YunTipBean;
+import com.cy.yyjia.zhe28.util.DataBindingHelper;
+
+/* JADX INFO: loaded from: classes2.dex */
+public class ItemYunTipBindingImpl extends ItemYunTipBinding {
+    private static final ViewDataBinding.IncludedLayouts sIncludes = null;
+    private static final SparseIntArray sViewsWithIds = null;
+    private long mDirtyFlags;
+    private final LinearLayout mboundView0;
+    private final TextView mboundView1;
+    private final TextView mboundView2;
+
+    public ItemYunTipBindingImpl(DataBindingComponent bindingComponent, View root) {
+        this(bindingComponent, root, mapBindings(bindingComponent, root, 3, sIncludes, sViewsWithIds));
+    }
+
+    private ItemYunTipBindingImpl(DataBindingComponent bindingComponent, View root, Object[] bindings) {
+        super(bindingComponent, root, 1);
+        this.mDirtyFlags = -1L;
+        LinearLayout linearLayout = (LinearLayout) bindings[0];
+        this.mboundView0 = linearLayout;
+        linearLayout.setTag(null);
+        TextView textView = (TextView) bindings[1];
+        this.mboundView1 = textView;
+        textView.setTag(null);
+        TextView textView2 = (TextView) bindings[2];
+        this.mboundView2 = textView2;
+        textView2.setTag(null);
+        setRootTag(root);
+        invalidateAll();
+    }
+
+    @Override // androidx.databinding.ViewDataBinding
+    public void invalidateAll() {
+        synchronized (this) {
+            this.mDirtyFlags = 4L;
+        }
+        requestRebind();
+    }
+
+    @Override // androidx.databinding.ViewDataBinding
+    public boolean hasPendingBindings() {
+        synchronized (this) {
+            return this.mDirtyFlags != 0;
+        }
+    }
+
+    @Override // androidx.databinding.ViewDataBinding
+    public boolean setVariable(int variableId, Object variable) {
+        if (23 != variableId) {
+            return false;
+        }
+        setData((YunTipBean) variable);
+        return true;
+    }
+
+    @Override // com.cy.yyjia.zhe28.databinding.ItemYunTipBinding
+    public void setData(YunTipBean Data) {
+        updateRegistration(0, Data);
+        this.mData = Data;
+        synchronized (this) {
+            this.mDirtyFlags |= 1;
+        }
+        notifyPropertyChanged(23);
+        super.requestRebind();
+    }
+
+    @Override // androidx.databinding.ViewDataBinding
+    protected boolean onFieldChange(int localFieldId, Object object, int fieldId) {
+        if (localFieldId != 0) {
+            return false;
+        }
+        return onChangeData((YunTipBean) object, fieldId);
+    }
+
+    private boolean onChangeData(YunTipBean Data, int fieldId) {
+        if (fieldId == 0) {
+            synchronized (this) {
+                this.mDirtyFlags |= 1;
+            }
+            return true;
+        }
+        if (fieldId != 94) {
+            return false;
+        }
+        synchronized (this) {
+            this.mDirtyFlags |= 2;
+        }
+        return true;
+    }
+
+    @Override // androidx.databinding.ViewDataBinding
+    protected void executeBindings() {
+        long j;
+        String desc;
+        boolean z;
+        synchronized (this) {
+            j = this.mDirtyFlags;
+            this.mDirtyFlags = 0L;
+        }
+        YunTipBean yunTipBean = this.mData;
+        long j2 = 7 & j;
+        String title = null;
+        if (j2 != 0) {
+            selected = yunTipBean != null ? yunTipBean.getSelected() : false;
+            z = !selected;
+            if ((j & 5) == 0 || yunTipBean == null) {
+                desc = null;
+            } else {
+                title = yunTipBean.getTitle();
+                desc = yunTipBean.getDesc();
+            }
+        } else {
+            desc = null;
+            z = false;
+        }
+        if (j2 != 0) {
+            DataBindingHelper.setSelected(this.mboundView1, selected);
+            DataBindingHelper.setViewGone(this.mboundView2, z);
+        }
+        if ((j & 5) != 0) {
+            TextViewBindingAdapter.setText(this.mboundView1, title);
+            TextViewBindingAdapter.setText(this.mboundView2, desc);
+        }
+    }
+}

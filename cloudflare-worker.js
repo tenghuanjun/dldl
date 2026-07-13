@@ -659,6 +659,108 @@ async function safeFetch(url, options) {
   return text;
 }
 
+// ==================== 套餐过期拦截 ====================
+// 通过游戏账号 uname 反查归属用户（accounts.user_id → users.plan_*)，
+// 若套餐已过期则禁止进入游戏。移动端不改版，仅 Worker 重新部署即生效。
+const PLAN_SUPABASE_URL = 'https://xywlbjsyhpyyxboznmct.supabase.co';
+const PLAN_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
+
+async function checkPlanStatus(uname) {
+  if (!uname) return { allowed: true };
+  try {
+    const headers = { 'apikey': PLAN_SUPABASE_KEY, 'Authorization': 'Bearer ' + PLAN_SUPABASE_KEY };
+    // 1. 游戏账号 → 归属用户 id
+    const accResp = await fetch(
+      PLAN_SUPABASE_URL + '/rest/v1/accounts?uname=eq.' + encodeURIComponent(uname) + '&select=user_id&limit=1',
+      { headers }
+    );
+    if (!accResp.ok) return { allowed: true };
+    const accs = await accResp.json();
+    if (!accs || !accs.length || !accs[0].user_id) return { allowed: true };
+    const userId = accs[0].user_id;
+    // 2. 用户 → 启用状态 + 套餐信息（只判 enabled，过期则懒禁用）
+    const userResp = await fetch(
+      PLAN_SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userId) + '&select=enabled,plan_type,plan_expire_at&limit=1',
+      { headers }
+    );
+    if (!userResp.ok) return { allowed: true };
+    const users = await userResp.json();
+    if (!users || !users.length) return { allowed: true };
+    const u = users[0];
+
+    // 1) 套餐「非永久」且已过期：优先判断，保证文案始终是「套餐已过期」
+    //    （即使已被懒禁用置为 enabled=false，仍走这里，避免文案退化成「账号已被禁用」）
+    const exp = u.plan_expire_at ? new Date(u.plan_expire_at).getTime() : NaN;
+    const isExpired = !isNaN(exp) && Date.now() >= exp;
+    if (u.plan_type && u.plan_type !== 'permanent' && isExpired) {
+      // 懒自动禁用：把用户置为禁用（写入失败不影响本次拦截）
+      if (u.enabled !== false) {
+        try {
+          await fetch(
+            PLAN_SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userId),
+            {
+              method: 'PATCH',
+              headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ enabled: false })
+            }
+          );
+        } catch (_) { /* 忽略写入失败，拦截照常生效 */ }
+      }
+      return { allowed: false, reason: '套餐已过期，请续费后再使用', expireAt: u.plan_expire_at };
+    }
+
+    // 2) 未过期但被禁用（管理员手动禁用，或 enabled 为 null/undefined 的异常兜底）：拦截
+    //    只有 enabled === true 才放行，null/undefined 一律视为禁用
+    if (u.enabled !== true) {
+      return { allowed: false, reason: '账号已被禁用，请联系管理员', expireAt: u.plan_expire_at };
+    }
+
+    return { allowed: true };
+  } catch (e) {
+    console.error('[plan-check] 校验异常，放行:', e.message);
+    return { allowed: true };
+  }
+}
+
+// 主动禁用：扫描所有「非永久套餐 + 已过期 + 仍启用」的用户，批量置为 enabled=false。
+// 由 Cron 定时触发（每6小时），使 account.html 用户管理列表能主动显示「已禁用」，
+// 无需等用户下次访问接口才懒禁用。也可通过 /api/disable-expired-users 手动触发。
+async function disableExpiredUsers() {
+  const headers = { 'apikey': PLAN_SUPABASE_KEY, 'Authorization': 'Bearer ' + PLAN_SUPABASE_KEY };
+  const result = { scanned: 0, disabled: 0, errors: 0 };
+  try {
+    // 只拉「仍启用 + 有到期时间」的用户，减少扫描量
+    const resp = await fetch(
+      PLAN_SUPABASE_URL + '/rest/v1/users?select=id,plan_type,plan_expire_at&enabled=eq.true&plan_expire_at=not.is.null',
+      { headers }
+    );
+    if (!resp.ok) { console.log('[disable-expired] 查询失败:', resp.status); return result; }
+    const users = await resp.json();
+    result.scanned = users.length;
+    const now = Date.now();
+    for (const u of users) {
+      if (u.plan_type === 'permanent') continue;              // 永久卡不禁用
+      const exp = u.plan_expire_at ? new Date(u.plan_expire_at).getTime() : NaN;
+      if (isNaN(exp) || now < exp) continue;                  // 未过期跳过
+      try {
+        const pr = await fetch(
+          PLAN_SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(u.id),
+          {
+            method: 'PATCH',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: false })
+          }
+        );
+        if (pr.ok) result.disabled++; else result.errors++;
+      } catch (_) { result.errors++; }
+    }
+  } catch (e) {
+    console.log('[disable-expired] 异常:', e.message);
+  }
+  console.log('[disable-expired] 完成: 扫描', result.scanned, '禁用', result.disabled, '错误', result.errors);
+  return result;
+}
+
 async function handlePassCode(request) {
   let body;
   try { body = await request.json(); } catch (_) {
@@ -671,6 +773,14 @@ async function handlePassCode(request) {
   const passSign = String(body.sign || '').trim();
   const uname = String(body.uname || '').trim();
   const upwd = String(body.upwd || '').trim();
+
+  // 套餐过期拦截（仅当传入游戏账号时校验；token 模式跳过）
+  if (uname) {
+    const plan = await checkPlanStatus(uname);
+    if (!plan.allowed) {
+      return jsonResponse({ ok: false, code: 'PLAN_EXPIRED', message: plan.reason }, 403);
+    }
+  }
 
   if (!sessionId) return jsonResponse({ ok: false, message: '缺少通行证码(sessionId)' }, 400);
 
@@ -765,6 +875,12 @@ async function handleAppLogin(request) {
   const upwd = String(body.upwd || '').trim();
   if (!uname || !upwd) return jsonResponse({ ok: false, message: '缺少 uname 或 upwd' }, 400);
 
+  // 套餐过期拦截：过期则禁止登录游戏
+  const plan = await checkPlanStatus(uname);
+  if (!plan.allowed) {
+    return jsonResponse({ ok: false, code: 'PLAN_EXPIRED', message: plan.reason }, 403);
+  }
+
   try {
     const result = await doLoginCore(uname, upwd);
     console.log('[app-login] ✅ 完成:', uname);
@@ -779,14 +895,40 @@ async function handleAppLogin(request) {
 
 const SUPABASE_URL = 'https://xywlbjsyhpyyxboznmct.supabase.co';
 
+// 获取「有效用户」id 集合：enabled=true 且（永久套餐 或 未过期）。
+// 供定时刷新过滤掉禁用/过期用户的账号，避免为其无意义地刷 token。
+// 返回 null 表示获取失败（调用方 FAIL-OPEN：不跳过任何账号，保持原行为，避免误杀）。
+async function getValidUserIds() {
+  const headers = { 'apikey': PLAN_SUPABASE_KEY, 'Authorization': 'Bearer ' + PLAN_SUPABASE_KEY };
+  try {
+    const resp = await fetch(
+      PLAN_SUPABASE_URL + '/rest/v1/users?select=id,plan_type,plan_expire_at&enabled=eq.true',
+      { headers }
+    );
+    if (!resp.ok) { console.log('[valid-users] 查询失败:', resp.status); return null; }
+    const users = await resp.json();
+    const ids = new Set();
+    const now = Date.now();
+    for (const u of users) {
+      if (u.plan_type === 'permanent') { ids.add(u.id); continue; }
+      const exp = u.plan_expire_at ? new Date(u.plan_expire_at).getTime() : NaN;
+      if (!isNaN(exp) && now < exp) ids.add(u.id);  // 未过期才有效
+    }
+    return ids;
+  } catch (e) {
+    console.log('[valid-users] 异常:', e.message);
+    return null;
+  }
+}
+
 async function refreshExpiredAccounts(env) {
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
   console.log('[cron] 开始扫描过期账号...');
-  const results = { scanned: 0, refreshed: 0, errors: 0, detail: [] };
+  const results = { scanned: 0, refreshed: 0, errors: 0, skipped: 0, detail: [] };
 
   try {
     // 查全量有URL的账号，按创建时间升序（最旧的优先）
-    let resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url,url_created_at&url=not.is.null&order=url_created_at.asc', {
+    let resp = await fetch(SUPABASE_URL + '/rest/v1/accounts?select=id,uname,upwd,url,url_created_at,user_id&url=not.is.null&order=url_created_at.asc', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     if (!resp.ok) { console.log('[cron] 查询失败:', resp.status); return results; }
@@ -794,15 +936,26 @@ async function refreshExpiredAccounts(env) {
     const accounts = await resp.json();
     results.scanned = accounts.length;
 
-    // 筛选过期账号（>=60h），按最旧优先
+    // 拉取有效用户集合（enabled=true 且未过期），用于过滤禁用/过期用户的账号
+    const validUserIds = await getValidUserIds();
+    console.log('[cron] 有效用户数:', validUserIds ? validUserIds.size : '获取失败(不过滤)');
+
+    // 筛选过期账号（>=60h），并剔除无归属 / 归属用户被禁用或套餐过期的账号
     const expired = [];
     for (const a of accounts) {
       const t = a.url_created_at ? new Date(a.url_created_at) : null;
       const ageH = t && !isNaN(t.getTime()) ? (Date.now() - t.getTime()) / 3600000 : -1;
-      if (ageH >= 60 && a.uname && a.upwd) expired.push({ acc: a, ageH });
+      if (ageH < 60 || !a.uname || !a.upwd) continue;
+      // 无归属用户 或 归属用户被禁用/过期 → 不刷新（停掉）。
+      // validUserIds 为 null（获取失败）时 FAIL-OPEN：不跳过任何账号，保持原行为。
+      if (validUserIds && (!a.user_id || !validUserIds.has(a.user_id))) {
+        results.skipped++;
+        continue;
+      }
+      expired.push({ acc: a, ageH });
     }
-    console.log('[cron] 过期账号:', expired.length, '→ 分发给 dlapi Worker 并行处理');
-    results.detail.push({ totalWithUrl: accounts.length, totalExpired: expired.length });
+    console.log('[cron] 过期账号:', expired.length, '→ 分发给 dlapi Worker 并行处理（已跳过', results.skipped, '个禁用/过期/无归属账号）');
+    results.detail.push({ totalWithUrl: accounts.length, totalExpired: expired.length, skipped: results.skipped });
 
     if (expired.length === 0) return results;
 
@@ -866,7 +1019,7 @@ async function refreshExpiredAccounts(env) {
     console.log('[cron] 异常:', e.message);
   }
 
-  console.log('[cron] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误');
+  console.log('[cron] 完成:', results.scanned, '扫描', results.refreshed, '刷新', results.errors, '错误', results.skipped, '跳过');
   return results;
 }
 
@@ -1067,6 +1220,7 @@ export default {
   async scheduled(event, env, ctx) {
     console.log('[cron] Cron Trigger fired:', new Date().toISOString());
     ctx.waitUntil(refreshExpiredAccounts(env));
+    ctx.waitUntil(disableExpiredUsers());  // 主动禁用过期套餐用户
   },
 
   async fetch(request, env) {
@@ -1091,6 +1245,12 @@ export default {
       // 手动触发定时刷新
       if (url.pathname === '/api/cron-refresh') {
         const result = await refreshExpiredAccounts(env);
+        return jsonResponse(result);
+      }
+
+      // 手动触发：扫描并禁用过期套餐用户
+      if (url.pathname === '/api/disable-expired-users') {
+        const result = await disableExpiredUsers();
         return jsonResponse(result);
       }
 

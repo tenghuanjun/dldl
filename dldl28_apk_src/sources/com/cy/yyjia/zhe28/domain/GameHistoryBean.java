@@ -1,0 +1,34 @@
+package com.cy.yyjia.zhe28.domain;
+
+import kotlin.Metadata;
+import kotlin.jvm.internal.Intrinsics;
+
+/* JADX INFO: compiled from: GameHistoryBean.kt */
+/* JADX INFO: loaded from: classes2.dex */
+@Metadata(d1 = {"\u0000\u0018\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0000\n\u0002\u0010\b\n\u0000\n\u0002\u0010\u000e\n\u0002\b\b\b\u0007\u0018\u00002\u00020\u0001B\u001d\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u0012\u0006\u0010\u0004\u001a\u00020\u0005\u0012\u0006\u0010\u0006\u001a\u00020\u0005¢\u0006\u0002\u0010\u0007R\u0011\u0010\u0004\u001a\u00020\u0005¢\u0006\b\n\u0000\u001a\u0004\b\b\u0010\tR\u0011\u0010\u0002\u001a\u00020\u0003¢\u0006\b\n\u0000\u001a\u0004\b\n\u0010\u000bR\u0011\u0010\u0006\u001a\u00020\u0005¢\u0006\b\n\u0000\u001a\u0004\b\f\u0010\t¨\u0006\r"}, d2 = {"Lcom/cy/yyjia/zhe28/domain/GameHistoryBean;", "", "id", "", "context", "", "time", "(ILjava/lang/String;Ljava/lang/String;)V", "getContext", "()Ljava/lang/String;", "getId", "()I", "getTime", "app_zhe28Release"}, k = 1, mv = {1, 9, 0}, xi = 48)
+public final class GameHistoryBean {
+    public static final int $stable = 0;
+    private final String context;
+    private final int id;
+    private final String time;
+
+    public GameHistoryBean(int i, String context, String time) {
+        Intrinsics.checkNotNullParameter(context, "context");
+        Intrinsics.checkNotNullParameter(time, "time");
+        this.id = i;
+        this.context = context;
+        this.time = time;
+    }
+
+    public final String getContext() {
+        return this.context;
+    }
+
+    public final int getId() {
+        return this.id;
+    }
+
+    public final String getTime() {
+        return this.time;
+    }
+}

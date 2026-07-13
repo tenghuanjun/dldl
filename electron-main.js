@@ -5,9 +5,12 @@
  * - 处理快捷登录 IPC：打开 37 门户并注入 UINFO/HISTORY cookie
  * - 管理子窗口（扫码页），共享 session 以支持多窗口 cookie 隔离
  */
+// Node.js 侧忽略 SSL 证书验证（必须在网络/HTTPS 模块加载前设置，否则直连 HTTPS 仍可能报握手错误）
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const path = require('path');
 const fs = require('fs');
-const { app, BrowserWindow, ipcMain, session, dialog, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, session, dialog, screen } = require('electron');
 
 // 构建产物优先：打包后存在 .min.js 则加载混淆版 preload，否则回退源码（开发态）
 function pickPreload(name) {
@@ -33,6 +36,13 @@ if (IS_APP_LOGIN_CHILD) {
   runAppLoginChildMode();
   return; // CommonJS 顶层 return 合法，终止后续执行
 }
+
+// ========== 网络 & SSL ==========
+// 忽略 Chromium 渲染进程的 SSL 证书错误（避免游戏服务器自签证书导致握手失败刷屏）
+app.commandLine.appendSwitch('ignore-certificate-errors');
+// 禁用本地 HTTP 缓存：避免修改 account.html 后需手动硬刷新才生效（本地管理面板无缓存需求）
+app.commandLine.appendSwitch('disable-http-cache');
+// Node.js 侧忽略 SSL 证书验证见文件顶部（需在网络模块加载前设置）
 
 // ========== GPU 加速 & 渲染优化 ==========
 // 禁用 GPU 沙箱（在某些 Windows 系统上可提升渲染性能）
@@ -82,6 +92,8 @@ if (!gotTheLock) {
   }
 
   let mainWindow = null;
+  let tray = null;
+  app.isQuiting = false;
   let httpServer = null;
   let portalCookieReady = false;
 
@@ -289,7 +301,7 @@ if (!gotTheLock) {
 
   const APP_WIN_W = 360;
   const APP_WIN_H = 600;
-  const APP_WIN_GAP = 8;
+  const APP_WIN_GAP = 3;
 
   /**
    * 打开一个独立的 APP 登录窗口（独立 Electron 进程 = 独立 GPU 进程）
@@ -452,9 +464,36 @@ if (!gotTheLock) {
       }
     });
 
-    mainWindow.on('closed', () => {
+    // 关闭按钮 → 最小化到托盘（不真正退出，保留多开窗口）
+    mainWindow.on('close', (e) => {
+      if (!app.isQuiting) {
+        e.preventDefault();
+        mainWindow.hide();
+        return;
+      }
       mainWindow = null;
     });
+
+    // ===== 系统托盘：最小化到托盘后双击/右键可恢复；点「退出」才真退出并回收多开 =====
+    if (!tray) {
+      try {
+        const iconFile = path.join(__dirname, 'logo.png');
+        const img = fs.existsSync(iconFile)
+          ? nativeImage.createFromPath(iconFile)
+          : nativeImage.createFromDataURL('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+        tray = new Tray(img);
+        tray.setToolTip('DLDL-Proxy');
+        const trayMenu = Menu.buildFromTemplate([
+          { label: '显示主窗口', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+          { type: 'separator' },
+          { label: '退出（关闭所有多开窗口）', click: () => { app.isQuiting = true; app.quit(); } }
+        ]);
+        tray.setContextMenu(trayMenu);
+        tray.on('click', () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
+      } catch (e) {
+        console.error('[tray] 创建托盘失败:', e);
+      }
+    }
 
     const url = `http://127.0.0.1:${PORT}/account.html`;
     try {
@@ -489,6 +528,7 @@ if (!gotTheLock) {
   app.on('second-instance', () => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
       mainWindow.focus();
     }
   });
@@ -529,7 +569,7 @@ if (!gotTheLock) {
   });
 
   app.on('window-all-closed', () => {
-    app.quit();
+    if (!app.isQuiting) app.quit();
   });
 }
 

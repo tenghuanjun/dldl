@@ -1,0 +1,65 @@
+package com.cy.yyjia.zhe28.databinding;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import androidx.viewbinding.ViewBinding;
+import androidx.viewbinding.ViewBindings;
+import com.cy.yyjia.zhe28.R;
+
+/* JADX INFO: loaded from: classes2.dex */
+public final class PopYunBinding implements ViewBinding {
+    private final LinearLayout rootView;
+    public final TextView tv1;
+    public final TextView tv2;
+    public final TextView tv3;
+    public final TextView tv4;
+
+    private PopYunBinding(LinearLayout rootView, TextView tv1, TextView tv2, TextView tv3, TextView tv4) {
+        this.rootView = rootView;
+        this.tv1 = tv1;
+        this.tv2 = tv2;
+        this.tv3 = tv3;
+        this.tv4 = tv4;
+    }
+
+    @Override // androidx.viewbinding.ViewBinding
+    public LinearLayout getRoot() {
+        return this.rootView;
+    }
+
+    public static PopYunBinding inflate(LayoutInflater inflater) {
+        return inflate(inflater, null, false);
+    }
+
+    public static PopYunBinding inflate(LayoutInflater inflater, ViewGroup parent, boolean attachToParent) {
+        View viewInflate = inflater.inflate(R.layout.pop_yun, parent, false);
+        if (attachToParent) {
+            parent.addView(viewInflate);
+        }
+        return bind(viewInflate);
+    }
+
+    public static PopYunBinding bind(View rootView) {
+        int i = R.id.tv1;
+        TextView textView = (TextView) ViewBindings.findChildViewById(rootView, R.id.tv1);
+        if (textView != null) {
+            i = R.id.tv2;
+            TextView textView2 = (TextView) ViewBindings.findChildViewById(rootView, R.id.tv2);
+            if (textView2 != null) {
+                i = R.id.tv3;
+                TextView textView3 = (TextView) ViewBindings.findChildViewById(rootView, R.id.tv3);
+                if (textView3 != null) {
+                    i = R.id.tv4;
+                    TextView textView4 = (TextView) ViewBindings.findChildViewById(rootView, R.id.tv4);
+                    if (textView4 != null) {
+                        return new PopYunBinding((LinearLayout) rootView, textView, textView2, textView3, textView4);
+                    }
+                }
+            }
+        }
+        throw new NullPointerException("Missing required view with ID: ".concat(rootView.getResources().getResourceName(i)));
+    }
+}

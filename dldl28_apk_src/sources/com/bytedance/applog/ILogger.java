@@ -1,0 +1,6 @@
+package com.bytedance.applog;
+
+/* JADX INFO: loaded from: classes2.dex */
+public interface ILogger {
+    void log(String str, Throwable th);
+}

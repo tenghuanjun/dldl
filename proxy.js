@@ -319,7 +319,8 @@ function fetchText(url, useProxy = false, timeoutMs = 0) {
       path: urlObj.pathname + urlObj.search,
       method: 'GET',
       timeout: effectiveTimeout,
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      rejectUnauthorized: false  // 忽略证书验证，避免 SSL 握手失败
     };
 
     const req = protocol.request(options, (resp) => {

@@ -1,0 +1,14 @@
+package com.google.protobuf;
+
+import com.google.protobuf.GeneratedMessageLite;
+
+/* JADX INFO: loaded from: d:\dldl\dldl28_apk_extract\classes3.dex */
+final class NewInstanceSchemaLite implements NewInstanceSchema {
+    NewInstanceSchemaLite() {
+    }
+
+    @Override // com.google.protobuf.NewInstanceSchema
+    public Object newInstance(Object obj) {
+        return ((GeneratedMessageLite) obj).dynamicMethod(GeneratedMessageLite.MethodToInvoke.NEW_MUTABLE_INSTANCE);
+    }
+}

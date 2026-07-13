@@ -302,6 +302,13 @@
             display: flex; align-items: center;
         }
         .account-select-wrap input { width: 18px; height: 18px; accent-color: #C3702A; }
+    .plan-bar { display: flex; align-items: center; gap: 8px; padding: 4px 12px 8px; }
+    .plan-user { font-weight: 600; color: #333; font-size: 14px; }
+    .plan-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; color: #fff; }
+    .plan-badge.plan-none { background: #9aa0a6; }
+    .plan-badge.plan-permanent { background: #C3702A; }
+    .plan-badge.plan-active { background: #C3702A; }
+    .plan-badge.plan-expired { background: #d23b3b; }
     </style>
 </head>
 <body>
@@ -354,6 +361,10 @@
                 <button class="btn btn-secondary btn-sm" @click="openAddModal">新增</button>
                 <button class="btn btn-secondary btn-sm" @click="handleLogout">退出</button>
             </div>
+        </div>
+        <div class="plan-bar" v-if="planInfo">
+            <span class="plan-user">{{ currentUser && currentUser.username }}</span>
+            <span class="plan-badge" :class="planInfo.cls">{{ planInfo.label }}</span>
         </div>
         <div class="tip" v-if="lastRefresh">最近刷新：{{ lastRefresh }}<br>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。</div>
         <div class="tip" v-else>点击「刷新APPtoken」更新凭据，「APP登录」打开游戏链接。绿色圆点表示已有URL。</div>
@@ -466,7 +477,7 @@
 </div>
 
 <script>
-const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted, onUnmounted } = Vue;
 
 createApp({
     setup() {
@@ -580,7 +591,9 @@ createApp({
                         headers: jsonHdrs(),
                         body: JSON.stringify({ name: area, user_id: currentUser.value.id, sort_order: 999 })
                     });
-                    if (!createAreaResp.ok) throw new Error('创建区服失败 (' + createAreaResp.status + ')');
+                    if (!createAreaResp.ok && createAreaResp.status !== 409) {
+                        throw new Error('创建区服失败 (' + createAreaResp.status + ')');
+                    }
                 }
 
                 var body = {
@@ -1041,6 +1054,12 @@ createApp({
                 if (!arr || !arr.length) throw new Error('用户不存在');
                 var data = arr[0];
                 if (data.enabled === false) throw new Error('账号已被禁用，请联系管理员开启');
+                // 套餐过期直接拒绝登录（管理员与永久卡不受限；未开通套餐不拦截）
+                var isAdminLogin = data.is_admin === true || data.username === 'tenghuanjun';
+                if (!isAdminLogin && data.plan_type && data.plan_type !== 'permanent' && data.plan_expire_at) {
+                    var expLogin = new Date(data.plan_expire_at).getTime();
+                    if (!isNaN(expLogin) && Date.now() >= expLogin) throw new Error('套餐已过期，请联系管理员续费');
+                }
                 var hash = hashPassword(password);
                 console.log('[mobile login] user:', data.username, 'db_hash:', data.password_hash, 'computed_hash:', hash, 'match:', hash === data.password_hash);
                 if (hash !== data.password_hash) throw new Error('密码错误');
@@ -1089,23 +1108,41 @@ createApp({
             Object.keys(launchedMap).forEach(function(k) { delete launchedMap[k]; });
         }
 
-        // 被禁用→踢下线属于预期流程，用此哨兵消息区分真实异常
+        // 被禁用/套餐过期→踢下线属于预期流程，用此哨兵消息区分真实异常
         const DISABLED_MSG = '账号已被禁用，已退出登录';
+        const EXPIRED_MSG = '套餐已过期，已退出登录';
 
-        // ===== 校验当前账号是否仍启用（被禁用则踢下线） =====
-        async function checkUserEnabled() {
+        // ===== 校验当前账号状态（被禁用或套餐过期则踢下线） =====
+        async function checkAccountStatus() {
             if (!currentUser.value) return;
             try {
-                var resp = await fetch(API + '/users?select=enabled&id=eq.' + currentUser.value.id, { headers: hdrs() });
+                var resp = await fetch(API + '/users?select=enabled,plan_type,plan_expire_at&id=eq.' + currentUser.value.id, { headers: hdrs() });
                 if (!resp.ok) return; // 网络/权限异常时不拦截，避免误踢
                 var arr = await resp.json();
-                if (arr && arr.length && arr[0].enabled === false) {
+                if (!arr || !arr.length) return;
+                var u = arr[0];
+                // 同步套餐信息到本地（管理员改套餐后即见）
+                if (currentUser.value) {
+                    currentUser.value.plan_type = u.plan_type;
+                    currentUser.value.plan_expire_at = u.plan_expire_at;
+                }
+                if (u.enabled === false) {
                     showToast('您的账号已被禁用，已自动退出登录');
                     handleLogout();
                     throw new Error(DISABLED_MSG);
                 }
+                // 套餐过期检测：管理员与永久卡不受限；未开通套餐不拦截
+                var isAdmin = currentUser.value && (currentUser.value.is_admin === true || currentUser.value.username === 'tenghuanjun');
+                if (!isAdmin && u.plan_type && u.plan_type !== 'permanent' && u.plan_expire_at) {
+                    var exp = new Date(u.plan_expire_at).getTime();
+                    if (!isNaN(exp) && Date.now() >= exp) {
+                        showToast('套餐已过期，已自动退出登录，请联系管理员续费');
+                        handleLogout();
+                        throw new Error(EXPIRED_MSG);
+                    }
+                }
             } catch (e) {
-                if (e.message === DISABLED_MSG) throw e;
+                if (e.message === DISABLED_MSG || e.message === EXPIRED_MSG) throw e;
                 // 其他错误（网络等）忽略，不影响后续刷新
             }
         }
@@ -1113,7 +1150,7 @@ createApp({
         // ===== 加载账号数据（从服务端） =====
         async function fetchAccounts() {
             if (!currentUser.value) return;
-            await checkUserEnabled();
+            await checkAccountStatus();
             var uid = currentUser.value.id;
             var areasPromise = fetch(
                 API + '/areas?select=*&user_id=eq.' + uid + '&order=sort_order.asc',
@@ -1487,6 +1524,7 @@ createApp({
         }
 
         // ===== 初始化 =====
+        var statusTimer = null;
         onMounted(function() {
             var saved = localStorage.getItem('dldl_user');
             if (saved) {
@@ -1499,6 +1537,29 @@ createApp({
                     }
                 } catch (e) { localStorage.removeItem('dldl_user'); }
             }
+            // 已登录则每小时检测一次：账号被禁用或套餐过期时自动退出
+            if (currentUser.value) checkAccountStatus();
+            statusTimer = setInterval(function() { checkAccountStatus(); }, 3600000);
+        });
+        onUnmounted(function() {
+            if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+        });
+
+        // 套餐信息展示（与桌面端徽章一致）：未开通/永久卡/剩X天/已过期
+        const planInfo = computed(function() {
+            var u = currentUser.value;
+            if (!u) return null;
+            var type = u.plan_type;
+            if (!type) return { label: '未开通套餐', cls: 'plan-none' };
+            if (type === 'permanent') return { label: '永久卡', cls: 'plan-permanent' };
+            if (!u.plan_expire_at) return { label: '未开通套餐', cls: 'plan-none' };
+            var exp = new Date(u.plan_expire_at);
+            if (isNaN(exp.getTime())) return { label: '套餐', cls: 'plan-none' };
+            var y = exp.getFullYear(), m = exp.getMonth() + 1, d = exp.getDate();
+            var dateStr = y + '/' + m + '/' + d;
+            if (Date.now() >= exp.getTime()) return { label: '已过期 ' + dateStr, cls: 'plan-expired' };
+            var days = Math.floor((exp.getTime() - Date.now()) / 86400000);
+            return { label: '剩' + days + '天·到期' + dateStr, cls: 'plan-active' };
         });
 
         return {
@@ -1529,6 +1590,7 @@ createApp({
             getPassCodeValue, getPassCodeStatus, isPassCodeSending,
             onPassCodeInput, onPassCodeBlur, clearPassCode,
             scrollToTop,
+            planInfo: planInfo,
             toastVisible: toastVisible, toastMsg: toastMsg, showToast: showToast
         };
     }

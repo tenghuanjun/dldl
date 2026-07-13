@@ -37,9 +37,9 @@
         <template v-if="isLoggedIn">
         <header class="account-controls-sticky">
             <div class="sticky-row sticky-row-top">
-                <h1 class="sticky-page-title">多账号扫码入口</h1>
                 <div class="user-info">
                     <span class="username">{{ currentUser?.username }}</span>
+                    <span class="user-plan" :class="currentPlan.cls" v-if="currentPlan.text">{{ currentPlan.text }}</span>
                     <button v-if="isAdmin" class="btn btn-secondary btn-compact" type="button" @click="openUserManageModal">用户管理</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="handleLogout">退出</button>
                 </div>
@@ -329,12 +329,12 @@
                         </span>
                         <span class="um-col-plan">
                             <span class="user-manage-plan" :class="planClass(user)">{{ planLabel(user) }}</span>
-                            <select class="plan-select" :value="user.plan_type || ''" @change="setPlan(user, $event)" :disabled="user.username === 'tenghuanjun'">
-                                <option value="" disabled>设置套餐</option>
+                            <select class="plan-select" :value="user.plan_type || ''" @mousedown.capture="onPlanSelectOpen($event)" @change="setPlan(user, $event)" :disabled="user.username === 'tenghuanjun'">
+                                <option value="" disabled>选择套餐▼</option>
                                 <option value="permanent">永久卡</option>
                                 <option value="year">年卡</option>
                                 <option value="month">月卡</option>
-                                <option value="trial">体验卡(3天)</option>
+                                <option value="trial">体验卡</option>
                             </select>
                         </span>
                         <span class="um-col-actions">
@@ -526,11 +526,28 @@
                 },
                 isAdmin() {
                     return this.currentUser?.username === 'tenghuanjun';
+                },
+                /** 当前登录用户的套餐摘要：用于 header 醒目展示到期时间 */
+                currentPlan() {
+                    const u = this.currentUser;
+                    if (!u) return { text: '', cls: '' };
+                    if (!u.plan_type) return { text: '未开通套餐', cls: 'plan-none' };
+                    if (u.plan_type === 'permanent') return { text: '永久卡', cls: 'plan-active' };
+                    const end = u.plan_expire_at ? new Date(u.plan_expire_at) : null;
+                    if (!end || isNaN(end.getTime())) return { text: this.planTypeName(u.plan_type), cls: 'plan-active' };
+                    const now = new Date();
+                    const days = Math.ceil((end - now) / 86400000);
+                    const endStr = this.fmtFullDate(u.plan_expire_at);
+                    if (end <= now) return { text: `已过期 ${endStr}`, cls: 'plan-expired' };
+                    return { text: `剩${days}天 · 到期${endStr}`, cls: 'plan-active' };
                 }
             },
             mounted() {
                 this.checkLoginState();
                 this.fixAndLoadProxyConfig();
+                // 已登录则立即校验一次，并每小时检测：账号被禁用或套餐过期时自动退出
+                if (this.isLoggedIn) this.checkAccountStatus();
+                this._statusTimer = setInterval(() => { this.checkAccountStatus(); }, 3600000);
                 this._onLoginPageTokenMessage = (event) => {
                     if (event.origin !== window.location.origin) return;
                     const payload = event.data;
@@ -543,6 +560,7 @@
                 if (this._onLoginPageTokenMessage) {
                     window.removeEventListener('message', this._onLoginPageTokenMessage);
                 }
+                if (this._statusTimer) { clearInterval(this._statusTimer); this._statusTimer = null; }
             },
             methods: {
                 hashPassword(password) {
@@ -584,6 +602,11 @@
                         const hash = this.hashPassword(password);
                         if (hash !== data.password_hash) throw new Error('密码错误');
                         if (data.enabled === false) throw new Error('账号已被禁用，请联系管理员');
+                        // 套餐过期直接拒绝登录（管理员与永久卡不受限；未开通套餐不拦截）
+                        if (data.username !== 'tenghuanjun' && data.plan_type && data.plan_type !== 'permanent' && data.plan_expire_at) {
+                            const exp = new Date(data.plan_expire_at).getTime();
+                            if (!isNaN(exp) && Date.now() >= exp) throw new Error('套餐已过期，请联系管理员续费');
+                        }
                         const { password_hash, ...userInfo } = data;
                         this.currentUser = userInfo; this.isLoggedIn = true;
                         localStorage.setItem('dldl_user', JSON.stringify(userInfo));
@@ -700,17 +723,32 @@
                 planTypeName(type) {
                     return { permanent: '永久卡', year: '年卡', month: '月卡', trial: '体验卡' }[type] || '未设置';
                 },
-                // 列表显示：套餐名 + 到期/剩余状态
+                // 日期格式化为 YYYY/MM/DD（供套餐到期展示）
+                fmtFullDate(iso) {
+                    if (!iso) return '';
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return '';
+                    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+                },
+                // 日期格式化为 MM/DD
+                fmtDate(iso) {
+                    if (!iso) return '';
+                    const d = new Date(iso);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                },
+                // 列表显示：套餐名 + 起止日期
                 planLabel(user) {
                     if (!user.plan_type) return '未设置';
                     const name = this.planTypeName(user.plan_type);
                     if (user.plan_type === 'permanent') return name;
-                    if (!user.plan_expire_at) return name;
+                    const start = this.fmtDate(user.plan_start_at);
+                    const end = this.fmtDate(user.plan_expire_at);
+                    if (!user.plan_expire_at) return start ? `${name}（${start}起）` : name;
                     const exp = new Date(user.plan_expire_at);
                     const now = new Date();
-                    if (exp <= now) return name + '·已过期';
+                    if (exp <= now) return `${name}·已过期（${end}）`;
                     const days = Math.ceil((exp - now) / 86400000);
-                    return name + '·剩' + days + '天';
+                    return `${name} ${start}→${end} 剩${days}天`;
                 },
                 // 套餐标签着色：有效 / 过期 / 未设置
                 planClass(user) {
@@ -719,36 +757,61 @@
                     if (user.plan_expire_at && new Date(user.plan_expire_at) > new Date()) return 'plan-active';
                     return 'plan-expired';
                 },
-                // 设置套餐：从当前时间起算，永久卡无到期，年/月/体验卡按期限计算到期时间
+                // 根据套餐类型计算默认到期日（从现在起算）
+                defaultPlanExpire(planType) {
+                    const now = new Date();
+                    if (planType === 'year') { const d = new Date(now); d.setFullYear(d.getFullYear() + 1); return d; }
+                    if (planType === 'month') { const d = new Date(now); d.setMonth(d.getMonth() + 1); return d; }
+                    if (planType === 'trial') { const d = new Date(now); d.setDate(d.getDate() + 3); return d; }
+                    return null;
+                },
+                /** 修复 select 同值不触发 change 的问题：点击下拉时先清空值，确保选任何项都触发 change */
+                onPlanSelectOpen(evt) {
+                    evt.target.value = '';
+                },
+                // 设置套餐：选择类型后弹出到期日输入，让管理员指定具体过期时间
                 async setPlan(user, evt) {
                     if (user.username === 'tenghuanjun') return;
                     const planType = evt && evt.target ? evt.target.value : evt;
-                    if (!planType || planType === user.plan_type) return;
+                    if (!planType) {
+                        // 空值=用户取消了选择或选中了占位项，还原 select
+                        if (evt && evt.target) evt.target.value = user.plan_type || '';
+                        return;
+                    }
                     const label = this.planTypeName(planType);
-                    const confirmed = await this.confirmAction(`确认将用户 ${user.username} 的使用权限设置为「${label}」吗？将从现在开始计算期限。`, '设置套餐');
-                    if (!confirmed) {
-                        // 取消时把下拉还原回原值
+                    const defaultExpire = this.defaultPlanExpire(planType);
+                    const defaultDateStr = defaultExpire ? defaultExpire.toISOString().slice(0, 10) : '';
+                    // 弹窗让用户确认/修改到期日期
+                    const expireDateStr = await this.promptPlanExpireDate(user.username, label, defaultDateStr);
+                    if (expireDateStr === null) {
                         if (evt && evt.target) evt.target.value = user.plan_type || '';
                         return;
                     }
                     const now = new Date();
                     let expire = null;
-                    if (planType === 'year') { expire = new Date(now); expire.setFullYear(expire.getFullYear() + 1); }
-                    else if (planType === 'month') { expire = new Date(now); expire.setMonth(expire.getMonth() + 1); }
-                    else if (planType === 'trial') { expire = new Date(now); expire.setDate(expire.getDate() + 3); }
-                    // permanent: expire 保持 null
+                    if (planType !== 'permanent' && expireDateStr) {
+                        expire = new Date(expireDateStr + 'T23:59:59');
+                        if (isNaN(expire.getTime())) {
+                            this.showError('日期格式不正确');
+                            if (evt && evt.target) evt.target.value = user.plan_type || '';
+                            return;
+                        }
+                    }
                     try {
                         const payload = {
                             plan_type: planType,
                             plan_start_at: now.toISOString(),
-                            plan_expire_at: expire ? expire.toISOString() : null
+                            plan_expire_at: expire ? expire.toISOString() : null,
+                            enabled: true  // 设置/续费套餐即恢复启用
                         };
                         const { error } = await db.from('users').update(payload).eq('id', user.id);
                         if (error) throw error;
                         user.plan_type = payload.plan_type;
                         user.plan_start_at = payload.plan_start_at;
                         user.plan_expire_at = payload.plan_expire_at;
-                        this.showSuccess(`已将 ${user.username} 设置为「${label}」`);
+                        user.enabled = true;
+                        const expireInfo = expire ? `，到期 ${expireDateStr}` : '';
+                        this.showSuccess(`已将 ${user.username} 设置为「${label}」${expireInfo}`);
                     } catch (e) {
                         if (evt && evt.target) evt.target.value = user.plan_type || '';
                         this.showError(`设置套餐失败：${e.message}`);
@@ -892,6 +955,33 @@
                         return false;
                     }
                 },
+                /** 弹出日期输入框，让管理员指定套餐到期日。返回日期字符串 'YYYY-MM-DD' 或 null（取消） */
+                async promptPlanExpireDate(username, planLabel, defaultDateStr) {
+                    // 降级：无 ElMessageBox 时直接用 window.prompt
+                    if (!ElMessageBox || typeof ElMessageBox.prompt !== 'function') {
+                        const input = window.prompt(`为用户「${username}」设置「${planLabel}」\n请输入到期日期（YYYY-MM-DD）：`, defaultDateStr);
+                        if (!input) return null;
+                        return input.trim();
+                    }
+                    try {
+                        const { value } = await ElMessageBox.prompt(
+                            `为用户「${username}」设置「${planLabel}」\n请输入到期日期：`,
+                            '设置到期时间',
+                            {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                                inputValue: defaultDateStr,
+                                inputType: 'text',
+                                inputPlaceholder: 'YYYY-MM-DD',
+                                closeOnClickModal: false,
+                                appendTo: document.body
+                            }
+                        );
+                        return (value || '').trim() || null;
+                    } catch (_) {
+                        return null;
+                    }
+                },
                 CACHE_KEY_ACCOUNTS() {
                     return 'dldl_accounts_' + (this.currentUser?.id || '');
                 },
@@ -913,21 +1003,42 @@
                     } catch (e) {}
                     return false;
                 },
-                async refreshAccounts() {
-                    // 点击刷新列表时先校验当前用户状态：被禁用则直接退出账号并提示
-                    if (this.currentUser && this.currentUser.id) {
-                        try {
-                            const { data: u, error: uErr } = await db
-                                .from('users').select('enabled').eq('id', this.currentUser.id).single();
-                            if (!uErr && u && u.enabled === false) {
-                                this.handleLogout();
-                                this.showError('当前账号已被禁用，已自动退出登录');
-                                return;
-                            }
-                        } catch (_) {
-                            // 查询用户状态失败时仍继续刷新列表，不阻塞主流程
+                /**
+                 * 校验当前登录用户状态：被禁用或套餐过期则自动退出登录。
+                 * 由「刷新列表」及每小时定时器调用。返回 false 表示已退出。
+                 * 查询失败时 fail-open（返回 true，不误踢）。
+                 */
+                async checkAccountStatus() {
+                    if (!this.currentUser || !this.currentUser.id) return true;
+                    try {
+                        const { data: u, error: uErr } = await db
+                            .from('users').select('enabled, plan_type, plan_expire_at').eq('id', this.currentUser.id).single();
+                        if (uErr || !u) return true; // 查询失败不阻塞主流程
+                        // 同步套餐信息，使 header 到期时间始终最新（管理员改套餐后即见）
+                        this.currentUser.plan_type = u.plan_type;
+                        this.currentUser.plan_expire_at = u.plan_expire_at;
+                        if (u.enabled === false) {
+                            this.handleLogout();
+                            this.showError('当前账号已被禁用，已自动退出登录');
+                            return false;
                         }
+                        // 套餐过期检测：管理员与永久卡不受限；未开通套餐（plan_type 为空）不在此拦截
+                        if (!this.isAdmin && u.plan_type && u.plan_type !== 'permanent' && u.plan_expire_at) {
+                            const exp = new Date(u.plan_expire_at).getTime();
+                            if (!isNaN(exp) && Date.now() >= exp) {
+                                this.handleLogout();
+                                this.showError('套餐已过期，已自动退出登录，请联系管理员续费');
+                                return false;
+                            }
+                        }
+                        return true;
+                    } catch (_) {
+                        return true;
                     }
+                },
+                async refreshAccounts() {
+                    // 点击刷新列表时先校验当前用户状态：被禁用或套餐过期则自动退出
+                    if (!(await this.checkAccountStatus())) return;
                     this.accountsRefreshing = true;
                     try {
                         await this.loadAccounts();
@@ -1214,6 +1325,11 @@
                     this.loadingText = '正在添加账号...';
                     this.loadingVisible = true;
                     try {
+                        // 确保区服记录存在（外键 accounts.area_name → areas.name）
+                        const { data: areaExists } = await db.from('areas').select('name').eq('name', area).eq('user_id', this.currentUser.id).maybeSingle();
+                        if (!areaExists) {
+                            await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 0 });
+                        }
                         const { data, error } = await db.from('accounts').insert({
                             user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url
                         }).select().single();
@@ -2542,7 +2658,7 @@
             gap: 6px; min-width: 0;
         }
 
-        .user-info { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
         .username { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
         .batch-row-head {
@@ -2982,6 +3098,12 @@
         .plan-active  { color: #f59e0b; background: rgba(245,158,11,0.1); }
         .plan-expired { color: var(--danger); background: var(--danger-soft); }
         .plan-none    { color: var(--text-muted); background: rgba(148,163,184,0.1); }
+
+        /* 当前用户套餐徽章（header 用户名旁） */
+        .user-info .user-plan {
+            font-size: 11px; padding: 2px 9px; border-radius: 999px;
+            font-weight: 600; white-space: nowrap; flex-shrink: 0;
+        }
 
         .um-col-plan .plan-select {
             flex-shrink: 0;
