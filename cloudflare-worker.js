@@ -865,6 +865,47 @@ async function doLoginCore(uname, upwd) {
   };
 }
 
+/**
+ * 28 手游登录：POST https://mobile.28zhe.com/api/v1/user/login
+ * 明文密码 + bearer 鉴权，无 SignV3/AES 签名。与 37 系完全独立。
+ */
+async function zhe28UserLogin(uname, upwd) {
+  const formBody = new URLSearchParams({
+    username: uname, password: upwd, version: '2'
+  }).toString();
+  const resp = await fetch('https://mobile.28zhe.com/api/v1/user/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Authorization': 'bearer ',
+      'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QT)'
+    },
+    body: formBody
+  });
+  const json = await resp.json().catch(() => ({}));
+  if (json.code !== 200) {
+    throw new Error(json.msg || '28 登录失败');
+  }
+  const d = json.data || {};
+  const token = String(d.token || d.access_token || '');
+  console.log('[zhe28] 登录成功:', uname, 'uid=', d.uid || d.user_id || '');
+  const genUuid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => (c === 'x' ? Math.random() * 16 | 0 : (Math.random() * 4 | 8)).toString(16));
+  return {
+    ok: true, state: 1, platform: '28', msg: json.msg || 'ok',
+    uid: String(d.uid || d.user_id || ''),
+    uname: String(d.uname || d.username || uname),
+    token,
+    sign: '',
+    entryTime: String(Math.floor(Date.now() / 1000)),
+    appVer: '134',
+    platCode: '28zhe',
+    IMEI: genUuid(),
+    entryGid: '1003279',
+    entryPid: '46',
+    rawLoginData: d
+  };
+}
+
 // ==================== /api/app-login ====================
 
 async function handleAppLogin(request) {
@@ -873,6 +914,7 @@ async function handleAppLogin(request) {
 
   const uname = String(body.uname || '').trim();
   const upwd = String(body.upwd || '').trim();
+  const platform = String(body.platform || '37').trim();
   if (!uname || !upwd) return jsonResponse({ ok: false, message: '缺少 uname 或 upwd' }, 400);
 
   // 套餐过期拦截：过期则禁止登录游戏
@@ -882,8 +924,8 @@ async function handleAppLogin(request) {
   }
 
   try {
-    const result = await doLoginCore(uname, upwd);
-    console.log('[app-login] ✅ 完成:', uname);
+    const result = platform === '28' ? await zhe28UserLogin(uname, upwd) : await doLoginCore(uname, upwd);
+    console.log('[app-login] ✅ 完成:', uname, 'platform=', platform);
     return jsonResponse(result);
   } catch (error) {
     console.error('[app-login] 失败:', error.message);

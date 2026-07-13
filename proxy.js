@@ -682,6 +682,68 @@ const APP_LOGIN_CONFIG = {
 };
 APP_LOGIN_CONFIG.AES_KEY = APP_LOGIN_CONFIG.APP_KEY.substring(0, 16);
 
+/**
+ * 28 手游登录：POST https://mobile.28zhe.com/api/v1/user/login
+ * 与 37 系完全不同：明文密码、bearer 鉴权、无 SignV3/AES 签名。
+ * 详见《28手游斗罗反编译分析文档.md》。
+ */
+async function zhe28UserLogin(uname, upwd) {
+  const formBody = new URLSearchParams({
+    username: uname,
+    password: upwd,
+    version: '2'
+  }).toString();
+  const urlObj = new URL('https://mobile.28zhe.com/api/v1/user/login');
+  const bodyText = await new Promise((resolve, reject) => {
+    const opts = {
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname,
+      method: 'POST',
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Content-Length': Buffer.byteLength(formBody),
+        // 首次登录 token 为空，按反编译逻辑仍带 bearer 头
+        'Authorization': 'bearer ',
+        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 10; Android SDK built for x86_64 Build/QT)'
+      }
+    };
+    const req = https.request(opts, (resp) => {
+      let data = '';
+      resp.on('data', (c) => { data += c.toString(); });
+      resp.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('28 登录请求超时')); });
+    req.write(formBody);
+    req.end();
+  });
+  let json;
+  try { json = JSON.parse(bodyText); } catch (e) { throw new Error('28 登录响应解析失败: ' + bodyText.slice(0, 200)); }
+  // 28 返回结构: { code:200, msg, data:{...} }
+  if (json.code !== 200) {
+    throw new Error(json.msg || '28 登录失败');
+  }
+  const d = json.data || {};
+  const token = String(d.token || d.access_token || '');
+  console.log('[zhe28] 登录成功:', uname, 'uid=', d.uid || d.user_id || '');
+  return {
+    ok: true, state: 1, platform: '28', msg: json.msg || 'ok',
+    uid: String(d.uid || d.user_id || ''),
+    uname: String(d.uname || d.username || uname),
+    token,
+    sign: '',
+    entryTime: String(Math.floor(Date.now() / 1000)),
+    appVer: '134',
+    platCode: '28zhe',
+    IMEI: (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => (c === 'x' ? Math.random() * 16 | 0 : (Math.random() * 4 | 8)).toString(16))),
+    entryGid: '1003279',
+    entryPid: '46',
+    rawLoginData: d
+  };
+}
+
 function appAesEncrypt(plainText, key) {
   const cipher = crypto.createCipheriv('aes-128-ecb', Buffer.from(key, 'utf8'), null);
   cipher.setAutoPadding(true);
@@ -998,6 +1060,16 @@ app.post('/api/app-login', async (req, res) => {
     const upwd = String(req.body.upwd || '').trim();
     if (!uname || !upwd) {
       return res.status(400).json({ ok: false, message: '缺少 uname 或 upwd' });
+    }
+
+    const platform = String(req.body.platform || '37').trim();
+    if (platform === '28') {
+      try {
+        const r = await zhe28UserLogin(uname, upwd);
+        return res.json(r);
+      } catch (e) {
+        return res.status(500).json({ ok: false, message: e.message });
+      }
     }
 
     const encryptedPwd = appAesEncrypt(upwd, APP_LOGIN_CONFIG.AES_KEY);

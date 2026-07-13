@@ -215,6 +215,13 @@
                         </el-select>
                     </div>
                     <div class="form-field">
+                        <label class="form-label">平台</label>
+                        <el-select v-model="accountForm.platform" class="platform-select">
+                            <el-option label="37系（原斗罗）" value="37"></el-option>
+                            <el-option label="28手游" value="28"></el-option>
+                        </el-select>
+                    </div>
+                    <div class="form-field">
                         <label class="form-label">昵称 name</label>
                         <input class="form-input" v-model="accountForm.name" placeholder="请输入昵称">
                     </div>
@@ -474,7 +481,7 @@
                     areas: [],
                     accountModalVisible: false,
                     accountModalMode: 'create',
-                    accountForm: { area: '', name: '', uname: '', upwd: '', token: '', time: '', sign: '', uinfo: '', history: '', url: '' },
+                    accountForm: { area: '', name: '', uname: '', upwd: '', platform: '37', token: '', time: '', sign: '', uinfo: '', history: '', url: '' },
                     loginUrlPaste: '',
                     editingAccountRef: null,
                     /** 勾选批量启动：key = accountSelectKey(area, account) */
@@ -1272,6 +1279,7 @@
                         name: account.name || '',
                         uname: account.uname || '',
                         upwd: account.upwd || '',
+                        platform: account.platform || '37',
                         token: account.token != null ? String(account.token) : '',
                         time: account.time != null ? String(account.time) : '',
                         sign: account.sign != null ? String(account.sign) : '',
@@ -1287,6 +1295,7 @@
                         name: '',
                         uname: '',
                         upwd: '',
+                        platform: '37',
                         token: '',
                         time: '',
                         sign: '',
@@ -1331,7 +1340,7 @@
                             await db.from('areas').insert({ name: area, user_id: this.currentUser.id, sort_order: 0 });
                         }
                         const { data, error } = await db.from('accounts').insert({
-                            user_id: this.currentUser.id, area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url
+                            user_id: this.currentUser.id, area_name: area, uname, upwd, platform: this.accountForm.platform || '37', name, token, time, sign, uinfo, history, url
                         }).select().single();
                         if (error) {
                             if (error.code === '23505') { this.showError(`区服 ${area} 下账号 ${uname} 已存在`); return; }
@@ -1357,7 +1366,7 @@
                     this.loadingText = '正在保存账号...';
                     this.loadingVisible = true;
                     try {
-                        const updateData = { area_name: area, uname, upwd, name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
+                        const updateData = { area_name: area, uname, upwd, platform: this.accountForm.platform || '37', name, token, time, sign, uinfo, history, url, app_token: target.app_token || '', app_sign: target.app_sign || '' };
                         const { error } = await db.from('accounts').update(updateData)
                             .eq('id', target.id).eq('user_id', this.currentUser.id);
                         if (error) {
@@ -1884,7 +1893,7 @@
                         const resp = await fetch('/api/app-login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ uname, upwd })
+                            body: JSON.stringify({ uname, upwd, platform: String(account.platform || '37') })
                         });
                         const result = await resp.json();
                         if (!result.ok || result.state !== 1) {
@@ -1938,10 +1947,11 @@
                     // APP 登录流程：完整模拟 APP 扫码授权
                     // SDK登录 → qrcode/scan → qrcode/confirm → /pc/getCodeInfo → 获取游戏入口参数
                     // 使用当前代理地址作为 base URL，确保走本地代理的 mock 拦截和注入
+                    const isZhe28 = String((account && account.platform) || loginResult.platform || '37') === '28';
                     const token = loginResult.token || "";
                     const gid = loginResult.entryGid || "1003279";
                     const pid = loginResult.entryPid || "46";
-                    const platCode = loginResult.platCode || "37wan";
+                    const platCode = loginResult.platCode || (isZhe28 ? "28zhe" : "37wan");
                     const appVer = loginResult.appVer || "134";
                     const sign = loginResult.sign || "";
                     const time = loginResult.entryTime || String(Math.floor(Date.now() / 1000));
@@ -1951,6 +1961,7 @@
                             (c === 'x' ? Math.random() * 16 | 0 : (Math.random() * 4 | 8)).toString(16)));
 
                     const rawParams = {
+                        platform: isZhe28 ? '28' : '37',
                         gid: gid,
                         pid: pid,
                         token: token,
@@ -2298,7 +2309,7 @@
                         const resp = await fetch('/api/app-login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ uname, upwd })
+                            body: JSON.stringify({ uname, upwd, platform: String(account.platform || '37') })
                         });
                         const result = await resp.json();
                         if (!result.ok || result.state !== 1) {
