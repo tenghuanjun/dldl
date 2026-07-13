@@ -726,12 +726,15 @@ async function zhe28UserLogin(uname, upwd) {
     throw new Error(json.msg || '28 登录失败');
   }
   const d = json.data || {};
-  const token = String(d.token || d.access_token || '');
-  console.log('[zhe28] 登录成功:', uname, 'uid=', d.uid || d.user_id || '');
+  const u = d.user || {};
+  const token = String(d.token || '');
+  const authCookie = Array.isArray(d.cookie) ? (d.cookie.find(c => c.name === '28zhe_auth') || {}).value || '' : '';
+  console.log('[zhe28] 登录成功:', uname, 'uid=', u.uid || '');
   return {
     ok: true, state: 1, platform: '28', msg: json.msg || 'ok',
-    uid: String(d.uid || d.user_id || ''),
-    uname: String(d.uname || d.username || uname),
+    uid: String(u.uid || ''),
+    uname: String(u.userName || uname),
+    authCookie,
     token,
     sign: '',
     entryTime: String(Math.floor(Date.now() / 1000)),
