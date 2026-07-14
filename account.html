@@ -111,6 +111,7 @@
                 >
                 <label class="batch-inline-label">批</label>
                 <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
+                <button class="btn btn-compact btn-reset" type="button" @click="resetAccountState" title="清除所有勾选和已填的通行证码">重置</button>
                 <span class="batch-search-sep"></span>
                 <input
                     v-model="searchKeyword"
@@ -2421,6 +2422,12 @@
                     }
                     this.accountSelectMap = next;
                 },
+                /** 重置：清空所有勾选与已填的通行证码，恢复到默认状态 */
+                resetAccountState() {
+                    this.accountSelectMap = {};
+                    this.passCodeMap = {};
+                    this.showSuccess('已重置：清除全部勾选与通行证码');
+                },
                 pruneStaleSelections() {
                     const valid = new Set();
                     for (const g of this.areas) {
@@ -3470,6 +3477,18 @@
             font-size: 14px; font-weight: 500;
             padding: 0 14px;
         }
+
+        .sticky-row-batch .btn-reset {
+            background: var(--surface);
+            color: var(--text-muted, #9aa0b4);
+            border: 1px solid var(--border);
+        }
+        .sticky-row-batch .btn-reset:hover {
+            background: var(--surface-hover, #2a2d42);
+            color: var(--text);
+            border-color: var(--accent, #5b8def);
+        }
+
 
         .sticky-page-title {
             margin: 0; padding: 0;
