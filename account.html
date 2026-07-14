@@ -561,7 +561,23 @@
                     <span style="font-size:12px; color:var(--text-muted);" v-if="syncMode==='native'">主控用真实输入、各窗口 PostMessage 同步（适合非 CEF 的原生客户端）</span>
                     <span style="font-size:12px; color:var(--text-muted);" v-else>抑制主控真实点击，统一 PostMessage 同步到主控与各窗口渲染层</span>
                 </div>
-                <div style="max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin-bottom:10px; background:var(--surface-2, rgba(255,255,255,0.02));">
+                    <div style="font-size:13px; font-weight:600; margin-bottom:8px;">窗口管理（仅作用于上方多开游戏窗口）</div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+                        <label style="font-size:12px;">宽 <input v-model.number="syncWinW" type="number" min="50" class="form-input" style="width:64px;"></label>
+                        <label style="font-size:12px;">高 <input v-model.number="syncWinH" type="number" min="50" class="form-input" style="width:64px;"></label>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="applySyncSize">应用宽高</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="autoArrangeSync">自动排列</button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <button class="btn btn-secondary btn-compact" type="button" @click="previewMasterHighlight" :disabled="!syncMaster">预览主控高亮</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="hideSyncWindows">隐藏窗口</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="showSyncWindows">显示窗口</button>
+                        <button class="btn btn-danger btn-compact" type="button" @click="closeAllSyncWindows" :disabled="!syncWindows.length">全部关闭</button>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">「全部关闭」仅关闭上方多开游戏窗口，不会关闭账号列表程序。</div>
+                </div>
+                <div style="max-height:200px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
                     <table style="width:100%; border-collapse:collapse; font-size:13px;">
                         <thead>
                             <tr style="position:sticky; top:0; background:var(--surface);">
@@ -594,22 +610,6 @@
                 </div>
                 <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
                     选中一个主控（红框高亮）后，其余同类窗口默认作为同步目标；开始同步后，你在主控窗口内的点击与滚轮滚动会同步到所有勾选窗口。
-                </div>
-                <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin-top:10px; background:var(--surface-2, rgba(255,255,255,0.02));">
-                    <div style="font-size:13px; font-weight:600; margin-bottom:8px;">窗口管理（仅作用于上方多开游戏窗口）</div>
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
-                        <label style="font-size:12px;">宽 <input v-model.number="syncWinW" type="number" min="50" class="form-input" style="width:64px;"></label>
-                        <label style="font-size:12px;">高 <input v-model.number="syncWinH" type="number" min="50" class="form-input" style="width:64px;"></label>
-                        <button class="btn btn-secondary btn-compact" type="button" @click="applySyncSize">应用宽高</button>
-                        <button class="btn btn-secondary btn-compact" type="button" @click="autoArrangeSync">自动排列</button>
-                    </div>
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                        <button class="btn btn-secondary btn-compact" type="button" @click="previewMasterHighlight" :disabled="!syncMaster">预览主控高亮</button>
-                        <button class="btn btn-secondary btn-compact" type="button" @click="hideSyncWindows">隐藏窗口</button>
-                        <button class="btn btn-secondary btn-compact" type="button" @click="showSyncWindows">显示窗口</button>
-                        <button class="btn btn-danger btn-compact" type="button" @click="closeAllSyncWindows" :disabled="!syncWindows.length">全部关闭</button>
-                    </div>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">「全部关闭」仅关闭上方多开游戏窗口，不会关闭账号列表程序。</div>
                 </div>
                 <div class="modal-actions" style="margin-top:12px;">
                     <button class="btn btn-secondary" type="button" @click="closeSyncModal">关闭</button>
