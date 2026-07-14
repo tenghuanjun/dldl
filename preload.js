@@ -82,4 +82,23 @@ contextBridge.exposeInMainWorld('__ELECTRON__', {
     ipcRenderer.on('sync-event', (_e, payload) => handler(payload));
   },
 
+  // ========== 批量启动任意 exe（浏览选程序 + 启动数量） ==========
+  /**
+   * 弹出系统文件选择框，只允许选 .exe
+   * @returns {Promise<{ok:boolean, canceled?:boolean, path?:string}>}
+   */
+  pickExe: () => ipcRenderer.invoke('pick-exe'),
+  /**
+   * 按数量批量启动指定 exe
+   * @param {{exePath:string, count:number}} payload
+   * @returns {Promise<{ok:boolean, launched?:number, total?:number, errors?:string[], message?:string}>}
+   */
+  batchLaunchExe: (payload) => ipcRenderer.invoke('batch-launch-exe', payload),
+  /** 读取批量启动程序 + 同步方式配置（本地持久化） */
+  getExeLaunchConfig: () => ipcRenderer.invoke('get-exe-launch-config'),
+  /** 保存批量启动程序 + 同步方式配置（exe 路径 / 启动数量 / 同步方式） */
+  saveExeLaunchConfig: (cfg) => ipcRenderer.invoke('save-exe-launch-config', cfg),
+  /** 批量复制通行证码：按百分比坐标逐窗口双击复制 */
+  batchCopyPasscodes: (payload) => ipcRenderer.invoke('batch-copy-passcodes', payload),
+
 });

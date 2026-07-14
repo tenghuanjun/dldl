@@ -42,6 +42,7 @@ import math
 import win32gui
 import win32con
 import win32api
+import win32clipboard
 
 # ─── Win32 常量 ───
 WM_MOUSEMOVE      = 0x0200
@@ -68,8 +69,17 @@ SW_HIDE       = 0
 SW_SHOWNORMAL = 1
 SW_SHOW       = 5
 SW_RESTORE    = 9
+SWP_NOSIZE    = 0x0001
 SWP_NOMOVE    = 0x0002
 SWP_NOZORDER  = 0x0004
+SWP_NOACTIVATE = 0x0010
+
+# ─── 鼠标/键盘模拟常量 ───
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP   = 0x0004
+VK_CONTROL = 0x11
+VK_C       = 0x43
+VK_MENU    = 0x12   # Alt 键，用于释放前台锁
 
 
 # ─── 结构体 ───
@@ -157,14 +167,18 @@ def find_render_child(parent_hwnd):
     return result
 
 
-def get_windows_by_pids(pids):
+def get_windows_by_pids(pids, native_pids=None):
     """枚举可见的、可同步的顶层窗口。
 
     - 传入 pids (dldl 各游戏窗口子进程 PID) 时: 返回 PID 命中的窗口 (即多开斗罗窗口);
       若一个都没命中 (极端情况), 回退返回全部可同步窗口, 避免面板空列表。
+    - native_pids: 批量启动的「原生客户端」进程 PID。这些窗口的窗口类可能不是
+      CEF/Chrome (classify_window 认不出), 故对命中 native_pids 的窗口放宽窗口类限制,
+      即使 type_label 为空也列出 (标为 "原生客户端"), 否则会被过滤掉看不到。
     - 每个窗口都带 is_dldl 标记, 供面板默认勾选 dldl 窗口。
     """
     pid_set = set(int(p) for p in pids) if pids else None
+    native_set = set(int(p) for p in native_pids) if native_pids else set()
     out = []
 
     def cb(hwnd, _):
@@ -173,10 +187,14 @@ def get_windows_by_pids(pids):
         title = win32gui.GetWindowText(hwnd)
         if not title:
             return True
+        pid = _get_pid(hwnd)
+        is_native = pid in native_set
         type_label, cn = classify_window(hwnd)
         if not type_label:
-            return True  # 只列可同步窗口
-        pid = _get_pid(hwnd)
+            # 非 CEF/Chrome 窗口: 仅当它是批量启动的原生客户端时才保留
+            if not is_native:
+                return True  # 只列可同步窗口
+            type_label = "原生客户端"
         try:
             rect = win32gui.GetWindowRect(hwnd)
         except Exception:
@@ -225,14 +243,42 @@ def _op_windows(hwnds, op_name, fn):
     return results
 
 
+def _read_clipboard():
+    """读取剪贴板 Unicode 文本，失败或非文本返回空字符串。"""
+    try:
+        win32clipboard.OpenClipboard()
+        if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
+            return win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT) or ""
+        return ""
+    except Exception:
+        return ""
+    finally:
+        try:
+            win32clipboard.CloseClipboard()
+        except Exception:
+            pass
+
+
 def _cmd_window_op(req):
     """统一处理窗口管理类指令, 返回 (action, count, failed)。"""
     hwnds = req.get("hwnds") or []
 
     action = req.get("action")
     if action == "close":
+        native_pids = set(int(p) for p in (req.get("native_pids") or []))
         def _fn(h):
-            win32gui.PostMessage(h, WM_CLOSE, 0, 0)
+            pid = _get_pid(h)
+            if pid and pid in native_pids:
+                # 原生客户端（非 CEF/Electron）不响应 WM_CLOSE，只好 TerminateProcess 强制杀进程
+                try:
+                    hproc = win32api.OpenProcess(0x0001, False, pid)   # PROCESS_TERMINATE
+                    win32api.TerminateProcess(hproc, 0)
+                    win32api.CloseHandle(hproc)
+                except Exception:
+                    # TerminateProcess 失败兜底：发 WM_CLOSE（最起码有尝试）
+                    win32gui.PostMessage(h, WM_CLOSE, 0, 0)
+            else:
+                win32gui.PostMessage(h, WM_CLOSE, 0, 0)
         r = _op_windows(hwnds, "close", _fn)
         return "close", len(r["ok"]), r["failed"]
 
@@ -257,7 +303,22 @@ def _cmd_window_op(req):
         start_x = int(req.get("startX") or 0)
         start_y = int(req.get("startY") or 0)
         if cols <= 0:
-            cols = int(math.ceil(math.sqrt(n)))
+            # 自动列数：按当前显示器工作区宽度尽量多放几列（先横向铺满再换行），
+            # 而非套 ceil(sqrt(n)) 的正方形网格（那样 4 个窗口会每行只放 2 个，才出现"2 个就换行"）。
+            cols = int(math.ceil(math.sqrt(n)))  # 兜底
+            if win_w > 0 and (win_w + gap) > 0:
+                try:
+                    mon = win32api.MonitorFromPoint(
+                        (start_x, start_y), win32con.MONITOR_DEFAULTTONEAREST)
+                    info = win32api.GetMonitorInfo(mon)
+                    work = info["Work"]  # (left, top, right, bottom)
+                    avail_w = work[2] - work[0] - start_x
+                    if avail_w > 0:
+                        fit = int(avail_w // (win_w + gap))
+                        if fit >= 1:
+                            cols = fit
+                except Exception:
+                    pass
         # 默认宽高取第一个窗口当前尺寸
         if win_w <= 0 or win_h <= 0:
             try:
@@ -758,7 +819,7 @@ def main():
                 _emit({"type": "pong"})
 
             elif cmd == "enumerate":
-                wins = get_windows_by_pids(req.get("pids"))
+                wins = get_windows_by_pids(req.get("pids"), req.get("native_pids"))
                 _emit({"type": "windows", "list": wins})
 
             elif cmd == "highlight":
@@ -806,6 +867,76 @@ def main():
                            "count": count, "failed": failed})
                 except Exception as e:
                     _emit({"type": "error", "msg": "窗口操作失败: %s" % e})
+
+            elif cmd == "batch-copy":
+                # 批量复制通行证码：按百分比坐标逐窗口激活 → 双击 → Ctrl+C → 读剪贴板
+                hwnds = req.get("hwnds") or []
+                px = float(req.get("px") or 0)
+                py = float(req.get("py") or 0)
+                user32 = ctypes.windll.user32
+                codes = []
+                for hwnd in hwnds:
+                    h = int(hwnd)
+                    if not win32gui.IsWindow(h):
+                        codes.append("[SKIP:窗口已关闭]")
+                        continue
+                    try:
+                        # 还原最小化窗口
+                        if win32gui.IsIconic(h):
+                            win32gui.ShowWindow(h, SW_RESTORE)
+                            time.sleep(0.2)
+                        # Z 序顶层 + Alt 释放前台锁激活
+                        user32.SetWindowPos(h, 0, 0, 0, 0, 0,
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
+                        user32.keybd_event(VK_MENU, 0, 0, 0)
+                        user32.SetForegroundWindow(h)
+                        user32.keybd_event(VK_MENU, 0, win32con.KEYEVENTF_KEYUP, 0)
+                        # 给客户端足够时间聚焦和渲染
+                        time.sleep(0.8)
+                        # 按百分比算坐标
+                        rect = win32gui.GetWindowRect(h)
+                        w = rect[2] - rect[0]
+                        hh = rect[3] - rect[1]
+                        cx = rect[0] + int(px / 100.0 * w)
+                        cy = rect[1] + int(py / 100.0 * hh)
+                        old_pos = win32gui.GetCursorPos()
+                        win32api.SetCursorPos((cx, cy))
+                        time.sleep(0.1)
+                        # 双击
+                        user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                        time.sleep(0.08)
+                        user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                        time.sleep(0.08)
+                        user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                        time.sleep(0.08)
+                        user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                        # 等选中文本
+                        time.sleep(0.8)
+                        # Ctrl+C
+                        user32.keybd_event(VK_CONTROL, 0, 0, 0)
+                        user32.keybd_event(VK_C, 0, 0, 0)
+                        time.sleep(0.08)
+                        user32.keybd_event(VK_C, 0, win32con.KEYEVENTF_KEYUP, 0)
+                        user32.keybd_event(VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
+                        time.sleep(0.5)
+                        # 读剪贴板；空则重试
+                        data = _read_clipboard()
+                        if not data:
+                            time.sleep(0.6)
+                            user32.keybd_event(VK_CONTROL, 0, 0, 0)
+                            user32.keybd_event(VK_C, 0, 0, 0)
+                            time.sleep(0.08)
+                            user32.keybd_event(VK_C, 0, win32con.KEYEVENTF_KEYUP, 0)
+                            user32.keybd_event(VK_CONTROL, 0, win32con.KEYEVENTF_KEYUP, 0)
+                            time.sleep(0.5)
+                            data = _read_clipboard()
+                        codes.append(data.strip() if data else "[EMPTY:未取到内容]")
+                        # 恢复光标
+                        win32api.SetCursorPos(old_pos)
+                        time.sleep(0.1)
+                    except Exception as e:
+                        codes.append("[ERR:%s]" % e)
+                _emit({"type": "batch-copy-result", "codes": codes, "hwnds": hwnds})
 
             elif cmd == "quit":
                 engine.stop()

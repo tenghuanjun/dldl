@@ -42,6 +42,8 @@ if (IS_APP_LOGIN_CHILD) {
 app.commandLine.appendSwitch('ignore-certificate-errors');
 // 禁用本地 HTTP 缓存：避免修改 account.html 后需手动硬刷新才生效（本地管理面板无缓存需求）
 app.commandLine.appendSwitch('disable-http-cache');
+// 测试用：开启远程调试端口，供 Playwright/CDP 自动驱动桌面端（正式发布前请删除此行）
+app.commandLine.appendSwitch('remote-debugging-port', '9222');
 // Node.js 侧忽略 SSL 证书验证见文件顶部（需在网络模块加载前设置）
 
 // ========== GPU 加速 & 渲染优化 ==========
@@ -384,6 +386,82 @@ if (!gotTheLock) {
     return { ok: true };
   });
 
+  // ========== 批量启动任意 exe（桌面端：浏览选程序 + 启动数量） ==========
+  // 用户只想要：浏览选一个 exe → 填数量 N → 点「批量启动」→ 拉起 N 个独立进程。
+  // 直接 spawn 外部 exe（detached + unref），不纳入 dldl 自身多开进程管理。
+
+  /** 系统文件选择框，只允许选 .exe，返回绝对路径 */
+  ipcMain.handle('pick-exe', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        title: '选择要启动的程序',
+        properties: ['openFile'],
+        filters: [{ name: '可执行程序', extensions: ['exe'] }]
+      });
+      if (result.canceled || !result.filePaths || !result.filePaths.length) {
+        return { ok: false, canceled: true };
+      }
+      return { ok: true, path: result.filePaths[0] };
+    } catch (e) {
+      return { ok: false, message: e && e.message ? e.message : String(e) };
+    }
+  });
+
+  // 批量启动的原生客户端进程 PID 集合（供窗口同步枚举时识别为可同步目标）
+  const nativeClientPids = new Set();
+
+  /** 按数量批量启动指定 exe */
+  ipcMain.handle('batch-launch-exe', async (_e, payload) => {
+    const { exePath, count } = payload || {};
+    if (!exePath || typeof exePath !== 'string') {
+      return { ok: false, message: '请先选择要启动的程序' };
+    }
+    if (!fs.existsSync(exePath)) {
+      return { ok: false, message: '程序路径不存在：' + exePath };
+    }
+    const n = Math.max(1, Math.min(200, parseInt(count, 10) || 1));
+    let launched = 0;
+    const errors = [];
+    for (let i = 0; i < n; i++) {
+      try {
+        // detached + unref：启动的进程独立存活，不受 dldl 主进程退出影响
+        const child = spawn(exePath, [], { detached: true, stdio: 'ignore' });
+        if (child.pid) {
+          const pid = child.pid;
+          nativeClientPids.add(pid);
+          child.on('exit', () => nativeClientPids.delete(pid));
+        }
+        child.unref();
+        launched++;
+      } catch (e) {
+        errors.push(e && e.message ? e.message : String(e));
+        if (errors.length >= 5) break;
+      }
+    }
+    return { ok: true, launched, total: n, errors };
+  });
+
+  // ========== 批量启动程序 + 同步方式 本地持久化 ==========
+  // 用户每次重启都要重新选 exe / 填数量 / 选同步方式，体验差；
+  // 把配置落盘到 userData 下的 JSON，打开同步弹窗时自动回填。
+  const exeLaunchConfigPath = path.join(app.getPath('userData'), 'exe-launch-config.json');
+  ipcMain.handle('get-exe-launch-config', () => {
+    try {
+      if (fs.existsSync(exeLaunchConfigPath)) {
+        return { ok: true, config: JSON.parse(fs.readFileSync(exeLaunchConfigPath, 'utf8')) };
+      }
+    } catch (_) { /* 损坏则忽略，回退默认 */ }
+    return { ok: true, config: {} };
+  });
+  ipcMain.handle('save-exe-launch-config', (_e, cfg) => {
+    try {
+      fs.writeFileSync(exeLaunchConfigPath, JSON.stringify(cfg || {}, null, 2));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, message: e && e.message ? e.message : String(e) };
+    }
+  });
+
 
   // ========== 窗口同步引擎（整合自 tongbuqi/window_sync.py，Python headless 引擎） ==========
   // 每个游戏窗口是独立 Electron 子进程（Chrome_WidgetWin_1 / CEF），主进程已持有其 PID，
@@ -542,9 +620,12 @@ if (!gotTheLock) {
 
   // 枚举多开的斗罗窗口（按 appLoginWindows 里的子进程 PID 精准识别）
   ipcMain.handle('sync-enumerate', async () => {
-    const pids = [...appLoginWindows.values()].map((c) => c && c.pid).filter(Boolean);
+    const appPids = [...appLoginWindows.values()].map((c) => c && c.pid).filter(Boolean);
+    const nativePids = [...nativeClientPids];
+    // pids = APP 登录多开窗口 + 批量启动的原生客户端，均视为可同步目标
+    const pids = [...appPids, ...nativePids];
     try {
-      const obj = await sendSync({ cmd: 'enumerate', pids }, 'windows');
+      const obj = await sendSync({ cmd: 'enumerate', pids, native_pids: nativePids }, 'windows');
       return { ok: true, windows: obj.list || [], pids };
     } catch (e) {
       return { ok: false, message: e && e.message || String(e) };
@@ -593,9 +674,34 @@ if (!gotTheLock) {
     for (const k of ['w', 'h', 'cols', 'gap', 'winW', 'winH', 'startX', 'startY']) {
       if (payload[k] !== undefined) extra[k] = payload[k];
     }
+    // 关闭原生客户端需 TerminateProcess 而非 WM_CLOSE，告知引擎哪些 PID 是批量启动的原生进程
+    if (action === 'close') {
+      extra.native_pids = [...nativeClientPids];
+    }
     try {
       const obj = await sendSync({ cmd: 'window-op', action, hwnds: hwnds || [], ...extra }, 'window-op');
       return { ok: true, count: obj.count || 0, failed: obj.failed || [], action };
+    } catch (e) {
+      return { ok: false, message: e && e.message || String(e) };
+    }
+  });
+
+  // 批量复制通行证码：按百分比坐标逐个激活原生客户端窗口 → 双击 → Ctrl+C → 读剪贴板
+  ipcMain.handle('batch-copy-passcodes', async (_e, payload) => {
+    const { hwnds, px, py } = payload || {};
+    if (!hwnds || !hwnds.length) {
+      return { ok: false, message: '没有可操作的窗口，请先批量启动并刷新窗口' };
+    }
+    try {
+      // 逐窗模式每次只传 1 个 hwnd，每窗留 8 秒，最低 15 秒
+      const timeout = Math.max(15000, (hwnds.length || 1) * 8000);
+      const obj = await sendSync({
+        cmd: 'batch-copy',
+        hwnds,
+        px: px || 0,
+        py: py || 0,
+      }, 'batch-copy-result', timeout);
+      return { ok: true, codes: obj.codes || [] };
     } catch (e) {
       return { ok: false, message: e && e.message || String(e) };
     }
