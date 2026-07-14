@@ -385,6 +385,223 @@ if (!gotTheLock) {
   });
 
 
+  // ========== 窗口同步引擎（整合自 tongbuqi/window_sync.py，Python headless 引擎） ==========
+  // 每个游戏窗口是独立 Electron 子进程（Chrome_WidgetWin_1 / CEF），主进程已持有其 PID，
+  // 故把 PID 列表传给 Python 引擎即可精准识别「多开的斗罗窗口」。
+  // 引擎通过 stdin/stdout 的行分隔 JSON 与主进程通信，同步核心逻辑（低级鼠标钩子捕获主控 →
+  // PostMessage 投递到各窗口渲染窗口）与原同步器完全一致。
+  const PY_CANDIDATES = ['python', 'py', 'python3'];
+  let syncProc = null;
+  let syncStdoutBuf = '';
+  const syncQueue = []; // {expect, resolve, reject, timer}
+
+  function onSyncLine(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj.type === 'ready') return;
+    const head = syncQueue[0];
+    if (head && (obj.type === head.expect || obj.type === 'error')) {
+      syncQueue.shift();
+      clearTimeout(head.timer);
+      if (obj.type === 'error') head.reject(new Error(obj.msg || '同步引擎错误'));
+      else head.resolve(obj);
+      return;
+    }
+    // 无人等待的消息（如 F10 强制停止的 status）→ 转发给渲染进程
+    if (obj.type === 'status' && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('sync-event', obj);
+    }
+  }
+
+  /** 计算自包含 exe 路径 (PyInstaller 打包产物, 免装 Python)；不存在返回 null */
+  function syncExePath() {
+    const exe = app.isPackaged
+      ? path.join(process.resourcesPath, 'sync_engine_dist', 'sync_engine.exe')
+      : path.join(__dirname, 'sync_engine_dist', 'sync_engine.exe');
+    return fs.existsSync(exe) ? exe : null;
+  }
+
+  /** 计算 .py 脚本路径 (开发态/未打包时回退)；不存在返回 null */
+  function syncPyPath() {
+    const script = app.isPackaged
+      ? path.join(process.resourcesPath, 'sync_engine.py')
+      : path.join(__dirname, 'sync_engine.py');
+    return fs.existsSync(script) ? script : null;
+  }
+
+  function spawnSyncEngine() {
+    const exe = syncExePath();
+    if (exe) {
+      // 优先用自包含 exe（打包目标机免装 Python）
+      try {
+        const p = spawn(exe, [], {
+          cwd: path.dirname(exe),
+          env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        attachSyncProc(p, exe);
+        return p;
+      } catch (e) {
+        console.error('[sync] 启动 exe 失败, 回退 python:', e);
+      }
+    }
+    // 回退: 用 python 直接跑 .py（需本机装 Python + pywin32）
+    const script = syncPyPath();
+    if (!script) {
+      console.error('[sync] 既找不到引擎 exe 也找不到 sync_engine.py');
+      syncProc = null;
+      return null;
+    }
+    const tryIdx = (idx) => {
+      if (idx >= PY_CANDIDATES.length) {
+        console.error('[sync] 未找到可用的 Python 运行时');
+        syncProc = null;
+        return;
+      }
+      const bin = PY_CANDIDATES[idx];
+      const args = bin === 'py' ? ['-3', script] : [script];
+      let p;
+      try {
+        p = spawn(bin, args, {
+          cwd: path.dirname(script),
+          env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+      } catch (e) {
+        return tryIdx(idx + 1);
+      }
+      attachSyncProc(p, `${bin} ${script}`);
+    };
+    tryIdx(0);
+    return syncProc;
+  }
+
+  function attachSyncProc(p, label) {
+    syncProc = p;
+    let started = false;
+    p.on('error', (e) => {
+      if (!started) {
+        console.error('[sync] 启动失败:', label, e);
+        if (p === syncProc) syncProc = null;
+      } else {
+        console.error('[sync] 引擎错误:', e);
+        if (p === syncProc) syncProc = null;
+      }
+    });
+    p.stdout.on('data', (d) => {
+      started = true;
+      syncStdoutBuf += d.toString('utf8');
+      let nl;
+      while ((nl = syncStdoutBuf.indexOf('\n')) >= 0) {
+        const line = syncStdoutBuf.slice(0, nl).trim();
+        syncStdoutBuf = syncStdoutBuf.slice(nl + 1);
+        if (line) { try { onSyncLine(JSON.parse(line)); } catch (_) {} }
+      }
+    });
+    p.stderr.on('data', (d) => { console.error('[sync-py]', d.toString('utf8').trim()); });
+    p.on('exit', (code) => { console.log('[sync] 引擎退出:', code); if (p === syncProc) syncProc = null; });
+  }
+
+  function ensureSyncProc() {
+    if (syncProc && !syncProc.killed) return syncProc;
+    return spawnSyncEngine();
+  }
+
+  /**
+   * 向 Python 引擎发送一条指令。
+   * @param {Object} cmd - 指令对象
+   * @param {string} [expect] - 期望的回复 type；省略则 fire-and-forget
+   * @param {number} [timeoutMs]
+   */
+  function sendSync(cmd, expect, timeoutMs = 6000) {
+    return new Promise((resolve, reject) => {
+      const proc = ensureSyncProc();
+      if (!proc) return reject(new Error('无法启动同步引擎（需要本机安装 Python 及 pywin32）'));
+      const write = () => {
+        try { proc.stdin.write(JSON.stringify(cmd) + '\n'); }
+        catch (e) { reject(new Error('写入同步引擎失败：' + (e && e.message || e))); return false; }
+        return true;
+      };
+      if (!expect) { if (write()) resolve({ ok: true }); return; }
+      const entry = { expect, resolve, reject };
+      entry.timer = setTimeout(() => {
+        const i = syncQueue.indexOf(entry);
+        if (i >= 0) syncQueue.splice(i, 1);
+        reject(new Error('同步引擎响应超时'));
+      }, timeoutMs);
+      syncQueue.push(entry);
+      if (!write()) { clearTimeout(entry.timer); const i = syncQueue.indexOf(entry); if (i >= 0) syncQueue.splice(i, 1); }
+    });
+  }
+
+  function stopSyncEngine() {
+    if (!syncProc) return;
+    try { syncProc.stdin.write(JSON.stringify({ cmd: 'quit' }) + '\n'); } catch (_) {}
+    try { syncProc.kill(); } catch (_) {}
+    syncProc = null;
+  }
+
+  // 枚举多开的斗罗窗口（按 appLoginWindows 里的子进程 PID 精准识别）
+  ipcMain.handle('sync-enumerate', async () => {
+    const pids = [...appLoginWindows.values()].map((c) => c && c.pid).filter(Boolean);
+    try {
+      const obj = await sendSync({ cmd: 'enumerate', pids }, 'windows');
+      return { ok: true, windows: obj.list || [], pids };
+    } catch (e) {
+      return { ok: false, message: e && e.message || String(e) };
+    }
+  });
+
+  // 主控窗口红框高亮
+  ipcMain.handle('sync-highlight', async (_e, payload) => {
+    const { hwnd, times } = payload || {};
+    try { sendSync({ cmd: 'highlight', hwnd, times: times || 3 }); return { ok: true }; }
+    catch (e) { return { ok: false, message: e && e.message || String(e) }; }
+  });
+
+  // 开始同步：master=主控 hwnd，targets=同步窗口 hwnd 数组
+  ipcMain.handle('sync-start', async (_e, payload) => {
+    const { master, targets, mode } = payload || {};
+    try {
+      const s = await sendSync({ cmd: 'start', master, targets, mode: mode || 'web' }, 'status');
+      return { ok: true, status: s };
+    } catch (e) {
+      return { ok: false, message: e && e.message || String(e) };
+    }
+  });
+
+  ipcMain.handle('sync-stop', async () => {
+    try { const s = await sendSync({ cmd: 'stop' }, 'status'); return { ok: true, status: s }; }
+    catch (e) { return { ok: false, message: e && e.message || String(e) }; }
+  });
+
+  ipcMain.handle('sync-status', async () => {
+    try { const s = await sendSync({ cmd: 'status' }, 'status'); return { ok: true, status: s }; }
+    catch (e) { return { ok: false, message: e && e.message || String(e) }; }
+  });
+
+  // 窗口管理：关闭 / 宽高 / 自动排列 / 隐藏 / 显示（仅作用于多开游戏窗口，不碰账号列表）
+  // hwnds 由渲染进程从已枚举的 syncWindows 传入（均来自 appLoginWindows 子进程 PID），
+  // 账号列表主窗口不在其中，故不会误关。
+  ipcMain.handle('sync-window-op', async (_e, payload) => {
+    const { action, hwnds } = payload || {};
+    // Python 引擎只认一个 cmd: 'window-op'，内部再按 action 字段分发
+    if (!['close', 'set_size', 'arrange', 'hide', 'show'].includes(action)) {
+      return { ok: false, message: '未知窗口操作: ' + action };
+    }
+    // 透传额外参数（w/h/cols/gap/winW/winH/startX/startY）
+    const extra = {};
+    for (const k of ['w', 'h', 'cols', 'gap', 'winW', 'winH', 'startX', 'startY']) {
+      if (payload[k] !== undefined) extra[k] = payload[k];
+    }
+    try {
+      const obj = await sendSync({ cmd: 'window-op', action, hwnds: hwnds || [], ...extra }, 'window-op');
+      return { ok: true, count: obj.count || 0, failed: obj.failed || [], action };
+    } catch (e) {
+      return { ok: false, message: e && e.message || String(e) };
+    }
+  });
+
+
   // ========== 主窗口创建 ==========
 
   async function createMainWindow() {
@@ -559,6 +776,8 @@ if (!gotTheLock) {
   app.on('before-quit', (event) => {
     // 退出前回收所有独立的 APP 登录子进程，避免遗留僵尸进程占满 GPU/内存
     closeAllAppLoginWindows();
+    // 回收 Python 同步引擎
+    stopSyncEngine();
     if (!httpServer) return;
     event.preventDefault();
     closeHttpServer().then(() => {

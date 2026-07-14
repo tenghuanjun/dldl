@@ -1307,7 +1307,14 @@ app.use('/api/h5sdk/login', async (req, res) => {
 // 构建产物优先：account.min.html（混淆版）存在时，/account.html 请求改发它
 app.get('/account.html', (req, res, next) => {
   const minHtml = path.join(staticRoot, 'account.min.html');
-  if (fs.existsSync(minHtml)) return res.sendFile(minHtml);
+  if (fs.existsSync(minHtml)) {
+    // 用「读取后发送」而非 res.sendFile：避免文件被改写后 sendFile 偶发读到旧内容
+    try {
+      return res.type('html').send(fs.readFileSync(minHtml));
+    } catch (e) {
+      return next(e);
+    }
+  }
   next();
 });
 app.use(express.static(staticRoot));

@@ -48,4 +48,38 @@ contextBridge.exposeInMainWorld('__ELECTRON__', {
     return ipcRenderer.invoke('close-all-app-logins');
   },
 
+  // ========== 窗口同步（整合自 tongbuqi 同步器，Python headless 引擎） ==========
+  /**
+   * 枚举多开的斗罗窗口（按子进程 PID 精准识别）
+   * @returns {Promise<{ok:boolean, windows?:Array, message?:string}>}
+   */
+  syncEnumerate: () => ipcRenderer.invoke('sync-enumerate'),
+  /**
+   * 主控窗口红框高亮
+   * @param {number} hwnd
+   */
+  syncHighlight: (hwnd) => ipcRenderer.invoke('sync-highlight', { hwnd }),
+  /**
+   * 开始同步
+   * @param {{master:number, targets:number[], mode?:string}} payload
+   */
+  syncStart: (payload) => ipcRenderer.invoke('sync-start', payload),
+  /** 停止同步 */
+  syncStop: () => ipcRenderer.invoke('sync-stop'),
+  /** 查询同步状态 */
+  syncStatus: () => ipcRenderer.invoke('sync-status'),
+  /**
+   * 窗口管理：关闭/宽高/排列/隐藏/显示
+   * @param {{action:'close'|'set_size'|'arrange'|'hide'|'show', hwnds:number[], w?:number, h?:number, cols?:number, gap?:number, winW?:number, winH?:number, startX?:number, startY?:number}} payload
+   */
+  syncWindowOp: (payload) => ipcRenderer.invoke('sync-window-op', payload),
+  /**
+   * 监听引擎主动上报的事件（如 F10 强制停止）
+   * @param {(payload:any)=>void} handler
+   */
+  onSyncEvent: (handler) => {
+    if (typeof handler !== 'function') return;
+    ipcRenderer.on('sync-event', (_e, payload) => handler(payload));
+  },
+
 });

@@ -24,3 +24,6 @@ deploy.err
 deploy.log
 wrangler.dlapi.toml
 $null
+
+# 同步引擎 PyInstaller 打包产物（由 tools/build_sync_engine.py 生成，勿提交）
+sync_engine_dist/

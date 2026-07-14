@@ -64,6 +64,7 @@
                          如将来修复代理链，取消注释 <button> 即可恢复。 -->
                     <!-- <button class="btn btn-compact" :class="useProxy ? 'btn-proxy-active' : 'btn-secondary'" type="button" @click="toggleProxyAndRefreshIP">代理IP 已停用</button> -->
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAreaSortModal">区服排序</button>
+                    <button class="btn btn-compact" :class="syncRunning ? 'btn-danger' : 'btn-secondary'" type="button" @click="openSyncModal">{{ syncRunning ? '同步中■' : '窗口同步' }}</button>
                 </div>
             </div>
             <div class="sticky-row sticky-row-batch">
@@ -483,6 +484,72 @@
             </div>
         </div>
 
+        <div v-if="syncModalVisible" class="modal-mask" @click.self="closeSyncModal">
+            <div class="modal" style="max-width: 640px;">
+                <div class="modal-title">窗口同步（斗罗多开）</div>
+                <div style="display:flex; align-items:center; gap:10px; margin:6px 0 10px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary btn-compact" type="button" @click="refreshSyncWindows" :disabled="syncLoading">{{ syncLoading ? '识别中...' : '刷新窗口' }}</button>
+                    <span style="font-size:12px; color:var(--text-muted);">识别到 {{ syncWindows.length }} 个可同步窗口，勾选主控左侧点即高亮</span>
+                    <span v-if="syncRunning" class="pass-code-status ok">同步进行中（F10 可强制停止）</span>
+                </div>
+                <div style="max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="position:sticky; top:0; background:var(--surface);">
+                                <th style="padding:8px 6px; text-align:center; width:64px;">主控</th>
+                                <th style="padding:8px 6px; text-align:center; width:64px;">同步</th>
+                                <th style="padding:8px 6px; text-align:left;">标题</th>
+                                <th style="padding:8px 6px; text-align:left; width:130px;">类型</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="w in syncWindows" :key="w.hwnd"
+                                :style="{ background: syncMaster === w.hwnd ? 'var(--accent-soft)' : 'transparent', borderTop:'1px solid var(--border)' }">
+                                <td style="padding:6px; text-align:center;">
+                                    <input type="radio" :value="w.hwnd" :checked="syncMaster === w.hwnd" @change="onPickMaster(w)" :disabled="syncRunning">
+                                </td>
+                                <td style="padding:6px; text-align:center;">
+                                    <input type="checkbox" :checked="syncTargets.includes(w.hwnd)" @change="toggleSyncTarget(w.hwnd)" :disabled="syncRunning || syncMaster === w.hwnd">
+                                </td>
+                                <td style="padding:6px; word-break:break-all;">
+                                    {{ w.title || '(无标题)' }}
+                                    <span v-if="!w.is_dldl" style="font-size:11px; color:var(--text-muted);">（非多开窗口）</span>
+                                </td>
+                                <td style="padding:6px; color:var(--text-muted);">{{ w.type }}</td>
+                            </tr>
+                            <tr v-if="!syncWindows.length">
+                                <td colspan="4" style="padding:18px; text-align:center; color:var(--text-muted);">未识别到窗口，请先「APP登录」打开游戏窗口后点「刷新窗口」</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                    选中一个主控（红框高亮）后，其余同类窗口默认作为同步目标；开始同步后，你在主控窗口内的点击与滚轮滚动会同步到所有勾选窗口。
+                </div>
+                <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin-top:10px; background:var(--surface-2, rgba(255,255,255,0.02));">
+                    <div style="font-size:13px; font-weight:600; margin-bottom:8px;">窗口管理（仅作用于上方多开游戏窗口）</div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+                        <label style="font-size:12px;">宽 <input v-model.number="syncWinW" type="number" min="50" class="form-input" style="width:64px;"></label>
+                        <label style="font-size:12px;">高 <input v-model.number="syncWinH" type="number" min="50" class="form-input" style="width:64px;"></label>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="applySyncSize">应用宽高</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="autoArrangeSync">自动排列</button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <button class="btn btn-secondary btn-compact" type="button" @click="previewMasterHighlight" :disabled="!syncMaster">预览主控高亮</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="hideSyncWindows">隐藏窗口</button>
+                        <button class="btn btn-secondary btn-compact" type="button" @click="showSyncWindows">显示窗口</button>
+                        <button class="btn btn-danger btn-compact" type="button" @click="closeAllSyncWindows" :disabled="!syncWindows.length">全部关闭</button>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">「全部关闭」仅关闭上方多开游戏窗口，不会关闭账号列表程序。</div>
+                </div>
+                <div class="modal-actions" style="margin-top:12px;">
+                    <button class="btn btn-secondary" type="button" @click="closeSyncModal">关闭</button>
+                    <button v-if="!syncRunning" class="btn" type="button" @click="startSync" :disabled="!syncMaster || !syncTargets.length">▶ 开始同步</button>
+                    <button v-else class="btn btn-danger" type="button" @click="stopSync">■ 停止同步</button>
+                </div>
+            </div>
+        </div>
+
         <div v-if="loadingVisible" class="loading-mask">
             <div class="loading-spinner"></div>
             <div class="loading-text">{{ loadingText || '加载中...' }}</div>
@@ -629,6 +696,15 @@
                     submitting: false,
                     /** URL筛选 */
                     urlFilter: 'all',
+                    /** ===== 窗口同步 ===== */
+                    syncModalVisible: false,
+                    syncLoading: false,
+                    syncRunning: false,
+                    syncWindows: [],      // [{hwnd,pid,title,type,is_dldl,...}]
+                    syncMaster: null,     // 主控窗口 hwnd
+                    syncTargets: [],      // 同步目标 hwnd 数组
+                    syncWinW: 360,        // 窗口管理：目标宽（也用于自动排列）
+                    syncWinH: 600,        // 窗口管理：目标高（也用于自动排列）
                 };
             },
             computed: {
@@ -680,7 +756,8 @@
                 this.fixAndLoadProxyConfig();
                 // 已登录则立即校验一次，并每小时检测：账号被禁用或套餐过期时自动退出
                 if (this.isLoggedIn) this.checkAccountStatus();
-                this._statusTimer = setInterval(() => { this.checkAccountStatus(); }, 3600000);
+                // 静默后台校验：每 5 分钟检测一次账号禁用/套餐过期（前端无感知，仅异常时弹出退出提示）
+                this._statusTimer = setInterval(() => { this.checkAccountStatus(); }, 300000);
                 this._onLoginPageTokenMessage = (event) => {
                     if (event.origin !== window.location.origin) return;
                     const payload = event.data;
@@ -688,6 +765,17 @@
                     void this.handleTokenRefreshedFromLoginPage(payload);
                 };
                 window.addEventListener('message', this._onLoginPageTokenMessage);
+                // 监听同步引擎主动上报（如 F10 强制停止），保持 UI 状态一致
+                if (window.__ELECTRON__ && typeof window.__ELECTRON__.onSyncEvent === 'function') {
+                    window.__ELECTRON__.onSyncEvent((payload) => {
+                        if (payload && payload.type === 'status') {
+                            this.syncRunning = !!payload.running;
+                            if (!payload.running && payload.reason === 'f10') {
+                                this.showSuccess('同步已通过 F10 强制停止');
+                            }
+                        }
+                    });
+                }
             },
             beforeUnmount() {
                 if (this._onLoginPageTokenMessage) {
@@ -1199,6 +1287,16 @@
                         // 同步套餐信息，使 header 到期时间始终最新（管理员改套餐后即见）
                         this.currentUser.plan_type = u.plan_type;
                         this.currentUser.plan_expire_at = u.plan_expire_at;
+                        // 将最新校验结果写入本地缓存，供关键操作前「读本地对比」使用（无需每次点击都现请求接口）
+                        try {
+                            localStorage.setItem('dldl_status_check', JSON.stringify({
+                                userId: this.currentUser.id,
+                                enabled: u.enabled,
+                                plan_type: u.plan_type,
+                                plan_expire_at: u.plan_expire_at,
+                                checkedAt: Date.now()
+                            }));
+                        } catch (_) { /* 缓存不可用时忽略，下次定时器或复核会补 */ }
                         if (u.enabled === false) {
                             this.handleLogout();
                             this.showError('当前账号已被禁用，已自动退出登录');
@@ -1218,9 +1316,45 @@
                         return true;
                     }
                 },
+                /**
+                 * 关键操作前的强制校验（顶部刷新列表 / 刷新 APP token 等入口调用）。
+                 * 优先读取本地缓存（由 5 分钟定时器持续写入），仅当本地无「当前用户的新鲜记录」时才联网复核一次，
+                 * 避免频繁请求接口影响体验。管理员（isAdmin）全程无阻断。
+                 * 返回 false 表示已被禁用或套餐过期并已自动退出。
+                 */
+                async assertActive() {
+                    if (this.isAdmin) return true;                       // 管理员不受套餐/禁用限制
+                    if (!this.currentUser || !this.currentUser.id) return true;
+                    const now = Date.now();
+                    const FRESH_MS = 5 * 60 * 1000;                      // 与定时器间隔一致
+                    let rec = null;
+                    try {
+                        const raw = localStorage.getItem('dldl_status_check');
+                        if (raw) rec = JSON.parse(raw);
+                    } catch (_) { rec = null; }
+                    // 本地有当前用户的新鲜记录 → 直接对比，不请求接口
+                    if (rec && rec.userId === this.currentUser.id && (now - rec.checkedAt) < FRESH_MS) {
+                        if (rec.enabled === false) {
+                            this.handleLogout();
+                            this.showError('当前账号已被禁用，已自动退出登录');
+                            return false;
+                        }
+                        if (rec.plan_type && rec.plan_type !== 'permanent' && rec.plan_expire_at) {
+                            const exp = new Date(rec.plan_expire_at).getTime();
+                            if (!isNaN(exp) && now >= exp) {
+                                this.handleLogout();
+                                this.showError('套餐已过期，已自动退出登录，请联系管理员续费');
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                    // 本地无新鲜记录（首次/陈旧）→ 强制联网复核一次（checkAccountStatus 内部会写回本地）
+                    return await this.checkAccountStatus();
+                },
                 async refreshAccounts() {
-                    // 点击刷新列表时先校验当前用户状态：被禁用或套餐过期则自动退出
-                    if (!(await this.checkAccountStatus())) return;
+                    // 点击刷新列表时先校验：优先读本地缓存（5 分钟定时器已更新），无新鲜记录才联网复核
+                    if (!(await this.assertActive())) return;
                     this.accountsRefreshing = true;
                     try {
                         await this.loadAccounts();
@@ -2494,6 +2628,8 @@
                 },
                 // --- 通行证登录 end ---
                 async refreshToken(account) {
+                    // 刷新 APP token 前强制校验：读本地缓存对比，无新鲜记录才联网复核（管理员无阻断）
+                    if (!(await this.assertActive())) return;
                     const uname = String(account && account.uname || '').trim();
                     const upwd = String(account && account.upwd || '').trim();
                     if (!uname || !upwd) {
@@ -2666,6 +2802,165 @@
                             return null;
                         }
                     }
+                },
+
+                // ========== 窗口同步（整合自 tongbuqi 同步器） ==========
+                _syncApi() {
+                    const e = window.__ELECTRON__;
+                    if (!e || typeof e.syncEnumerate !== 'function') {
+                        this.showError('窗口同步仅在 DLDL-Proxy 桌面客户端内可用');
+                        return null;
+                    }
+                    return e;
+                },
+                async openSyncModal() {
+                    if (!this._syncApi()) return;
+                    this.syncModalVisible = true;
+                    // 打开时刷新一次状态与窗口列表
+                    try {
+                        const st = await window.__ELECTRON__.syncStatus();
+                        if (st && st.ok && st.status) this.syncRunning = !!st.status.running;
+                    } catch (_) {}
+                    await this.refreshSyncWindows();
+                },
+                closeSyncModal() {
+                    this.syncModalVisible = false;
+                },
+                async refreshSyncWindows() {
+                    const api = this._syncApi();
+                    if (!api) return;
+                    this.syncLoading = true;
+                    try {
+                        const res = await api.syncEnumerate();
+                        if (!res || !res.ok) {
+                            this.showError(`识别窗口失败：${res && res.message || '未知错误'}`);
+                            this.syncWindows = [];
+                            return;
+                        }
+                        this.syncWindows = res.windows || [];
+                        // 校正已选：移除已消失的窗口
+                        const alive = new Set(this.syncWindows.map(w => w.hwnd));
+                        if (this.syncMaster && !alive.has(this.syncMaster)) this.syncMaster = null;
+                        this.syncTargets = this.syncTargets.filter(h => alive.has(h));
+                        // 未选主控时，默认选第一个多开窗口为主控，其余多开窗口为同步目标
+                        if (!this.syncRunning && !this.syncMaster) {
+                            const dldl = this.syncWindows.filter(w => w.is_dldl);
+                            if (dldl.length) {
+                                this.syncMaster = dldl[0].hwnd;
+                                this.syncTargets = dldl.slice(1).map(w => w.hwnd);
+                                api.syncHighlight(this.syncMaster);
+                            }
+                        }
+                    } catch (e) {
+                        this.showError(`识别窗口失败：${e?.message || e}`);
+                    } finally {
+                        this.syncLoading = false;
+                    }
+                },
+                onPickMaster(w) {
+                    const oldMaster = this.syncMaster;
+                    // 切换主控时，旧主控不再担任主控 → 自动加回同步目标（仍在窗口列表且非新主控）
+                    if (oldMaster && oldMaster !== w.hwnd) {
+                        const alive = this.syncWindows.map(x => x.hwnd);
+                        if (alive.includes(oldMaster) && !this.syncTargets.includes(oldMaster)) {
+                            this.syncTargets.push(oldMaster);
+                        }
+                    }
+                    // 新主控从同步目标里剔除，并正式设为当前主控
+                    this.syncTargets = this.syncTargets.filter(h => h !== w.hwnd);
+                    this.syncMaster = w.hwnd;
+                    const api = this._syncApi();
+                    if (api) api.syncHighlight(w.hwnd);
+                },
+                toggleSyncTarget(hwnd) {
+                    if (this.syncMaster === hwnd) return;
+                    const i = this.syncTargets.indexOf(hwnd);
+                    if (i >= 0) this.syncTargets.splice(i, 1);
+                    else this.syncTargets.push(hwnd);
+                },
+                async startSync() {
+                    const api = this._syncApi();
+                    if (!api) return;
+                    if (!this.syncMaster) { this.showError('请先选择主控窗口'); return; }
+                    if (!this.syncTargets.length) { this.showError('请至少勾选一个同步目标窗口'); return; }
+                    try {
+                        const res = await api.syncStart({
+                            master: this.syncMaster,
+                            targets: this.syncTargets.slice(),
+                            mode: 'web',
+                        });
+                        if (!res || !res.ok) {
+                            this.showError(`开始同步失败：${res && res.message || '未知错误'}`);
+                            return;
+                        }
+                        this.syncRunning = true;
+                        this.showSuccess(`已开始同步：主控 1 个 → 同步 ${this.syncTargets.length} 个（F10 可停止）`);
+                    } catch (e) {
+                        this.showError(`开始同步失败：${e?.message || e}`);
+                    }
+                },
+                async stopSync() {
+                    const api = this._syncApi();
+                    if (!api) return;
+                    try {
+                        await api.syncStop();
+                    } catch (_) {}
+                    this.syncRunning = false;
+                    this.showSuccess('已停止同步');
+                },
+
+                /** 通用窗口管理入口：仅作用于上方已枚举的多开游戏窗口 */
+                async _opSyncWindows(action, extra) {
+                    const api = this._syncApi();
+                    if (!api) return;
+                    const hwnds = this.syncWindows.map(w => w.hwnd);
+                    if (!hwnds.length) { this.showError('没有可操作的窗口，请先「刷新窗口」'); return; }
+                    // 关闭窗口前若正在同步，先停同步（避免主控被关导致异常）
+                    if (action === 'close' && this.syncRunning) {
+                        try { await this.stopSync(); } catch (_) {}
+                    }
+                    const labelMap = { close: '关闭', set_size: '调整宽高', arrange: '自动排列', hide: '隐藏', show: '显示' };
+                    try {
+                        const res = await api.syncWindowOp({ action, hwnds, ...(extra || {}) });
+                        if (!res || !res.ok) {
+                            this.showError('窗口操作失败：' + (res && res.message || '未知错误'));
+                            return;
+                        }
+                        if (action === 'close') {
+                            this.showSuccess(`已关闭 ${res.count} 个同步窗口`);
+                            // 窗口关闭后刷新列表
+                            setTimeout(() => this.refreshSyncWindows(), 600);
+                        } else {
+                            const failed = (res.failed && res.failed.length) ? `（${res.failed.length} 个失败）` : '';
+                            this.showSuccess(`已${labelMap[action] || action} ${res.count} 个窗口${failed}`);
+                        }
+                    } catch (e) {
+                        this.showError('窗口操作失败：' + (e?.message || e));
+                    }
+                },
+                /** 应用宽高到所有多开窗口（保持当前位置，仅改尺寸） */
+                applySyncSize() {
+                    const w = parseInt(this.syncWinW, 10);
+                    const h = parseInt(this.syncWinH, 10);
+                    if (!w || !h || w <= 0 || h <= 0) { this.showError('请输入有效的宽高（> 0）'); return; }
+                    this._opSyncWindows('set_size', { w, h });
+                },
+                /** 自动排列所有多开窗口为网格（用当前宽高输入作为每窗尺寸） */
+                autoArrangeSync() {
+                    const winW = parseInt(this.syncWinW, 10) || 0;
+                    const winH = parseInt(this.syncWinH, 10) || 0;
+                    this._opSyncWindows('arrange', { winW, winH, gap: 4 });
+                },
+                hideSyncWindows() { this._opSyncWindows('hide'); },
+                showSyncWindows() { this._opSyncWindows('show'); },
+                closeAllSyncWindows() { this._opSyncWindows('close'); },
+                /** 预览红框高亮当前选中的主控窗口，便于确认哪个是主窗口 */
+                previewMasterHighlight() {
+                    if (!this.syncMaster) { this.showError('请先选择主控窗口（左侧单选框）'); return; }
+                    const api = this._syncApi();
+                    if (!api) return;
+                    try { api.syncHighlight(this.syncMaster); this.showSuccess('已高亮主控窗口红框'); }
+                    catch (e) { this.showError('高亮失败：' + (e?.message || e)); }
                 },
 
             }

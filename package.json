@@ -10,8 +10,9 @@
     "dev": "electron .",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win",
-    "pack": "node tools/obfuscate-desktop.mjs && electron-builder --win --x64",
+    "build-sync": "python tools/build_sync_engine.py",
+    "dist:win": "npm run build-sync && electron-builder --win",
+    "pack": "node tools/obfuscate-desktop.mjs && npm run build-sync && electron-builder --win --x64",
     "build": "node tools/obfuscate.mjs",
     "postinstall": "electron-builder install-app-deps"
   },
@@ -66,6 +67,10 @@
       "logo.png"
     ],
     "asarUnpack": [],
+    "extraResources": [
+      "sync_engine.py",
+      "sync_engine_dist"
+    ],
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
