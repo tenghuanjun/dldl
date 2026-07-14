@@ -111,7 +111,7 @@
                 >
                 <label class="batch-inline-label">批</label>
                 <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
-                <button class="btn btn-compact btn-reset" type="button" @click="resetAccountState" title="清除所有勾选和已填的通行证码">重置</button>
+                <button class="btn btn-compact" type="button" @click="resetAccountState" title="清除所有勾选和已填的通行证码">重置</button>
                 <span class="batch-search-sep"></span>
                 <input
                     v-model="searchKeyword"
@@ -3478,16 +3478,6 @@
             padding: 0 14px;
         }
 
-        .sticky-row-batch .btn-reset {
-            background: var(--surface);
-            color: var(--text-muted, #9aa0b4);
-            border: 1px solid var(--border);
-        }
-        .sticky-row-batch .btn-reset:hover {
-            background: var(--surface-hover, #2a2d42);
-            color: var(--text);
-            border-color: var(--accent, #5b8def);
-        }
 
 
         .sticky-page-title {
