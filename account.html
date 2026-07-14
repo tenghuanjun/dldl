@@ -513,7 +513,8 @@
         </div>
 
         <div v-if="syncModalVisible" class="modal-mask" @click.self="closeSyncModal">
-            <div class="modal" style="max-width: 640px;">
+            <div class="modal" style="max-width: 640px; position:relative;">
+                <button type="button" @click="closeSyncModal" title="关闭" style="position:absolute; top:10px; right:12px; width:28px; height:28px; border:none; background:transparent; color:var(--text-muted); font-size:18px; line-height:1; cursor:pointer; border-radius:6px; padding:0;">✕</button>
 
                 <div style="display:flex; align-items:center; gap:14px; margin:0 0 10px; flex-wrap:wrap;">
                     <span style="font-size:13px; font-weight:600;">同步方式</span>
@@ -575,6 +576,10 @@
                         <button class="btn btn-secondary btn-compact" type="button" @click="showSyncWindows">显示窗口</button>
                         <button class="btn btn-danger btn-compact" type="button" @click="closeAllSyncWindows" :disabled="!syncWindows.length">全部关闭</button>
                     </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+                        <button v-if="!syncRunning" class="btn btn-compact" type="button" @click="startSync" :disabled="!syncMaster || !syncTargets.length">▶ 开始同步</button>
+                        <button v-else class="btn btn-danger btn-compact" type="button" @click="stopSync">■ 停止同步</button>
+                    </div>
                     <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">「全部关闭」仅关闭上方多开游戏窗口，不会关闭账号列表程序。</div>
                 </div>
                 <div style="max-height:200px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
@@ -610,11 +615,6 @@
                 </div>
                 <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
                     选中一个主控（红框高亮）后，其余同类窗口默认作为同步目标；开始同步后，你在主控窗口内的点击与滚轮滚动会同步到所有勾选窗口。
-                </div>
-                <div class="modal-actions" style="margin-top:12px;">
-                    <button class="btn btn-secondary" type="button" @click="closeSyncModal">关闭</button>
-                    <button v-if="!syncRunning" class="btn" type="button" @click="startSync" :disabled="!syncMaster || !syncTargets.length">▶ 开始同步</button>
-                    <button v-else class="btn btn-danger" type="button" @click="stopSync">■ 停止同步</button>
                 </div>
             </div>
         </div>
