@@ -2332,14 +2332,22 @@
                  */
                 _openAppLoginWindow(url, title) {
                     const electron = window.__ELECTRON__;
+                    // 用「窗口管理」里的宽高作为客户端初始尺寸（缺省 360x600）
+                    const winW = parseInt(this.syncWinW, 10) || 360;
+                    const winH = parseInt(this.syncWinH, 10) || 600;
                     if (electron && typeof electron.openAppLogin === 'function') {
-                        electron.openAppLogin({ url: String(url), title: title || 'APP 登录' }).catch(e => {
+                        electron.openAppLogin({
+                            url: String(url),
+                            title: title || 'APP 登录',
+                            width: winW,
+                            height: winH
+                        }).catch(e => {
                             this.showError(`打开 APP 登录窗口失败：${e?.message || e}`);
                         });
                         return;
                     }
                     // 回退：纯网页环境直接新开窗口
-                    const winOpts = 'width=360,height=660';
+                    const winOpts = `width=${winW},height=${winH}`;
                     const w = window.open(url, '_blank', winOpts);
                     if (!w) this.showError('弹窗被拦截，请允许本应用打开新窗口');
                 },

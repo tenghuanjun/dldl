@@ -309,24 +309,30 @@ if (!gotTheLock) {
    * 打开一个独立的 APP 登录窗口（独立 Electron 进程 = 独立 GPU 进程）
    * @param {string} url - 已构建好的登录地址（含 token/sign）
    * @param {string} title - 窗口标题（一般传账号名）
+   * @param {number} [width] - 窗口宽度（缺省用 APP_WIN_W）。来自「窗口管理」的宽高
+   * @param {number} [height] - 窗口高度（缺省用 APP_WIN_H）。来自「窗口管理」的宽高
    * @returns {{ok: boolean, id?: string, message?: string}}
    */
-  function openAppLoginWindow(url, title) {
+  function openAppLoginWindow(url, title, width, height) {
     if (!url || !/^https?:\/\//i.test(url)) {
       return { ok: false, message: 'URL 必须以 http 或 https 开头' };
     }
     const id = `app_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
+    // 允许前端指定尺寸（窗口管理的宽高），缺省回退到默认 360x600
+    const winW = (typeof width === 'number' && isFinite(width) && width > 0) ? Math.floor(width) : APP_WIN_W;
+    const winH = (typeof height === 'number' && isFinite(height) && height > 0) ? Math.floor(height) : APP_WIN_H;
+
     // 平铺排版：按已开窗口数量计算网格坐标（对应文档 MoveWindow/SetWindowPos 平铺，避免全部叠在屏幕中央）
     let x = 0, y = 0;
     try {
       const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
-      const cols = Math.max(1, Math.floor((sw + APP_WIN_GAP) / (APP_WIN_W + APP_WIN_GAP)));
+      const cols = Math.max(1, Math.floor((sw + APP_WIN_GAP) / (winW + APP_WIN_GAP)));
       const idx = appLoginWindows.size;
       const col = idx % cols;
       const row = Math.floor(idx / cols);
-      x = col * (APP_WIN_W + APP_WIN_GAP);
-      y = Math.min(row * (APP_WIN_H + APP_WIN_GAP), Math.max(0, sh - APP_WIN_H));
+      x = col * (winW + APP_WIN_GAP);
+      y = Math.min(row * (winH + APP_WIN_GAP), Math.max(0, sh - winH));
     } catch (_) {
       // 取不到屏幕信息则放在默认位置
     }
@@ -342,8 +348,8 @@ if (!gotTheLock) {
       APP_LOGIN_TITLE: title || 'APP 登录',
       APP_LOGIN_X: String(x),
       APP_LOGIN_Y: String(y),
-      APP_LOGIN_W: String(APP_WIN_W),
-      APP_LOGIN_H: String(APP_WIN_H),
+      APP_LOGIN_W: String(winW),
+      APP_LOGIN_H: String(winH),
     };
     let child;
     try {
@@ -372,13 +378,13 @@ if (!gotTheLock) {
   }
 
   ipcMain.handle('open-app-login', (_event, payload) => {
-    const { url, title } = payload || {};
-    return openAppLoginWindow(url, title);
+    const { url, title, width, height } = payload || {};
+    return openAppLoginWindow(url, title, width, height);
   });
 
   ipcMain.on('dldl-open-app-login', (_event, payload) => {
-    const { url, title } = payload || {};
-    openAppLoginWindow(url, title);
+    const { url, title, width, height } = payload || {};
+    openAppLoginWindow(url, title, width, height);
   });
 
   ipcMain.handle('close-all-app-logins', () => {
@@ -912,8 +918,9 @@ function runAppLoginChildMode() {
 
   const url = process.env.APP_LOGIN_URL;
   const title = process.env.APP_LOGIN_TITLE || 'APP 登录';
+  // 子进程在 const APP_WIN_* 定义前已 return，这里只能用字面量兜底（正常由主进程经 env 传入）
   const w = Number(process.env.APP_LOGIN_W) || 360;
-  const h = Number(process.env.APP_LOGIN_H) || 660;
+  const h = Number(process.env.APP_LOGIN_H) || 600;
   const x = process.env.APP_LOGIN_X !== undefined ? Number(process.env.APP_LOGIN_X) : undefined;
   const y = process.env.APP_LOGIN_Y !== undefined ? Number(process.env.APP_LOGIN_Y) : undefined;
 
