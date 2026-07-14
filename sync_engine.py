@@ -170,14 +170,12 @@ def find_render_child(parent_hwnd):
 def get_windows_by_pids(pids, native_pids=None):
     """枚举可见的、可同步的顶层窗口。
 
-    - 传入 pids (dldl 各游戏窗口子进程 PID) 时: 返回 PID 命中的窗口 (即多开斗罗窗口);
-      若一个都没命中 (极端情况), 回退返回全部可同步窗口, 避免面板空列表。
-    - native_pids: 批量启动的「原生客户端」进程 PID。这些窗口的窗口类可能不是
-      CEF/Chrome (classify_window 认不出), 故对命中 native_pids 的窗口放宽窗口类限制,
-      即使 type_label 为空也列出 (标为 "原生客户端"), 否则会被过滤掉看不到。
-    - 每个窗口都带 is_dldl 标记, 供面板默认勾选 dldl 窗口。
+    严格只返回两类窗口，绝不回退到「全部可见窗口」，避免误关用户其它程序：
+      1) 斗罗大陆H5客户端：dldl 多开子进程窗口，其 PID ∈ pids（appLoginWindows）。
+      2) 原生客户端：批量启动的 exe 窗口，其 PID ∈ native_pids（50游戏斗罗大陆PC加速器等）。
+    其余窗口（Chrome 浏览器、其它 Electron 应用、DLDL-Proxy 主窗口等）一律跳过。
     """
-    pid_set = set(int(p) for p in pids) if pids else None
+    pid_set = set(int(p) for p in pids) if pids else set()
     native_set = set(int(p) for p in native_pids) if native_pids else set()
     out = []
 
@@ -188,13 +186,17 @@ def get_windows_by_pids(pids, native_pids=None):
         if not title:
             return True
         pid = _get_pid(hwnd)
+        if pid is None:
+            return True
         is_native = pid in native_set
+        is_dldl = pid in pid_set
+        # 只处理「斗罗大陆H5客户端」或「原生客户端」，其它程序直接跳过
+        if not is_native and not is_dldl:
+            return True
         type_label, cn = classify_window(hwnd)
         if not type_label:
-            # 非 CEF/Chrome 窗口: 仅当它是批量启动的原生客户端时才保留
-            if not is_native:
-                return True  # 只列可同步窗口
-            type_label = "原生客户端"
+            # 原生客户端窗口类可能不是 CEF/Chrome：标为「原生客户端」
+            type_label = "原生客户端" if is_native else "斗罗大陆H5"
         try:
             rect = win32gui.GetWindowRect(hwnd)
         except Exception:
@@ -207,16 +209,12 @@ def get_windows_by_pids(pids, native_pids=None):
             "class": cn,
             "type": type_label,
             "rect": list(rect),
-            "is_dldl": bool(pid_set is not None and pid in pid_set),
+            "is_dldl": bool(is_dldl),
         })
         return True
 
     win32gui.EnumWindows(cb, None)
-
-    if pid_set is not None:
-        matched = [w for w in out if w["is_dldl"]]
-        if matched:
-            return matched
+    # 严格只返回已知的两类窗口（不再回退到全部可见窗口，避免误关其它程序）
     return out
 
 
