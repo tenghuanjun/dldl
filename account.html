@@ -515,8 +515,19 @@
         <div v-if="syncModalVisible" class="modal-mask" @click.self="closeSyncModal">
             <div class="modal" style="max-width: 640px;">
 
-                <!-- 原生客户端模式：批量启动本地 exe（后续将在此选择同步模式 / 同步窗口） -->
-                <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin:10px 0; background:var(--surface-2, rgba(255,255,255,0.02));">
+                <div style="display:flex; align-items:center; gap:14px; margin:0 0 10px; flex-wrap:wrap;">
+                    <span style="font-size:13px; font-weight:600;">同步方式</span>
+                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" value="native" v-model="syncMode" @change="persistExeLaunchConfig"> 原生客户端
+                    </label>
+                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" value="web" v-model="syncMode" @change="persistExeLaunchConfig"> 网页/CEF
+                    </label>
+                    <span style="font-size:12px; color:var(--text-muted);" v-if="syncMode==='native'">主控用真实输入、各窗口 PostMessage 同步（适合非 CEF 的原生客户端）</span>
+                    <span style="font-size:12px; color:var(--text-muted);" v-else>抑制主控真实点击，统一 PostMessage 同步到主控与各窗口渲染层</span>
+                </div>
+                <!-- 原生客户端模式：批量启动本地 exe；仅在选择「原生客户端」同步方式时显示 -->
+                <div v-if="syncMode==='native'" style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin:0 0 10px; background:var(--surface-2, rgba(255,255,255,0.02));">
                     <div style="font-size:13px; font-weight:600; margin-bottom:6px;">原生客户端批量启动</div>
                     <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">浏览选择要启动的程序（.exe），设置数量后批量拉起；启动后点下方「刷新窗口」即可识别为同步目标。</div>
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
@@ -549,17 +560,6 @@
                     <button class="btn btn-secondary btn-compact" type="button" @click="refreshSyncWindows" :disabled="syncLoading">{{ syncLoading ? '识别中...' : '刷新窗口' }}</button>
                     <span style="font-size:12px; color:var(--text-muted);">识别到 {{ syncWindows.length }} 个可同步窗口，勾选主控左侧点即高亮</span>
                     <span v-if="syncRunning" class="pass-code-status ok">同步进行中（F10 可强制停止）</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:14px; margin:0 0 10px; flex-wrap:wrap;">
-                    <span style="font-size:13px; font-weight:600;">同步方式</span>
-                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                        <input type="radio" value="native" v-model="syncMode" @change="persistExeLaunchConfig"> 原生客户端
-                    </label>
-                    <label style="font-size:13px; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                        <input type="radio" value="web" v-model="syncMode" @change="persistExeLaunchConfig"> 网页/CEF
-                    </label>
-                    <span style="font-size:12px; color:var(--text-muted);" v-if="syncMode==='native'">主控用真实输入、各窗口 PostMessage 同步（适合非 CEF 的原生客户端）</span>
-                    <span style="font-size:12px; color:var(--text-muted);" v-else>抑制主控真实点击，统一 PostMessage 同步到主控与各窗口渲染层</span>
                 </div>
                 <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; margin-bottom:10px; background:var(--surface-2, rgba(255,255,255,0.02));">
                     <div style="font-size:13px; font-weight:600; margin-bottom:8px;">窗口管理（仅作用于上方多开游戏窗口）</div>
