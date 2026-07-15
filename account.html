@@ -111,6 +111,7 @@
                 >
                 <label class="batch-inline-label">批</label>
                 <button class="btn btn-compact" type="button" @click="batchLaunchByAreaSlice">启动该批</button>
+                <button class="btn btn-compact" type="button" @click="selectByAreaSlice">勾选该批</button>
                 <button class="btn btn-compact" type="button" @click="resetAccountState" title="清除所有勾选和已填的通行证码">重置</button>
                 <span class="batch-search-sep"></span>
                 <input
@@ -2539,6 +2540,35 @@
                         this.loadingVisible = false;
                         this.loadingText = '';
                     }
+                },
+                /** 只按区服/每批/第几批 切片勾选账号，不执行启动（用于免去手动逐个勾选） */
+                selectByAreaSlice() {
+                    const area = String(this.batchPanelArea || '').trim();
+                    if (!area) {
+                        this.showError('请选择区服');
+                        return;
+                    }
+                    const group = this.areas.find((g) => g.area === area);
+                    if (!group || !group.accounts.length) {
+                        this.showError('该区服下没有账号');
+                        return;
+                    }
+                    const size = Math.max(1, Math.floor(Number(this.batchPanelSize)) || 10);
+                    const batchNo = Math.max(1, Math.floor(Number(this.batchPanelBatchNo)) || 1);
+                    const start = (batchNo - 1) * size;
+                    const slice = group.accounts.slice(start, start + size);
+                    if (!slice.length) {
+                        this.showError(
+                            `第 ${batchNo} 批没有账号（当前区服共 ${group.accounts.length} 个，每批 ${size} 个，有效批次为 1～${Math.max(1, Math.ceil(group.accounts.length / size))}）`
+                        );
+                        return;
+                    }
+                    const next = { ...this.accountSelectMap };
+                    for (const account of slice) {
+                        next[this.accountSelectKey(group.area, account)] = true;
+                    }
+                    this.accountSelectMap = next;
+                    this.showSuccess(`已勾选第 ${batchNo} 批（${slice.length} 个账号）`);
                 },
                 // --- 通行证登录 ---
                 /** 通行证状态 key，用于 passCodeMap */
