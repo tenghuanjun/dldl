@@ -1,0 +1,22 @@
+  • electron-builder  version=25.1.8 os=10.0.26200
+  • loaded configuration  file=package.json ("build" field)
+  • executing @electron/rebuild  electronVersion=33.4.11 arch=x64 buildFromSource=false appDir=./
+  • installing native dependencies  arch=x64
+  • completed installing native dependencies
+  • packaging       platform=win32 arch=x64 electron=33.4.11 appOutDir=dist-electron\win-unpacked
+  • updating asar integrity executable resource  executablePath=dist-electron\win-unpacked\DLDL-Proxy.exe
+  • signing with signtool.exe  path=dist-electron\win-unpacked\resources\sync_engine_dist\sync_engine.exe
+  • no signing info identified, signing is skipped  signHook=false cscInfo=null
+  • default Electron icon is used  reason=application icon is not set
+  • signing with signtool.exe  path=dist-electron\win-unpacked\DLDL-Proxy.exe
+  • no signing info identified, signing is skipped  signHook=false cscInfo=null
+  • building        target=nsis file=dist-electron\DLDL-Proxy Setup 1.0.0.exe archs=x64 oneClick=false perMachine=false
+  • signing with signtool.exe  path=dist-electron\win-unpacked\resources\elevate.exe
+  • no signing info identified, signing is skipped  signHook=false cscInfo=null
+  • signing with signtool.exe  path=dist-electron\__uninstaller-nsis-dldl.exe
+  • no signing info identified, signing is skipped  signHook=false cscInfo=null
+  • signing with signtool.exe  path=dist-electron\DLDL-Proxy Setup 1.0.0.exe
+  • no signing info identified, signing is skipped  signHook=false cscInfo=null
+  • building block map  blockMapFile=dist-electron\DLDL-Proxy Setup 1.0.0.exe.blockmap
+
+d:\dldl>

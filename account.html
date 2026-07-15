@@ -52,7 +52,7 @@
                     </select>
                     <button class="btn btn-secondary btn-compact" type="button" @click="refreshAccounts" :disabled="accountsRefreshing">{{ accountsRefreshing ? '刷新中...' : '刷新列表' }}</button>
                     <button class="btn btn-secondary btn-compact" type="button" @click="openAccountModal()">新增</button>
-                    <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '隐藏密码' : '显示密码' }}</button>
+                    <button class="btn btn-secondary btn-compact" type="button" @click="showPwd = !showPwd">{{ showPwd ? '退出管理' : '账号管理' }}</button>
                     <button
                         class="btn btn-compact"
                         type="button"
@@ -152,9 +152,9 @@
                                 <div class="uname white-space-nowrap" v-if="showPwd">{{ account.upwd }}</div>
                             </div>
                             <div class="card-actions">
-                                <button class="btn btn-secondary" type="button" @click.stop="editAccount(account)">编辑</button>
+                                <button v-if="showPwd" class="btn btn-secondary" type="button" @click.stop="editAccount(account)">编辑</button>
                                 <button class="btn btn-secondary" type="button" @click.stop="refreshToken(account)">刷新APPtoken</button>
-                                <button class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(account)">复制网址</button>
+                                <button v-if="showPwd" class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(account)">复制网址</button>
                                 <button class="btn" type="button" @click.stop="appLogin(group.area, account)">APP登录</button>
                                 <span v-if="getAppLoginStatus(group.area, account) === 'launched'" class="pass-code-status ok">已启动</span>
                                 <!-- <button class="btn" type="button" @click="openLogin(account)">网页登录</button> -->
@@ -225,9 +225,9 @@
                                 <div class="nick white-space-nowrap"><span class="card-index">{{ idx + 1 }}</span>{{ item.account.name || '-' }}</div>
                             </div>
                             <div class="card-actions">
-                                <button class="btn btn-secondary" type="button" @click.stop="editAccount(item.account)">编辑</button>
+                                <button v-if="showPwd" class="btn btn-secondary" type="button" @click.stop="editAccount(item.account)">编辑</button>
                                 <button class="btn btn-secondary" type="button" @click.stop="refreshToken(item.account)">刷新APPtoken</button>
-                                <button class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(item.account)">复制网址</button>
+                                <button v-if="showPwd" class="btn btn-secondary" type="button" @click.stop="copyLoginUrl(item.account)">复制网址</button>
                                 <button class="btn" type="button" @click.stop="appLogin(item.area, item.account)">APP登录</button>
                                 <span v-if="getAppLoginStatus(item.area, item.account) === 'launched'" class="pass-code-status ok">已启动</span>
                             </div>
@@ -318,9 +318,29 @@
                         <label class="form-label">账号 uname</label>
                         <input class="form-input" v-model="accountForm.uname" placeholder="请输入账号">
                     </div>
-                    <div class="form-field full">
+                    <div class="form-field">
                         <label class="form-label">密码 upwd</label>
                         <input class="form-input" v-model="accountForm.upwd" placeholder="请输入密码">
+                    </div>
+                    <div class="form-field full form-section-label">APP登录地址</div>
+                    <div class="form-field full">
+                        <label class="form-label">url</label>
+                        <div class="pass-code-input-wrap">
+                            <textarea
+                                class="form-input form-textarea form-mono"
+                                v-model="accountForm.url"
+                                rows="2"
+                                placeholder="点击「APP登录」后自动生成，可手动编辑"
+                            ></textarea>
+                            <button
+                                v-if="accountForm.url"
+                                class="pass-code-clear"
+                                type="button"
+                                tabindex="-1"
+                                title="清除"
+                                @mousedown.prevent="accountForm.url = ''"
+                            >✕</button>
+                        </div>
                     </div>
                     <div class="form-field full form-section-label">快捷登录 Cookie</div>
                     <div class="form-field full">
@@ -356,26 +376,7 @@
                         <label class="form-label">sign</label>
                         <input class="form-input form-mono" v-model="accountForm.sign" placeholder="可选，与 time 配套">
                     </div>
-                    <div class="form-field full form-section-label">APP登录地址</div>
-                    <div class="form-field full">
-                        <label class="form-label">url</label>
-                        <div class="pass-code-input-wrap">
-                            <textarea
-                                class="form-input form-textarea form-mono"
-                                v-model="accountForm.url"
-                                rows="2"
-                                placeholder="点击「APP登录」后自动生成，可手动编辑"
-                            ></textarea>
-                            <button
-                                v-if="accountForm.url"
-                                class="pass-code-clear"
-                                type="button"
-                                tabindex="-1"
-                                title="清除"
-                                @mousedown.prevent="accountForm.url = ''"
-                            >✕</button>
-                        </div>
-                    </div>
+                    <div class="form-field full form-section-label">扫码登录 token</div>
                 </div>
                 <div class="form-help">保存后会写入数据库，新增账号会自动创建对应区服分组。可将完整 login.php 链接粘贴到上方并点「提取」，或手动填写 token / time / sign，或通过「刷新 token」写入。</div>
                 <div class="modal-actions">
@@ -3695,7 +3696,7 @@
             border-radius: 8px; vertical-align: middle;
         }
         .card-name .uname {
-            font-size: 11px; color: var(--text-muted);
+            font-size: 13px; color: #000;
             word-break: break-all; line-height: 1.4;
         }
 
