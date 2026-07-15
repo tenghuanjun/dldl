@@ -135,7 +135,7 @@
                 </div>
             </div>
 
-            <div class="cards" v-account-cards-sortable="group">
+            <div class="cards">
                 <div class="card sortable-account-card" :class="{ 'card-launched': getAppLoginStatus(group.area, account) === 'launched', 'card-selected': isAccountSelected(group.area, account) }" v-for="(account, idx) in filteredAccounts(group)" :key="`${group.area}-${account.uname}`" @click="toggleAccountSelection(group.area, account)">
                     <label class="card-check-wrap" @mousedown.stop @click.stop>
                         <input
@@ -144,7 +144,6 @@
                             @change="onAccountCheckboxChange($event, group.area, account)"
                         >
                     </label>
-                    <button type="button" class="card-drag-handle" aria-label="拖拽排序" title="拖拽排序" @click.stop @mousedown.stop>⋮⋮</button>
                     <div class="card-main">
                         <div class="card-top">
                             <div class="card-name">
@@ -632,58 +631,6 @@
         const { createApp } = Vue;
         const ElMessage = window.ElementPlus?.ElMessage;
         const ElMessageBox = window.ElementPlus?.ElMessageBox;
-
-        function destroyAccountCardsSortable(el) {
-            if (el._accountCardsSortable) {
-                el._accountCardsSortable.destroy();
-                el._accountCardsSortable = null;
-            }
-        }
-
-        const accountCardsSortableDirective = {
-            mounted(el, binding) {
-                el._sortableGroupRef = binding.value;
-                const SortableCtor = window.Sortable;
-                if (typeof SortableCtor !== 'function' || !binding.value || !Array.isArray(binding.value.accounts)) {
-                    return;
-                }
-                el._accountCardsSortable = SortableCtor.create(el, {
-                    animation: 150,
-                    handle: '.card-drag-handle',
-                    draggable: '.sortable-account-card',
-                    ghostClass: 'card-sortable-ghost',
-                    chosenClass: 'card-sortable-chosen',
-                    dragClass: 'card-sortable-drag',
-                    forceFallback: true,
-                    fallbackTolerance: 3,
-                    fallbackOnBody: true,
-                    // .cards 是 4 列 CSS Grid，会被 Sortable 误判为“纯横向”，导致跨行/跨列交换很难触发。
-                    // 降低交换阈值 + 启用反向交换区，使二维网格里的拖拽排序灵敏可用。
-                    swapThreshold: 0.65,
-                    invertSwap: true,
-                    onEnd(evt) {
-                        const g = el._sortableGroupRef;
-                        if (!g || !Array.isArray(g.accounts)) return;
-                        const oldIndex = evt.oldIndex;
-                        const newIndex = evt.newIndex;
-                        if (oldIndex === newIndex || oldIndex == null || newIndex == null) return;
-                        const list = g.accounts;
-                        const moved = list.splice(oldIndex, 1)[0];
-                        list.splice(newIndex, 0, moved);
-                        const vm = binding.instance;
-                        if (vm && typeof vm.onAccountCardsSorted === 'function') {
-                            void vm.onAccountCardsSorted(g.area);
-                        }
-                    }
-                });
-            },
-            updated(el, binding) {
-                el._sortableGroupRef = binding.value;
-            },
-            unmounted(el) {
-                destroyAccountCardsSortable(el);
-            }
-        };
 
         const supabaseUrl = 'https://xywlbjsyhpyyxboznmct.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5d2xianN5aHB5eXhib3pubWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODgwNzIsImV4cCI6MjA5NDY2NDA3Mn0.Q0KzoMgwNInH4gi30DEK_d1NbZCwl5yFjnTjubm_gYs';
@@ -1579,15 +1526,6 @@
                         return false;
                     }
                 },
-            async onAccountCardsSorted(area) {
-                // 账号顺序持久化到数据库的 sort_order 列（由 saveAccounts 写入每个账号在区服内的下标）。
-                // 保存后立刻从 DB 重新读回，保证界面顺序 == 数据库真实顺序：
-                // 若写库被丢弃（例如 Supabase schema 缓存未刷新导致新列被静默忽略），这里会立即回退暴露问题。
-                const savedDb = await this.saveAccounts();
-                await this.loadAccounts();
-                if (!savedDb) this.showError('排序保存失败');
-                else this.showSuccess('排序已保存');
-            },
             findAccountLocation(account) {
                 for (const group of this.areas) {
                     const index = group.accounts.findIndex(item => item.uname === account.uname && item.upwd === account.upwd);
@@ -3304,7 +3242,6 @@
 
             }
         });
-        app.directive('account-cards-sortable', accountCardsSortableDirective);
         app.use(ElementPlus);
         app.mount("#app");
     </script>
